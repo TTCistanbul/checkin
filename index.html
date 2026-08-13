@@ -1476,7 +1476,6 @@ function quotaCardsHtml(id){
   return `
     <div class="quota-card">
       <div class="qt type-annual">${t('q_annual_this_year')}</div>
-      <div class="qtag">${t('q_annual_remaining')}</div>
       <div class="qv">${annualLeftDays} ${t('days_unit')}</div>
       <div class="qsub">${L.annualLeft} ${t('hours_unit')} · ${nextAnn}</div>
     </div>
@@ -2090,7 +2089,6 @@ function empReportHtml(id,ym){
     </div>
     <div class="boxes">
       ${box(t('total_days'),cnt.work)}
-      ${box(t('total_paid_days'),cnt.paid)}
       ${box(t('st_sick_doc'),cnt.sick)}
       ${box(t('st_leave'),cnt.leave)}
       ${box(t('sum_holiday'),cnt.holiday)}
