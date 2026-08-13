@@ -647,11 +647,11 @@ const I18N = {
     approve:"核准", reject:"駁回", reset:"改回待審", days_unit:"天",
     q_annual:"特休額度(時)", q_sick:"病假額度(時)", q_personal:"事假額度(時)",
     q_annual_auto:"法定特休（依到職日自動計算）",
-    q_annual_auto_hint:"滿1年14天／滿5年20天／滿15年26天（土耳其勞動法）。未滿1年為0天。",
+    q_annual_auto_hint:"本年度特休剩餘由主控端自行調整；每到到職周年日，依完整年資自動增加 14／20／26 天。",
     q_carry:"累積結轉（小時）",
-    q_carry_hint:"去年未休完可結轉至此；支援 0.5 小時（例如 4 = 0.5 天）。法定天數會自動加上此值。",
+    q_carry_hint:"舊資料相容欄位；新的特休餘額由主控端自行調整，並於到職周年日自動增加法定天數。",
     q_remaining:"剩餘", q_accrued:"累計已請", done:"完成",
-    q_annual_this_year:"今年特休額度", q_can_carry:"可累積至下一年",
+    q_annual_this_year:"特休剩餘天數", q_annual_remaining:"特休剩餘天數", q_can_carry:"特休剩餘天數",
     q_annual_used_year:"今年已請特休", q_sick_used_year:"今年已請病假",
     q_biz_days_year:"今年出差天數",
     total_days:"當月出勤天數", sum_counted:"計入", sum_excluded:"未計入", select_emp:"選擇員工",
@@ -663,7 +663,7 @@ const I18N = {
     csv_file:"打卡紀錄", yes:"是", no:"否",
     th_emp_no:"員工工號", th_emp_name:"員工姓名",
     hire_date:"到職日", tenure:"年資", tenure_y:"年", tenure_m:"個月",
-    not_yet_1y:"未滿一年", anniv_soon:"再 %d 天滿一年", suggest_annual:"建議特休",
+    not_yet_1y:"未滿一年", anniv_soon:"再 %d 天滿一年", next_anniv:"距下次到職周年 %d 天，將增加 %h 天特休", suggest_annual:"建議特休",
     quota_low:"特休額度低於建議值，建議調成 %h 小時", no_hire_date:"未填到職日",
     no_attendance:"不列入打卡名單（不需打卡）",
     signing_in:"登入中…", net_error:"連不上伺服器，請檢查網路後再試。",
@@ -742,11 +742,11 @@ const I18N = {
     approve:"Approve", reject:"Reject", reset:"Reset", days_unit:"d",
     q_annual:"Annual (h)", q_sick:"Sick (h)", q_personal:"Personal (h)",
     q_annual_auto:"Statutory annual leave (from hire date)",
-    q_annual_auto_hint:"1–4 yrs: 14 days / 5–14 yrs: 20 days / 15+ yrs: 26 days (Turkish Labour Law). Under 1 year: 0.",
+    q_annual_auto_hint:"The current annual leave balance is adjusted by the admin; on each work anniversary, 14/20/26 days are added automatically according to completed service years.",
     q_carry:"Carry-over (hours)",
-    q_carry_hint:"Unused leave from last year. Supports 0.5 h (e.g. 4 = 0.5 day). Added on top of statutory days.",
+    q_carry_hint:"Legacy field kept for compatibility. The admin now adjusts the current remaining balance, and statutory days are added automatically on each work anniversary.",
     q_remaining:"Remaining", q_accrued:"Accrued", done:"Done",
-    q_annual_this_year:"Annual leave this year", q_can_carry:"Can carry to next year",
+    q_annual_this_year:"Remaining annual leave", q_annual_remaining:"Remaining annual leave", q_can_carry:"Remaining annual leave",
     q_annual_used_year:"Annual leave used this year", q_sick_used_year:"Sick leave used this year",
     q_biz_days_year:"Business trip days this year",
     total_days:"Days worked this month", sum_counted:"Counted", sum_excluded:"Not counted", select_emp:"Select employee",
@@ -758,7 +758,7 @@ const I18N = {
     csv_file:"attendance", yes:"Yes", no:"No",
     th_emp_no:"Staff ID", th_emp_name:"Name",
     hire_date:"Start date", tenure:"Tenure", tenure_y:"y", tenure_m:"m",
-    not_yet_1y:"under 1 year", anniv_soon:"1 year in %d days", suggest_annual:"Suggested annual",
+    not_yet_1y:"under 1 year", anniv_soon:"1 year in %d days", next_anniv:"Next work anniversary in %d days; add %h days annual leave", suggest_annual:"Suggested annual",
     quota_low:"Annual leave is below the suggested %h hours", no_hire_date:"No start date",
     no_attendance:"Not on the clock-in roster",
     signing_in:"Signing in…", net_error:"Can't reach the server. Check your connection and try again.",
@@ -893,20 +893,80 @@ function suggestedAnnualDays(hireDate){
   const y=Math.floor(mo/12);
   return y>=15 ? 26 : (y>=5 ? 20 : 14);
 }
-/* 法定特休時數（天 × 8），可再加「累積結轉」小時（支援 0.5） */
+/* 法定特休時數（天 × 8）。
+   特休餘額以「主控端設定的目前剩餘時數」為基準；
+   每到員工到職周年日，再依當時完整年資自動增加法定特休。 */
 function baseAnnualHours(hireDate){
   return suggestedAnnualDays(hireDate) * HOURS_PER_DAY;
 }
 function carryHoursOf(emp){
+  /* 舊資料相容：仍讀取舊的 carry 欄位，但新的介面不再把它當成主要調整欄位。 */
   if(!emp||!emp.quota) return 0;
   const c = emp.quota.carry;
   if(c==null || c==='') return 0;
   const n = parseFloat(c);
-  return isNaN(n) ? 0 : Math.round(n*2)/2; // 對齊 0.5 小時
+  return isNaN(n) ? 0 : Math.round(n*2)/2;
 }
 function annualQuotaHours(emp){
   if(!emp) return 0;
   return baseAnnualHours(emp.hireDate) + carryHoursOf(emp);
+}
+function annualRemainingSeedHours(emp){
+  if(!emp || !emp.quota) return null;
+  const v = Number(emp.quota.annualRemainingHours);
+  return Number.isFinite(v) ? Math.max(0, Math.round(v*2)/2) : null;
+}
+function annualBalanceAsOf(emp){
+  const v = emp && emp.quota && emp.quota.annualBalanceAsOf;
+  return v && /^\\d{4}-\\d{2}-\\d{2}$/.test(v) ? v : ymd(new Date());
+}
+function statutoryDaysForServiceYears(years){
+  const y=Number(years)||0;
+  return y>=15 ? 26 : (y>=5 ? 20 : (y>=1 ? 14 : 0));
+}
+function anniversaryDate(hireDate, years){
+  if(!hireDate) return null;
+  const h=new Date(hireDate+'T00:00:00');
+  if(isNaN(h)) return null;
+  const d=new Date(h);
+  d.setFullYear(h.getFullYear()+years);
+  return d;
+}
+/* 從「目前餘額最後調整日」一路檢查到今天。
+   只要跨過到職周年日，就把該周年對應的法定天數自動加回餘額。 */
+function anniversaryAccrualHours(emp){
+  if(!emp || !emp.hireDate || annualRemainingSeedHours(emp)==null) return 0;
+  const fromStr=annualBalanceAsOf(emp);
+  const from=new Date(fromStr+'T00:00:00');
+  const hire=new Date(emp.hireDate+'T00:00:00');
+  const today=new Date(); today.setHours(0,0,0,0);
+  if(isNaN(from)||isNaN(hire)||from>=today) return 0;
+
+  let total=0;
+  const maxYears=Math.max(0,today.getFullYear()-hire.getFullYear()+1);
+  for(let y=1;y<=maxYears;y++){
+    const ann=anniversaryDate(emp.hireDate,y);
+    if(!ann || ann<=from || ann>today) continue;
+    total += statutoryDaysForServiceYears(y) * HOURS_PER_DAY;
+  }
+  return total;
+}
+/* 舊資料沒有 annualRemainingHours 時，沿用原本系統算出的「目前餘額」，
+   但不追溯自動補發周年額度；主控端第一次儲存後即進入新制度。 */
+function legacyAnnualRemainingHours(emp){
+  if(!emp) return 0;
+  const quota=annualQuotaHours(emp);
+  const used=(typeof LEAVE_REQUESTS!=='undefined')
+    ? LEAVE_REQUESTS
+        .filter(r=>r.empId===emp.id && r.status==='approved' && ANNUAL_FIRST_FOR[r.type]!==false)
+        .reduce((s,r)=>s+r.hours,0)
+    : 0;
+  return Math.max(0, quota-used);
+}
+function currentAnnualRemainingHours(emp){
+  const seed=annualRemainingSeedHours(emp);
+  if(seed==null) return legacyAnnualRemainingHours(emp);
+  return seed + anniversaryAccrualHours(emp);
 }
 function daysToAnniversary(hireDate){
   const mo=tenureMonths(hireDate);
@@ -914,6 +974,19 @@ function daysToAnniversary(hireDate){
   const h=new Date(hireDate+'T00:00:00');
   const target=new Date(h.getFullYear()+1,h.getMonth(),h.getDate());
   return Math.ceil((target-new Date())/86400000);
+}
+function nextAnniversaryText(hireDate){
+  if(!hireDate) return t('no_hire_date');
+  const h=new Date(hireDate+'T00:00:00');
+  if(isNaN(h)) return t('no_hire_date');
+  const today=new Date(); today.setHours(0,0,0,0);
+  let years=Math.max(1,today.getFullYear()-h.getFullYear());
+  let next=anniversaryDate(hireDate,years);
+  if(next<=today){ years++; next=anniversaryDate(hireDate,years); }
+  if(!next) return t('no_hire_date');
+  const days=Math.ceil((next-today)/86400000);
+  const addDays=statutoryDaysForServiceYears(years);
+  return t('next_anniv').replace('%d',days).replace('%h',addDays);
 }
 function tenureBadge(e){
   const mo=tenureMonths(e.hireDate);
@@ -933,7 +1006,7 @@ function rosterIds(){ return Object.keys(EMPLOYEES).filter(k=>!EMPLOYEES[k].noAt
 function quotaOf(empId,type){
   const e=EMPLOYEES[empId];
   if(!e) return 0;
-  if(type==='annual') return annualQuotaHours(e);
+  if(type==='annual') return currentAnnualRemainingHours(e);
   return (e.quota && e.quota[type]!=null) ? e.quota[type] : 0;
 }
 /* 已核准的請假時數（依類別加總，未分攤前的原始值） */
@@ -977,9 +1050,12 @@ function countSickMarkDaysThisYear(empId){
   return n;
 }
 function leaveLedger(empId){
+  const emp=EMPLOYEES[empId]||{};
   const annualQuota=quotaOf(empId,'annual');
   let left=annualQuota;
   const acc={sick_doc:0, personal:0};
+  const balanceAsOf=annualBalanceAsOf(emp);
+  const hasManagedBalance=annualRemainingSeedHours(emp)!=null;
   /* 今年已用（時數） */
   let yearAnnualUsed=0;   // 今年從特休額度扣掉的時數
   let yearSickHours=0;    // 今年病假時數（請假單，不扣特休）
@@ -988,7 +1064,10 @@ function leaveLedger(empId){
     .filter(r=>r.empId===empId && r.status==='approved')
     .sort((a,b)=> a.date===b.date ? a.reqId-b.reqId : (a.date<b.date?-1:1))
     .forEach(r=>{
-      const useAnnual = ANNUAL_FIRST_FOR[r.type]!==false;
+      /* 新制度下，主控端調整日前的歷史假單已包含在「目前剩餘天數」裡，
+         因此只從調整日之後的核准假單繼續扣除。 */
+      const afterBalanceDate = !hasManagedBalance || !r.date || r.date>=balanceAsOf;
+      const useAnnual = afterBalanceDate && ANNUAL_FIRST_FOR[r.type]!==false;
       const fromAnnual = useAnnual ? Math.min(left, r.hours) : 0;
       left-=fromAnnual;
       const rest=r.hours-fromAnnual;
@@ -1387,21 +1466,19 @@ function accCard(cls,label,hours){
 function quotaCardsHtml(id){
   const L=leaveLedger(id);
   const y = new Date().getFullYear();
-  const emp = EMPLOYEES[id]||{};
-  const baseH = baseAnnualHours(emp.hireDate);
-  const carryH = carryHoursOf(emp);
   const annualTotalDays = dayStr(L.annualQuota);
   const annualLeftDays  = dayStr(L.annualLeft);
   const annualUsedDays  = dayStr(L.yearAnnualUsed);
   const sickDays        = dayStr(L.yearSickHours);
   const bizDays         = L.bizDays;
-  const carryNote = carryH ? ` · ${t('q_carry')} ${dayStr(carryH)}${t('days_unit')}` : '';
+  const emp = EMPLOYEES[id]||{};
+  const nextAnn = nextAnniversaryText(emp.hireDate);
   return `
     <div class="quota-card">
       <div class="qt type-annual">${t('q_annual_this_year')}</div>
-      <div class="qtag">${t('q_can_carry')}</div>
-      <div class="qv">${annualTotalDays} ${t('days_unit')}</div>
-      <div class="qsub">${t('suggest_annual')} ${dayStr(baseH)}${t('days_unit')}${carryNote}<br>${t('q_remaining')}: ${annualLeftDays} ${t('days_unit')}（${L.annualLeft}/${L.annualQuota} ${t('hours_unit')}）</div>
+      <div class="qtag">${t('q_annual_remaining')}</div>
+      <div class="qv">${annualLeftDays} ${t('days_unit')}</div>
+      <div class="qsub">${L.annualLeft} ${t('hours_unit')} · ${nextAnn}</div>
     </div>
     <div class="quota-card">
       <div class="qt type-annual">${t('q_annual_used_year')}</div>
@@ -2162,7 +2239,7 @@ document.getElementById('modalSave').onclick=async ()=>{
 
 /* --- 員工設定（可新增、可改編號/密碼/照片/姓名）--- */
 function empEditForm(id, isNew){
-  const e = isNew ? {id:'',name:'',empNo:'',email:'',role:'employee',photoUrl:'',hireDate:'',quota:{annual:112,sick:0,personal:0}} : EMPLOYEES[id];
+  const e = isNew ? {id:'',name:'',empNo:'',email:'',role:'employee',photoUrl:'',hireDate:'',quota:{annualRemainingHours:0,sick:0,personal:0}} : EMPLOYEES[id];
   const key = isNew ? 'new' : id;
   return `<div class="subcard" id="edit_${key}" style="display:${isNew?'block':'none'};">
       <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
@@ -2190,15 +2267,14 @@ function empEditForm(id, isNew){
             <span>${t('no_attendance')}</span>
           </label></div>
           <div class="field"><label>${t('hire_date')}</label><input type="date" id="hire_${key}" value="${e.hireDate||''}" onchange="updateAnnualPreview('${key}')"></div>
+          <div class="field"><label>${t('q_annual_remaining')}</label>
+            <input id="qar_${key}" type="number" min="0" step="0.5" value="${dayStr(leaveLedger(e.id||key).annualLeft)}" placeholder="0">
+            <div class="hint" style="margin-top:4px">${t('q_annual_auto_hint')}</div>
+          </div>
           <div class="field"><label>${t('q_annual_auto')}</label>
             <div id="qa_preview_${key}" style="padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:#f7f9fc;font-family:var(--mono);font-weight:700;color:var(--navy);">
               ${suggestedAnnualDays(e.hireDate)} ${t('days_unit')}（${baseAnnualHours(e.hireDate)} ${t('hours_unit')}）
             </div>
-            <div class="hint" style="margin-top:4px">${t('q_annual_auto_hint')}</div>
-          </div>
-          <div class="field"><label>${t('q_carry')}</label>
-            <input id="qc_${key}" type="number" min="0" step="0.5" value="${carryHoursOf(e)}" placeholder="0">
-            <div class="hint" style="margin-top:4px">${t('q_carry_hint')}</div>
           </div>
         </div>
       </div>
@@ -2264,7 +2340,8 @@ window.saveEmp=async (id)=>{
     noAttendance:document.getElementById('noatt_'+id).checked,
     hireDate:document.getElementById('hire_'+id).value||'',
     quota:{
-      carry: snapHalfHour(document.getElementById('qc_'+id).value),
+      annualRemainingHours: snapHalfHour((parseFloat(document.getElementById('qar_'+id).value)||0) * HOURS_PER_DAY),
+      annualBalanceAsOf: ymd(new Date()),
       sick:0, personal:0
     }
   };
@@ -2309,7 +2386,8 @@ window.addEmployee=async ()=>{
       noAttendance:document.getElementById('noatt_new').checked,
       hireDate:document.getElementById('hire_new').value||'',
       quota:{
-        carry: snapHalfHour((document.getElementById('qc_new')||{}).value),
+        annualRemainingHours: snapHalfHour((parseFloat((document.getElementById('qar_new')||{}).value)||0) * HOURS_PER_DAY),
+        annualBalanceAsOf: ymd(new Date()),
         sick:0, personal:0
       }
     });
