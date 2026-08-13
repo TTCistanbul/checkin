@@ -157,7 +157,7 @@
 
   .tabbar{ display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
   .quota-cards{ display:flex; gap:12px; flex-wrap:wrap; }
-  .quota-card{ flex:1; min-width:130px; border:1px solid var(--line); border-radius:8px; padding:14px; text-align:center; background:#fff; }
+  .quota-card{ flex:1; min-width:140px; border:1px solid var(--line); border-radius:8px; padding:14px; text-align:center; background:#fff; }
   .quota-card .qt{ font-size:12px; color:#5b6b78; margin-bottom:2px; }
   .quota-card .qtag{ font-size:10px; font-weight:700; letter-spacing:0.3px; margin-bottom:6px; display:inline-block;
                      padding:2px 8px; border-radius:10px; background:var(--navy-soft); color:var(--navy); }
@@ -646,7 +646,14 @@ const I18N = {
     rs_pending:"待審核", rs_approved:"已核准", rs_rejected:"已駁回",
     approve:"核准", reject:"駁回", reset:"改回待審", days_unit:"天",
     q_annual:"特休額度(時)", q_sick:"病假額度(時)", q_personal:"事假額度(時)",
+    q_annual_auto:"法定特休（依到職日自動計算）",
+    q_annual_auto_hint:"滿1年14天／滿5年20天／滿15年26天（土耳其勞動法）。未滿1年為0天。",
+    q_carry:"累積結轉（小時）",
+    q_carry_hint:"去年未休完可結轉至此；支援 0.5 小時（例如 4 = 0.5 天）。法定天數會自動加上此值。",
     q_remaining:"剩餘", q_accrued:"累計已請", done:"完成",
+    q_annual_this_year:"今年特休額度", q_can_carry:"可累積至下一年",
+    q_annual_used_year:"今年已請特休", q_sick_used_year:"今年已請病假",
+    q_biz_days_year:"今年出差天數",
     total_days:"當月出勤天數", sum_counted:"計入", sum_excluded:"未計入", select_emp:"選擇員工",
     st_holiday:"國定假日（有薪）", sum_holiday:"國定假日", half_day:"半天",
     export_month:"下載月份", export_one:"⬇ 下載這位員工 PDF", export_all:"⬇ 下載全部員工 PDF",
@@ -734,7 +741,14 @@ const I18N = {
     rs_pending:"Pending", rs_approved:"Approved", rs_rejected:"Rejected",
     approve:"Approve", reject:"Reject", reset:"Reset", days_unit:"d",
     q_annual:"Annual (h)", q_sick:"Sick (h)", q_personal:"Personal (h)",
+    q_annual_auto:"Statutory annual leave (from hire date)",
+    q_annual_auto_hint:"1–4 yrs: 14 days / 5–14 yrs: 20 days / 15+ yrs: 26 days (Turkish Labour Law). Under 1 year: 0.",
+    q_carry:"Carry-over (hours)",
+    q_carry_hint:"Unused leave from last year. Supports 0.5 h (e.g. 4 = 0.5 day). Added on top of statutory days.",
     q_remaining:"Remaining", q_accrued:"Accrued", done:"Done",
+    q_annual_this_year:"Annual leave this year", q_can_carry:"Can carry to next year",
+    q_annual_used_year:"Annual leave used this year", q_sick_used_year:"Sick leave used this year",
+    q_biz_days_year:"Business trip days this year",
     total_days:"Days worked this month", sum_counted:"Counted", sum_excluded:"Not counted", select_emp:"Select employee",
     st_holiday:"Public holiday ", sum_holiday:"Public holidays", half_day:"half day",
     export_month:"Month", export_one:"⬇ This employee (PDF)", export_all:"⬇ Everyone (PDF)",
@@ -868,11 +882,31 @@ function tenureText(hireDate){
   const y=Math.floor(mo/12), m=mo%12;
   return (y?`${y}${t('tenure_y')} `:'')+`${m}${t('tenure_m')}`;
 }
+/* 土耳其勞動法特休天數（依完整服務年資）
+   滿 1 年～未滿 5 年：14 天
+   滿 5 年～未滿 15 年：20 天
+   滿 15 年及以上：26 天
+   未滿 1 年：0 天 */
 function suggestedAnnualDays(hireDate){
   const mo=tenureMonths(hireDate);
   if(mo==null || mo<12) return 0;
   const y=Math.floor(mo/12);
   return y>=15 ? 26 : (y>=5 ? 20 : 14);
+}
+/* 法定特休時數（天 × 8），可再加「累積結轉」小時（支援 0.5） */
+function baseAnnualHours(hireDate){
+  return suggestedAnnualDays(hireDate) * HOURS_PER_DAY;
+}
+function carryHoursOf(emp){
+  if(!emp||!emp.quota) return 0;
+  const c = emp.quota.carry;
+  if(c==null || c==='') return 0;
+  const n = parseFloat(c);
+  return isNaN(n) ? 0 : Math.round(n*2)/2; // 對齊 0.5 小時
+}
+function annualQuotaHours(emp){
+  if(!emp) return 0;
+  return baseAnnualHours(emp.hireDate) + carryHoursOf(emp);
 }
 function daysToAnniversary(hireDate){
   const mo=tenureMonths(hireDate);
@@ -890,13 +924,18 @@ function tenureBadge(e){
     return `${txt} · <span style="color:#5b6b78">${t('anniv_soon').replace('%d',d)}</span>`;
   }
   const sug=suggestedAnnualDays(e.hireDate);
-  const cur=(e.quota&&e.quota.annual)||0;
-  const warn=(cur < sug*HOURS_PER_DAY)
-    ? ` · <span style="color:var(--warn)">⚠ ${t('quota_low').replace('%h', sug*HOURS_PER_DAY)}</span>` : '';
-  return `${txt} · ${t('suggest_annual')} ${sug} ${t('days_unit')}${warn}`;
+  const carry=carryHoursOf(e);
+  const carryTxt = carry ? ` + ${t('q_carry')} ${carry}${t('hours_unit')}` : '';
+  return `${txt} · ${t('suggest_annual')} ${sug} ${t('days_unit')}${carryTxt}`;
 }
 function rosterIds(){ return Object.keys(EMPLOYEES).filter(k=>!EMPLOYEES[k].noAttendance); }
-function quotaOf(empId,type){ const e=EMPLOYEES[empId]; return (e&&e.quota&&e.quota[type]!=null)?e.quota[type]:0; }
+/* 特休額度：依法定年資自動計算 + 可手動加「累積結轉」小時；其他假別仍讀 quota */
+function quotaOf(empId,type){
+  const e=EMPLOYEES[empId];
+  if(!e) return 0;
+  if(type==='annual') return annualQuotaHours(e);
+  return (e.quota && e.quota[type]!=null) ? e.quota[type] : 0;
+}
 /* 已核准的請假時數（依類別加總，未分攤前的原始值） */
 function usedLeaveHours(empId,type){
   return LEAVE_REQUESTS
@@ -905,15 +944,46 @@ function usedLeaveHours(empId,type){
 }
 /* ---- 休假帳本 ----
    規則：不管請哪一種假，一律先扣「特休（個人休假）」的剩餘額度；
-         特休扣完之後，超出的時數才依假別記到「病假／事假」的累計裡（累計沒有上限）。 */
+         特休扣完之後，超出的時數才依假別記到「病假／事假」的累計裡（累計沒有上限）。
+   另外額外統計「今年」已請特休／病假／出差天數，供老闆儀表板顯示。 */
 function accBucket(type){
   if(type==='sick_doc'||type==='sick') return 'sick_doc';
   return 'personal';
+}
+function currentYearPrefix(){
+  return String(new Date().getFullYear())+'-';
+}
+function isThisYear(dateStr){
+  return dateStr && String(dateStr).startsWith(currentYearPrefix());
+}
+/* 計算某員工今年被標記為公出（出差）的天數 */
+function countBizDaysThisYear(empId){
+  let n=0;
+  Object.keys(BIZ_MARKS).forEach(k=>{
+    if(!k.startsWith(empId+'|')) return;
+    const date=k.split('|')[1];
+    if(isThisYear(date)) n++;
+  });
+  return n;
+}
+/* 計算某員工今年被標記為「病假·有證明」的整天數（主控端標記） */
+function countSickMarkDaysThisYear(empId){
+  let n=0;
+  Object.keys(SICK_MARKS).forEach(k=>{
+    if(!k.startsWith(empId+'|')) return;
+    const date=k.split('|')[1];
+    if(isThisYear(date)) n++;
+  });
+  return n;
 }
 function leaveLedger(empId){
   const annualQuota=quotaOf(empId,'annual');
   let left=annualQuota;
   const acc={sick_doc:0, personal:0};
+  /* 今年已用（時數） */
+  let yearAnnualUsed=0;   // 今年從特休額度扣掉的時數
+  let yearSickHours=0;    // 今年病假時數（請假單，不扣特休）
+  let yearPersonalHours=0;
   LEAVE_REQUESTS
     .filter(r=>r.empId===empId && r.status==='approved')
     .sort((a,b)=> a.date===b.date ? a.reqId-b.reqId : (a.date<b.date?-1:1))
@@ -923,9 +993,21 @@ function leaveLedger(empId){
       left-=fromAnnual;
       const rest=r.hours-fromAnnual;
       if(rest>0) acc[accBucket(r.type)]+=rest;
+      if(isThisYear(r.date)){
+        yearAnnualUsed += fromAnnual;
+        if(r.type==='sick_doc'||r.type==='sick') yearSickHours += r.hours;
+        else if(r.type==='personal') yearPersonalHours += rest; // 超出特休的部分
+      }
     });
-  return { annualQuota, annualLeft:left, annualUsed:annualQuota-left,
-           sick_doc:acc.sick_doc, personal:acc.personal };
+  /* 主控端整天標記的病假也算進今年病假（以 1 天 = HOURS_PER_DAY 時） */
+  const sickMarkDays = countSickMarkDaysThisYear(empId);
+  yearSickHours += sickMarkDays * HOURS_PER_DAY;
+  const bizDays = countBizDaysThisYear(empId);
+  return {
+    annualQuota, annualLeft:left, annualUsed:annualQuota-left,
+    sick_doc:acc.sick_doc + sickMarkDays*HOURS_PER_DAY, personal:acc.personal,
+    yearAnnualUsed, yearSickHours, yearPersonalHours, bizDays
+  };
 }
 function remainingLeave(empId){ return leaveLedger(empId).annualLeft; }
 /* ---- 時間工具 ---- */
@@ -1276,7 +1358,17 @@ function populateReqTypeSelect(){
   const sel=document.getElementById('reqType');
   sel.innerHTML=LEAVE_TYPES.map(ty=>`<option value="${ty}">${typeLabel(ty)}</option>`).join('');
 }
-function dayStr(h){ return (h/HOURS_PER_DAY).toFixed(h%HOURS_PER_DAY?1:0); }
+/* 小時 → 天（保留最多 1 位小數，支援 0.5 天 = 4 小時） */
+function dayStr(h){
+  const d = Math.round((Number(h)||0) / HOURS_PER_DAY * 10) / 10;
+  return (d % 1 === 0) ? String(d) : d.toFixed(1);
+}
+/* 對齊 0.5 小時 */
+function snapHalfHour(h){
+  const n = parseFloat(h);
+  if(isNaN(n)) return 0;
+  return Math.round(n * 2) / 2;
+}
 function statCard(labelKey,count){
   return `<div class="quota-card">
       <div class="qt">${t(labelKey)}</div>
@@ -1291,17 +1383,44 @@ function accCard(cls,label,hours){
       <div class="qsub">${dayStr(hours)} ${t('days_unit')}</div>
     </div>`;
 }
+/* 老闆要看的四大指標：今年特休額度（可累積）、今年已請特休、今年已請病假、今年出差天數 */
 function quotaCardsHtml(id){
   const L=leaveLedger(id);
+  const y = new Date().getFullYear();
+  const emp = EMPLOYEES[id]||{};
+  const baseH = baseAnnualHours(emp.hireDate);
+  const carryH = carryHoursOf(emp);
+  const annualTotalDays = dayStr(L.annualQuota);
+  const annualLeftDays  = dayStr(L.annualLeft);
+  const annualUsedDays  = dayStr(L.yearAnnualUsed);
+  const sickDays        = dayStr(L.yearSickHours);
+  const bizDays         = L.bizDays;
+  const carryNote = carryH ? ` · ${t('q_carry')} ${dayStr(carryH)}${t('days_unit')}` : '';
   return `
     <div class="quota-card">
-      <div class="qt type-annual">${t('type_annual')}</div>
-      <div class="qtag">${t('q_remaining')}</div>
-      <div class="qv ${L.annualLeft<=HOURS_PER_DAY?'low':''}">${dayStr(L.annualLeft)} ${t('days_unit')}</div>
-      <div class="qsub">${L.annualLeft} / ${L.annualQuota} ${t('hours_unit')}</div>
+      <div class="qt type-annual">${t('q_annual_this_year')}</div>
+      <div class="qtag">${t('q_can_carry')}</div>
+      <div class="qv">${annualTotalDays} ${t('days_unit')}</div>
+      <div class="qsub">${t('suggest_annual')} ${dayStr(baseH)}${t('days_unit')}${carryNote}<br>${t('q_remaining')}: ${annualLeftDays} ${t('days_unit')}（${L.annualLeft}/${L.annualQuota} ${t('hours_unit')}）</div>
     </div>
-    ${accCard('type-sick_doc', t('type_sick_doc'), L.sick_doc)}
-    ${accCard('type-personal', t('type_personal'), L.personal)}`;
+    <div class="quota-card">
+      <div class="qt type-annual">${t('q_annual_used_year')}</div>
+      <div class="qtag acc">${y}</div>
+      <div class="qv">${annualUsedDays} ${t('days_unit')}</div>
+      <div class="qsub">${L.yearAnnualUsed} ${t('hours_unit')}</div>
+    </div>
+    <div class="quota-card">
+      <div class="qt type-sick_doc">${t('q_sick_used_year')}</div>
+      <div class="qtag acc">${y}</div>
+      <div class="qv">${sickDays} ${t('days_unit')}</div>
+      <div class="qsub">${L.yearSickHours} ${t('hours_unit')}</div>
+    </div>
+    <div class="quota-card">
+      <div class="qt" style="color:#1665c0">${t('q_biz_days_year')}</div>
+      <div class="qtag acc">${y}</div>
+      <div class="qv">${bizDays} ${t('days_unit')}</div>
+      <div class="qsub">${t('st_business')}</div>
+    </div>`;
 }
 function renderEmpLeavePage(id){
   populateReqTypeSelect();
@@ -2070,8 +2189,17 @@ function empEditForm(id, isNew){
             <input type="checkbox" id="noatt_${key}" ${e.noAttendance?'checked':''} style="width:auto;margin:0">
             <span>${t('no_attendance')}</span>
           </label></div>
-          <div class="field"><label>${t('hire_date')}</label><input type="date" id="hire_${key}" value="${e.hireDate||''}"></div>
-          <div class="field"><label>${t('q_annual')}</label><input id="qa_${key}" type="number" min="0" step="8" value="${(e.quota&&e.quota.annual!=null)?e.quota.annual:112}"></div>
+          <div class="field"><label>${t('hire_date')}</label><input type="date" id="hire_${key}" value="${e.hireDate||''}" onchange="updateAnnualPreview('${key}')"></div>
+          <div class="field"><label>${t('q_annual_auto')}</label>
+            <div id="qa_preview_${key}" style="padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:#f7f9fc;font-family:var(--mono);font-weight:700;color:var(--navy);">
+              ${suggestedAnnualDays(e.hireDate)} ${t('days_unit')}（${baseAnnualHours(e.hireDate)} ${t('hours_unit')}）
+            </div>
+            <div class="hint" style="margin-top:4px">${t('q_annual_auto_hint')}</div>
+          </div>
+          <div class="field"><label>${t('q_carry')}</label>
+            <input id="qc_${key}" type="number" min="0" step="0.5" value="${carryHoursOf(e)}" placeholder="0">
+            <div class="hint" style="margin-top:4px">${t('q_carry_hint')}</div>
+          </div>
         </div>
       </div>
       <div style="display:flex; gap:10px; margin-top:6px;">
@@ -2135,12 +2263,23 @@ window.saveEmp=async (id)=>{
     photoUrl:document.getElementById('photodata_'+id).value,
     noAttendance:document.getElementById('noatt_'+id).checked,
     hireDate:document.getElementById('hire_'+id).value||'',
-    quota:{ annual:parseInt(document.getElementById('qa_'+id).value,10)||0, sick:0, personal:0 }
+    quota:{
+      carry: snapHalfHour(document.getElementById('qc_'+id).value),
+      sick:0, personal:0
+    }
   };
   try{
     await DB.collection('employees').doc(id).set(patch,{merge:true});
     msg.className='msg ok'; msg.textContent=t('saved');
   }catch(err){ console.error('[saveEmp]',err); msg.textContent=t('save_fail'); }
+};
+window.updateAnnualPreview=(key)=>{
+  const hireEl=document.getElementById('hire_'+key);
+  const prev=document.getElementById('qa_preview_'+key);
+  if(!hireEl||!prev) return;
+  const days=suggestedAnnualDays(hireEl.value);
+  const hrs=baseAnnualHours(hireEl.value);
+  prev.textContent=`${days} ${t('days_unit')}（${hrs} ${t('hours_unit')}）`;
 };
 
 window.addEmployee=async ()=>{
@@ -2169,7 +2308,10 @@ window.addEmployee=async ()=>{
       photoUrl:document.getElementById('photodata_new').value,
       noAttendance:document.getElementById('noatt_new').checked,
       hireDate:document.getElementById('hire_new').value||'',
-      quota:{ annual:parseInt(document.getElementById('qa_new').value,10)||0, sick:0, personal:0 }
+      quota:{
+        carry: snapHalfHour((document.getElementById('qc_new')||{}).value),
+        sick:0, personal:0
+      }
     });
     document.getElementById('addFormSlot').innerHTML='';
   }catch(err){
