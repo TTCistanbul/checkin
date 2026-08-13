@@ -282,16 +282,19 @@
       </div>
       <div class="ip-banner" id="ipBanner">…</div>
       <div class="field">
-        <label data-i18n="login_user">姓名（或公司 Email）</label>
-        <input type="text" id="loginId" placeholder="osman" autocomplete="username" autocapitalize="none">
+        <label data-i18n="login_user">公司 Email</label>
+        <input type="email" id="loginId" placeholder="name@company.com" autocomplete="username" autocapitalize="none">
       </div>
       <div class="field">
         <label data-i18n="login_pw_email">密碼</label>
-        <input type="password" id="loginPw" placeholder="name@company.com" autocomplete="current-password" autocapitalize="none">
+        <input type="password" id="loginPw" placeholder="" autocomplete="current-password" autocapitalize="none">
       </div>
       <button class="btn-primary" id="loginBtn" data-i18n="login_btn">登入</button>
       <div class="msg err" id="loginMsg"></div>
-      <div class="demo-accounts" data-i18n="login_help">用你的名字登入（大小寫不拘），也可以直接打自己的公司 Email。密碼忘記了請找主控端重寄。</div>
+      <div style="text-align:right;margin-top:2px;">
+        <a href="#" id="forgotPwLink" style="font-size:12px;color:#5b6b78;text-decoration:underline;" data-i18n="forgot_pw">忘記密碼？</a>
+      </div>
+      <div class="demo-accounts" data-i18n="login_help">請用完整的公司 Email 登入。忘記密碼可點上方連結重寄。</div>
     </div>
   </div>
 
@@ -420,15 +423,7 @@
           </div>
         </div>
         <div class="cal-grid" id="calGrid"></div>
-        <div class="cal-total">
-          <span data-i18n="total_days">當月出勤天數</span>
-          <b id="calTotal">0</b>
-        </div>
-        <div class="cal-total" style="margin-top:8px;">
-          <span data-i18n="total_paid_days">公司支薪天數</span>
-          <b id="calPaid">0</b>
-        </div>
-        <p class="hint" id="calBreak"></p>
+        <div class="quota-cards" id="calStats" style="margin-top:14px;"></div>
         <div id="calWarn"></div>
         <div class="legend">
           <span><i class="dot green"></i><span data-i18n="lg_green">出勤完整（有上、下班紀錄）</span></span>
@@ -438,9 +433,7 @@
           <span><i class="dot" style="background:#c07a1a"></i><span data-i18n="st_sick_doc">病假·有證明</span></span>
           <span><i class="dot" style="background:#8f1d10"></i><span data-i18n="st_absent">曠職</span></span>
           <span><i class="dot" style="background:#5b3fa8"></i><span data-i18n="st_holiday">國定假日（有薪）</span></span>
-          <span><b>✓</b>&nbsp;<span data-i18n="lg_counted">有打勾的日子才計入出勤天數</span></span>
         </div>
-        <p class="hint" data-i18n="month_hint">休假／病假／公出請在「每日狀況」分頁編輯；細部請假時數用「請假審核」分頁管理。</p>
       </div>
 
       <!-- Daily status -->
@@ -485,7 +478,10 @@
 
       <!-- Leave review -->
       <div class="card tabpanel" id="panel-leavereview" style="display:none;">
-        <p class="section-title" data-i18n="admin_leave_title">請假審核 — 全部假單</p>
+        <p class="section-title" data-i18n="balance_dash_title">員工休假餘額</p>
+        <div id="leaveBalanceDash"></div>
+        <div class="divider"></div>
+        <p class="section-title" data-i18n="admin_leave_title">請假審核</p>
         <div class="field" style="max-width:220px;">
           <label data-i18n="filter_status">狀態篩選</label>
           <select id="reqFilter">
@@ -496,7 +492,6 @@
           </select>
         </div>
         <div class="tbl-scroll"><table id="allReqTable"></table></div>
-        <p class="hint" data-i18n="review_hint">核准後才會從對應額度扣抵；駁回不扣。三種額度各自獨立計算。</p>
       </div>
     </div>
   </div>
@@ -598,8 +593,10 @@ const I18N = {
   'zh-Hant':{
     emp_id:"員工編號（四碼）", password:"密碼", login_btn:"登入", logout:"登出",
     sys_title:"員工打卡系統",
-    login_user:"姓名（或公司 Email）", login_pw_email:"密碼",
-    login_help:"用你的名字登入（大小寫不拘），也可以直接打自己的公司 Email。密碼忘記了請找主控端重寄。",
+    login_user:"公司 Email", login_pw_email:"密碼",
+    login_help:"請用完整的公司 Email 登入。忘記密碼可點上方連結重寄。",
+    forgot_pw:"忘記密碼？", need_email_first:"請先在上面欄位輸入你的公司 Email",
+    fp_sent:"已寄出重設密碼信，請至信箱查收（含垃圾信匣）。",
     ip_checking:"⏳ 正在確認網路位置…",
     ip_ok:"✅ 公司網路，可以打卡",
     ip_blocked:"🔒 非公司網路，無法登入打卡。你目前的 IP：",
@@ -615,7 +612,6 @@ const I18N = {
     tab_monthly:"月總表", tab_daily:"每日狀況", tab_emp:"員工設定",
     admin_month_title:"月總表 — 每人每日工時", select_month:"選擇月份",
     lg_green:"出勤完整（有上、下班紀錄）", lg_red:"缺打卡（紅字）", lg_leave:"休假（主控端標記）",
-    month_hint:"出勤天數＝正常上班＋公出。公司支薪天數另外加上特休、國定假日與病假（有證明）——本公司優於勞基法，有看診證明的病假照給薪。沒有醫生證明的缺席一律記為曠職且不支薪。狀態請在「每日狀況」分頁編輯。",
     admin_daily_title:"每日打卡狀況", select_date:"選擇日期",
     daily_hint:"下方的橫列紀錄可用「選擇員工」切換，或直接點表格任一列。「編輯」可改上／下班時間與狀態。",
     admin_emp_title:"員工資料設定（照片 / 姓名 / 編號）",
@@ -638,9 +634,8 @@ const I18N = {
     etab_clock:"打卡", etab_leave:"請假", tab_leave_review:"請假審核",
     leave_balance_title:"我的休假額度", apply_leave:"申請請假", leave_type:"請假類別",
     from_time:"起", to_time:"迄", submit_request:"送出申請", my_requests:"我的假單",
-    admin_leave_title:"請假審核 — 全部假單", filter_status:"狀態篩選",
+    admin_leave_title:"請假審核", filter_status:"狀態篩選", balance_dash_title:"員工休假餘額",
     f_all:"全部", f_pending:"待審核", f_approved:"已核准", f_rejected:"已駁回",
-    review_hint:"核准後才會扣抵，駁回不扣。病假（有證明）不動特休、公司照給薪，只做累計；特休與事假先扣特休剩餘額度，扣完之後超出的時數才記入事假累計。沒有醫生證明的缺席請在「每日狀況」標記為曠職。",
     type_annual:"特休", type_sick:"病假", type_personal:"事假",
     type_sick_doc:"病假（有證明）", type_absent:"曠職",
     m_sick:"病假", st_sick:"病假", st_missing:"缺卡",
@@ -676,11 +671,8 @@ const I18N = {
     reset_sent:"重設密碼信已寄出：", deleted_note:"員工資料已刪除。Auth 帳號請到 Firebase Console 的 Authentication 一併移除。",
     change_pw:"更改密碼", new_pw:"新密碼（至少 6 碼）", pw_changed:"密碼已更新。",
     pw_relogin:"為了安全，請先登出重新登入再改密碼。",
-    lg_counted:"打勾＝公司要支薪的日子",
-    sum_paid:"公司支薪", sum_sick:"其中病假（有證明）",
-    sgk_claimable:"可向 SGK 請領", sgk_none:"前2天不可請領",
     total_paid_days:"公司支薪天數",
-    sum_unpaid:"無薪", warn_absent2:"⚠ 本月有連續 2 個工作日曠職。依土耳其勞動法第 25/II-g 條，這可能構成雇主正當解雇事由（不需給資遣費）。實際處理前請先與當地法務／會計確認。",
+    warn_absent2:"⚠ 本月有連續 2 個工作日曠職。依土耳其勞動法第 25/II-g 條，這可能構成雇主正當解雇事由（不需給資遣費）。實際處理前請先與當地法務／會計確認。",
     warn_absent3:"⚠ 本月曠職已達 3 個工作日。依土耳其勞動法第 25/II-g 條，一個月內累計 3 個工作日曠職也可能構成正當解雇事由。請與當地法務／會計確認。",
     leave_rule:"病假（有證明）不扣特休、公司照給薪，時數只做累計；第 3 天起公司可再向 SGK 請領 2/3 日薪。特休與事假一律先扣特休剩餘額度，扣完之後超出的時數才進事假累計。沒有醫生證明的缺席不算病假，會被記為曠職且不支薪。",
     date:"日期", employee:"員工", note_opt:"備註（選填）",
@@ -689,8 +681,10 @@ const I18N = {
   'en':{
     emp_id:"Employee ID (4 digits)", password:"Password", login_btn:"Log In", logout:"Log Out",
     sys_title:"Staff Check-In",
-    login_user:"Name (or company email)", login_pw_email:"Password",
-    login_help:"Log in with your name (not case-sensitive) or your company email. Ask the admin to resend your password if you forget it.",
+    login_user:"Company Email", login_pw_email:"Password",
+    login_help:"Log in with your full company email. Forgot your password? Use the link above to get a reset email.",
+    forgot_pw:"Forgot password?", need_email_first:"Please enter your company email above first",
+    fp_sent:"A password reset email has been sent — please check your inbox (and spam folder).",
     ip_checking:"⏳ Checking your network…",
     ip_ok:"✅ Office network — you can clock in",
     ip_blocked:"🔒 Not the office network, login is disabled. Your IP: ",
@@ -706,7 +700,6 @@ const I18N = {
     tab_monthly:"Monthly", tab_daily:"Daily", tab_emp:"Employees",
     admin_month_title:"Monthly overview — daily hours per person", select_month:"Month",
     lg_green:"Complete attendance (clock-in & clock-out on file)", lg_red:"Missing punch (red)", lg_leave:"Leave (marked by admin)",
-    month_hint:"Days worked = normal attendance + business trips. Paid days also include annual leave, public holidays and sick leave with a doctor's report — this office pays for certified sick leave, which is better than the statutory minimum. An absence without a report is recorded as unpaid absenteeism. Edit statuses on the Daily tab.",
     admin_daily_title:"Daily attendance", select_date:"Date",
     daily_hint:"Switch the row-style log below with the employee selector, or just click any row here. Use Edit to change times or status.",
     admin_emp_title:"Employee profiles (photo / name / ID)",
@@ -729,9 +722,8 @@ const I18N = {
     etab_clock:"Clock", etab_leave:"Leave", tab_leave_review:"Leave review",
     leave_balance_title:"My leave balance", apply_leave:"Apply for leave", leave_type:"Leave type",
     from_time:"From", to_time:"To", submit_request:"Submit", my_requests:"My requests",
-    admin_leave_title:"Leave review — all requests", filter_status:"Filter status",
+    admin_leave_title:"Leave review", filter_status:"Filter status", balance_dash_title:"Employee leave balances",
     f_all:"All", f_pending:"Pending", f_approved:"Approved", f_rejected:"Rejected",
-    review_hint:"Only approved requests count; rejected ones don't. Sick leave with a report never touches the annual balance; annual and personal leave use annual first. An absence without a report should be marked as absenteeism on the Daily tab.",
     type_annual:"Annual", type_sick:"Sick", type_personal:"Personal",
     type_sick_doc:"Sick (with report)", type_absent:"Absent",
     m_sick:"Sick leave", st_sick:"Sick", st_missing:"Missing",
@@ -767,11 +759,8 @@ const I18N = {
     reset_sent:"Password reset email sent to ", deleted_note:"Employee profile deleted. Remove the Auth user in the Firebase Console as well.",
     change_pw:"Change password", new_pw:"New password (min 6 chars)", pw_changed:"Password updated.",
     pw_relogin:"For security, please sign out and back in before changing your password.",
-    lg_counted:"A tick means the company pays for that day",
-    sum_paid:"Paid by company", sum_sick:"of which sick (with report)",
-    sgk_claimable:"claimable from SGK", sgk_none:"first 2 days not claimable",
     total_paid_days:"Paid days this month",
-    sum_unpaid:"Unpaid", warn_absent2:"⚠ Two consecutive working days of absence this month. Under Article 25/II-g of the Turkish Labour Law this may give the employer just cause for termination without severance. Confirm with local legal/accounting before acting.",
+    warn_absent2:"⚠ Two consecutive working days of absence this month. Under Article 25/II-g of the Turkish Labour Law this may give the employer just cause for termination without severance. Confirm with local legal/accounting before acting.",
     warn_absent3:"⚠ Three working days of absence this month. Under Article 25/II-g of the Turkish Labour Law three working days of absence within one month may also give just cause for termination. Confirm with local legal/accounting.",
     leave_rule:"Sick leave with a doctor's report is paid by the company and does not touch your annual balance — the hours are only tallied. From the 3rd day the company can also claim 2/3 of the daily wage from SGK. Annual and personal leave draw on your remaining annual balance first. An absence without a doctor's report is not sick leave — it is unpaid absenteeism.",
     date:"Date", employee:"Employee", note_opt:"Note (optional)",
@@ -1040,29 +1029,17 @@ function ipBlockMessage(){
   return t('ip_need_office')+(CLIENT_IP||'?');
 }
 
-/* ---- 登入：帳號＝姓名（或直接打 email），密碼由 Firebase Authentication 驗證 ---- */
-/* 名字 -> email：讀 Firestore 的 roster/index（此文件開放未登入讀取，只放姓名與信箱） */
-async function resolveEmail(input){
-  const v=(input||'').trim();
-  if(!v) return null;
-  if(v.indexOf('@')>=0) return v.toLowerCase();
-  try{
-    const doc=await DB.collection('roster').doc('index').get();
-    const map=(doc.exists && doc.data().map)||{};
-    return map[v.toLowerCase()]||null;
-  }catch(err){ console.error('[roster]',err); return null; }
-}
+/* ---- 登入：帳號＝公司 Email，密碼由 Firebase Authentication 驗證 ---- */
+/* 不再用姓名對照 email（roster 已停用，避免未登入也能讀到全體姓名與信箱） */
 async function doLogin(){
-  const who=document.getElementById('loginId').value.trim();
+  const email=(document.getElementById('loginId').value||'').trim().toLowerCase();
   const pw=document.getElementById('loginPw').value;
   const msg=document.getElementById('loginMsg');
   const btn=document.getElementById('loginBtn');
   msg.className='msg err'; msg.textContent='';
-  if(!who || !pw){ msg.textContent=t('login_fail'); return; }
+  if(!email || !pw){ msg.textContent=t('login_fail'); return; }
   btn.disabled=true; btn.textContent=t('signing_in');
   try{
-    const email=await resolveEmail(who);
-    if(!email){ msg.textContent=t('login_fail'); return; }
     await AUTH.signInWithEmailAndPassword(email,pw);
     /* 之後交給 onAuthStateChanged 處理 */
   }catch(err){
@@ -1072,6 +1049,24 @@ async function doLogin(){
     btn.disabled=false; btn.textContent=t('login_btn');
   }
 }
+
+/* ---- 忘記密碼：登入頁直接寄重設信，不需要先登入 ---- */
+window.forgotPassword=async ()=>{
+  const email=(document.getElementById('loginId').value||'').trim().toLowerCase();
+  const msg=document.getElementById('loginMsg');
+  msg.className='msg err'; msg.textContent='';
+  if(!email || email.indexOf('@')<0){ msg.textContent=t('need_email_first'); return; }
+  try{
+    await AUTH.sendPasswordResetEmail(email);
+    msg.className='msg ok'; msg.textContent=t('fp_sent');
+  }catch(err){
+    console.error('[reset]',err);
+    if(err.code==='auth/network-request-failed'){ msg.textContent=t('net_error'); return; }
+    /* 帳號不存在等其他錯誤仍顯示已寄出，避免洩漏哪些 Email 有註冊 */
+    msg.className='msg ok'; msg.textContent=t('fp_sent');
+  }
+};
+document.getElementById('forgotPwLink').onclick=(e)=>{ e.preventDefault(); forgotPassword(); };
 
 /* ---- 登入狀態改變 ---- */
 let UNSUBS=[];
@@ -1282,6 +1277,12 @@ function populateReqTypeSelect(){
   sel.innerHTML=LEAVE_TYPES.map(ty=>`<option value="${ty}">${typeLabel(ty)}</option>`).join('');
 }
 function dayStr(h){ return (h/HOURS_PER_DAY).toFixed(h%HOURS_PER_DAY?1:0); }
+function statCard(labelKey,count){
+  return `<div class="quota-card">
+      <div class="qt">${t(labelKey)}</div>
+      <div class="qv">${count} ${t('days_unit')}</div>
+    </div>`;
+}
 function accCard(cls,label,hours){
   return `<div class="quota-card">
       <div class="qt ${cls}">${label}</div>
@@ -1485,7 +1486,22 @@ function updatePendingBadge(){
   b.textContent=n;
   b.style.display = n>0 ? 'inline-block' : 'none';
 }
+function renderLeaveBalanceDash(){
+  const box=document.getElementById('leaveBalanceDash');
+  if(!box) return;
+  box.innerHTML = rosterIds().map(id=>{
+    const e=EMPLOYEES[id];
+    return `<div class="subcard">
+      <div class="emp-row" style="border-bottom:none;padding:0 0 10px;">
+        <div class="avatar">${avatarInner(e.photoUrl)}</div>
+        <div class="emp-info"><div class="n">${e.name||'(—)'}</div><div class="e">#${e.empNo||''}</div></div>
+      </div>
+      <div class="quota-cards">${quotaCardsHtml(id)}</div>
+    </div>`;
+  }).join('');
+}
 function renderAllRequests(){
+  renderLeaveBalanceDash();
   updatePendingBadge();
   const filter=document.getElementById('reqFilter').value;
   const list=LEAVE_REQUESTS.filter(r=>filter==='all'||r.status===filter).sort((a,b)=>b.reqId-a.reqId);
@@ -1640,15 +1656,6 @@ function renderMonthCalendar(){
   }
   document.getElementById('calGrid').innerHTML=cells;
 
-  /* --- 病假(有證明)：每一段連續期間前 SGK_WAIT_DAYS 天無給付，之後由 SGK 給付 2/3 日薪 --- */
-  let sickWait=0, sickPaid=0, run=0;
-  for(let day=1; day<=dim+1; day++){
-    if(stByDay[day]==='sick_doc'){ run++; }
-    else if(run>0){
-      const w=Math.min(run,SGK_WAIT_DAYS);
-      sickWait+=w; sickPaid+=run-w; run=0;
-    }
-  }
   /* --- 曠職：只看工作日（一～五）的連續天數 --- */
   let absRun=0, absMaxRun=0, absWorkdays=0;
   for(let day=1; day<=dim; day++){
@@ -1660,17 +1667,10 @@ function renderMonthCalendar(){
     else absRun=0;
   }
 
-  const days=cnt.work+cnt.biz;
-  const paid=cnt.work+cnt.biz+cnt.leave+cnt.holiday+cnt.holidayHalf+cnt.sick_doc;
-  document.getElementById('calTotal').textContent=`${days} ${t('days_unit')}`;
-  document.getElementById('calPaid').textContent=`${paid} ${t('days_unit')}`;
-  const co = (LANG==='en')?': ':'：', sep=(LANG==='en')?'  |  ':'　｜　';
-  const halfTxt = cnt.holidayHalf?` +${cnt.holidayHalf} ${t('half_day')}`:'';
-  const d1=`${t('sum_paid')}${co}${t('m_work')} ${cnt.work} · ${t('st_business')} ${cnt.biz} · ${t('st_leave')} ${cnt.leave} · ${t('sum_holiday')} ${cnt.holiday}${halfTxt} · ${t('st_sick_doc')} ${cnt.sick_doc}`;
-  const pO=(LANG==='en')?' (':'（', pC=(LANG==='en')?')':'）';
-  const d2=`${t('sum_sick')}${co}${cnt.sick_doc} ${t('days_unit')}${pO}${t('sgk_claimable')} ${sickPaid} · ${t('sgk_none')} ${sickWait}${pC}`;
-  const d3=`${t('sum_unpaid')}${co}${t('st_absent')} ${cnt.absent} · ${t('st_missing')} ${cnt.missing}`;
-  document.getElementById('calBreak').innerHTML = d1+sep+d2+sep+d3;
+  document.getElementById('calStats').innerHTML = statCard('m_work',cnt.work)
+    + statCard('st_business',cnt.biz)
+    + statCard('st_sick_doc',cnt.sick_doc)
+    + statCard('st_leave',cnt.leave);
 
   const warn=document.getElementById('calWarn');
   if(absMaxRun>=2)        warn.innerHTML=`<div class="warn-box">${t('warn_absent2')}</div>`;
@@ -2120,14 +2120,6 @@ window.handlePhoto=(key,input)=>{
   reader.readAsDataURL(file);
 };
 
-/* roster/index：登入頁用「姓名 -> email」對照，內容只有姓名與信箱 */
-async function syncRoster(){
-  const map={};
-  Object.values(EMPLOYEES).forEach(e=>{ if(e.name&&e.email) map[e.name.trim().toLowerCase()]=e.email.trim().toLowerCase(); });
-  try{ await DB.collection('roster').doc('index').set({map}); }
-  catch(err){ console.error('[roster sync]',err); }
-}
-
 window.saveEmp=async (id)=>{
   const e=EMPLOYEES[id];
   const msg=document.getElementById('editMsg_'+id);
@@ -2147,7 +2139,6 @@ window.saveEmp=async (id)=>{
   };
   try{
     await DB.collection('employees').doc(id).set(patch,{merge:true});
-    await syncRoster();
     msg.className='msg ok'; msg.textContent=t('saved');
   }catch(err){ console.error('[saveEmp]',err); msg.textContent=t('save_fail'); }
 };
@@ -2180,7 +2171,6 @@ window.addEmployee=async ()=>{
       hireDate:document.getElementById('hire_new').value||'',
       quota:{ annual:parseInt(document.getElementById('qa_new').value,10)||0, sick:0, personal:0 }
     });
-    await syncRoster();
     document.getElementById('addFormSlot').innerHTML='';
   }catch(err){
     console.error('[addEmployee]',err);
@@ -2196,7 +2186,6 @@ window.deleteEmp=async (id)=>{
   if(!confirm(t('confirm_delete'))) return;
   try{
     await DB.collection('employees').doc(id).delete();
-    await syncRoster();
     if(DRILL_ID===id) DRILL_ID=null;
     if(CAL_EMP===id) CAL_EMP=null;
     alert(t('deleted_note'));
