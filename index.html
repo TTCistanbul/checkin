@@ -365,7 +365,6 @@
         <div class="card">
           <p class="section-title" data-i18n="leave_balance_title">我的休假額度</p>
           <div class="quota-cards" id="empQuotaCards"></div>
-          <p class="hint" data-i18n="leave_rule">請假一律先扣特休的剩餘額度；特休用完之後，超出的時數才會記到病假／事假的累計，累計沒有上限。</p>
         </div>
         <div class="card">
           <p class="section-title" data-i18n="apply_leave">申請請假</p>
@@ -1472,12 +1471,14 @@ function quotaCardsHtml(id){
   const sickDays        = dayStr(L.yearSickHours);
   const bizDays         = L.bizDays;
   const emp = EMPLOYEES[id]||{};
-  const nextAnn = nextAnniversaryText(emp.hireDate);
+  const hireTxt = emp.hireDate
+    ? `${t('hire_date')} ${emp.hireDate}`
+    : t('no_hire_date');
   return `
     <div class="quota-card">
       <div class="qt type-annual">${t('q_annual_this_year')}</div>
       <div class="qv">${annualLeftDays} ${t('days_unit')}</div>
-      <div class="qsub">${L.annualLeft} ${t('hours_unit')} · ${nextAnn}</div>
+      <div class="qsub">${L.annualLeft} ${t('hours_unit')} · ${hireTxt}</div>
     </div>
     <div class="quota-card">
       <div class="qt type-annual">${t('q_annual_used_year')}</div>
