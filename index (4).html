@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>員工打卡系統 / Staff Check-In</title>
+<style>
+  :root{
+    --ink:#1c2b3a;
+    --paper:#eef1f5;
+    --line:#d8dee6;
+    --navy:#0b3a7a;          /* LOGO 深藍 */
+    --navy-soft:#e7edf5;
+    --good:#2e8b57;
+    --good-bg:#e4f4ea;
+    --bad:#c0392b;
+    --warn:#b8860b;
+    --leave:#7a5cc0;         /* 休假紫 */
+    --leave-bg:#efeafa;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    background:var(--paper);
+    position:relative;
+  }
+  /* 淡淡 LOGO 背景（浮水印），登入前後都在 */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:var(--logo-url);
+    background-repeat:no-repeat;
+    background-position:left -60px center;
+    background-size:min(360px,40vw);
+    opacity:0.06;
+    pointer-events:none;
+    z-index:0;
+  }
+  .page{ position:relative; z-index:1; padding:28px 16px 60px; display:flex; justify-content:center; }
+  .wrap{ width:100%; max-width:960px; }
+
+  .demo-flag{
+    background:#fff4d6; border:1px solid #e6c65a; color:#7a5c00;
+    font-size:12px; padding:8px 14px; border-radius:6px; margin-bottom:16px;
+    text-align:center; letter-spacing:0.3px;
+  }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:20px; padding-bottom:14px; border-bottom:2px solid var(--navy);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand img{ width:34px; height:34px; }
+  .brand h1{ font-size:18px; margin:0; letter-spacing:0.5px; color:var(--navy); }
+  .topbar-right{ display:flex; align-items:center; gap:12px; }
+  .clock{ font-family:var(--mono); font-size:13px; color:#5b6b78; }
+  .lang-toggle,.role-badge{
+    font-size:11px; border:1px solid var(--line); border-radius:20px;
+    padding:4px 11px; background:#fff; font-weight:700; cursor:pointer; width:auto;
+  }
+  .role-badge{ cursor:default; background:var(--navy); color:#fff; border-color:var(--navy); }
+
+  .card{
+    background:rgba(255,255,255,0.94); border:1px solid var(--line); border-radius:8px;
+    padding:24px; margin-bottom:16px; box-shadow:0 1px 3px rgba(20,40,70,0.04);
+  }
+  .section-title{ font-size:14px; font-weight:800; letter-spacing:0.4px; margin:0 0 16px; color:var(--navy); }
+  .hint{ font-size:12px; color:#8a94a0; margin-top:8px; line-height:1.6; }
+  .divider{ height:1px; background:var(--line); margin:18px 0; }
+
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:#5b6b78; margin-bottom:6px; }
+  .field input,.field select{
+    width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:6px;
+    font-size:15px; background:#fdfefe; font-family:inherit;
+  }
+  .field input:focus,.field select:focus{ outline:none; border-color:var(--navy); }
+
+  button{ padding:12px; border:none; border-radius:6px; cursor:pointer; font-size:14px; font-weight:700; }
+  .btn-primary{ width:100%; background:var(--navy); color:#fff; }
+  .btn-primary:hover{ background:#092e60; }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); width:auto; padding:9px 16px; font-size:13px; }
+  .btn-in{ background:var(--good); color:#fff; }
+  .btn-out{ background:var(--bad); color:#fff; }
+  .btn-mini{ width:auto; padding:6px 12px; font-size:12px; background:var(--navy-soft); color:var(--navy); border:1px solid var(--line); }
+
+  /* ---- Login ---- */
+  #loginView{ max-width:400px; margin:6vh auto 0; }
+  .login-logo{ text-align:center; margin-bottom:8px; }
+  .login-logo img{ width:64px; height:64px; }
+  .login-logo .t{ font-size:16px; font-weight:800; color:var(--navy); margin-top:8px; letter-spacing:0.5px; }
+  .msg{ font-size:13px; margin-top:10px; min-height:18px; }
+  .msg.err{ color:var(--bad); }
+  .demo-accounts{ font-size:12px; color:#5b6b78; background:var(--navy-soft); border-radius:6px; padding:10px 12px; margin-top:14px; line-height:1.8; }
+  .demo-accounts b{ color:var(--navy); }
+  .ip-banner{
+    font-size:12px; border-radius:6px; padding:8px 11px; margin:0 0 14px;
+    border:1px solid var(--line); background:#f7f9fc; color:#5b6b78; line-height:1.6;
+  }
+  .ip-banner.ok{ background:var(--good-bg); border-color:#bfe3cd; color:var(--good); }
+  .ip-banner.blocked{ background:#fbe6e2; border-color:#f0c8c0; color:var(--bad); }
+  .ip-banner.error{ background:#fdf3e2; border-color:#e8d29a; color:var(--warn); }
+  .ip-banner b{ font-family:var(--mono); }
+  .login-top{ display:flex; justify-content:flex-end; margin:-8px 0 4px; }
+
+  /* ---- Identity ---- */
+  .ident{ display:flex; align-items:center; gap:14px; }
+  .avatar{
+    width:52px; height:52px; border-radius:50%; object-fit:cover; flex-shrink:0;
+    border:1px solid var(--line); background:var(--navy-soft);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .avatar svg{ width:30px; height:30px; fill:#9fb0c4; }
+  .ident-name{ font-size:17px; font-weight:800; }
+  .ident-meta{ font-size:12px; color:#5b6b78; font-family:var(--mono); }
+
+  /* clock buttons (employee) */
+  .clock-actions{ display:flex; gap:12px; margin-top:16px; }
+  .clock-actions button{ flex:1; padding:16px; font-size:16px; }
+  .clock-flash{ text-align:center; font-family:var(--mono); font-size:22px; color:var(--navy); margin-top:14px; min-height:26px; font-weight:700; }
+
+  /* tables */
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th,td{ text-align:left; padding:9px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th{ color:#5b6b78; font-weight:700; font-size:12px; background:var(--navy-soft); }
+  .tbl-scroll{ overflow-x:auto; }
+  td.mono,th.mono{ font-family:var(--mono); }
+
+  .pill{ display:inline-block; padding:2px 9px; border-radius:12px; font-size:11px; font-weight:700; }
+  .pill.ok{ background:var(--good-bg); color:var(--good); }
+  .pill.late{ background:#fbe6e2; color:var(--bad); }
+  .pill.leave{ background:var(--leave-bg); color:var(--leave); }
+  .pill.biz{ background:#e2eefb; color:#1665c0; }
+
+  /* monthly grid */
+  .hrs-green{ color:var(--good); font-weight:800; }
+  .hrs-red{ color:var(--bad); font-weight:800; }
+  .hrs-normal{ color:var(--ink); }
+  .dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+  .dot.green{ background:var(--good); }
+  .dot.red{ background:var(--bad); }
+  .dot.leave{ background:var(--leave); }
+  .legend{ font-size:12px; color:#5b6b78; display:flex; gap:18px; flex-wrap:wrap; margin-top:12px; }
+  .legend span{ display:flex; align-items:center; }
+
+  .emp-row{ display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #eef1f5; }
+  .emp-row .avatar{ width:42px; height:42px; }
+  .emp-row .avatar svg{ width:24px; height:24px; }
+  .emp-info{ flex:1; }
+  .emp-info .n{ font-size:14px; font-weight:700; }
+  .emp-info .e{ font-size:11px; color:#8a94a0; font-family:var(--mono); }
+  .subcard{ background:#f7f9fc; border:1px solid var(--line); border-radius:6px; padding:16px; margin:8px 0 4px; }
+
+  .tabbar{ display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .quota-cards{ display:flex; gap:12px; flex-wrap:wrap; }
+  .quota-card{ flex:1; min-width:140px; border:1px solid var(--line); border-radius:8px; padding:14px; text-align:center; background:#fff; }
+  .quota-card .qt{ font-size:12px; color:#5b6b78; margin-bottom:2px; }
+  .quota-card .qtag{ font-size:10px; font-weight:700; letter-spacing:0.3px; margin-bottom:6px; display:inline-block;
+                     padding:2px 8px; border-radius:10px; background:var(--navy-soft); color:var(--navy); }
+  .quota-card .qtag.acc{ background:#fdf3e2; color:var(--warn); }
+  .quota-card .qv{ font-size:20px; font-weight:800; font-family:var(--mono); color:var(--navy); }
+  .quota-card .qv.low{ color:var(--bad); }
+  .quota-card .qsub{ font-size:11px; color:#8a94a0; margin-top:3px; }
+  .calc-hint{ font-size:13px; color:var(--navy); font-weight:700; font-family:var(--mono); padding:8px 0; }
+  .pill.pending{ background:#fdf3e2; color:#b8860b; }
+  .pill.approved{ background:var(--good-bg); color:var(--good); }
+  .pill.rejected{ background:#f2e7e5; color:var(--bad); }
+  .pill.sick{ background:#fdeede; color:#c07a1a; }
+  .cal-cell.sick{ background:#fdeede; border-color:#f0d3aa; }
+  .cal-cell.sick .cal-hrs{ color:#c07a1a; font-size:11px; }
+  .cal-badge.sick{ background:#c07a1a; }
+  .pill.absent{ background:#f7d9d4; color:#8f1d10; font-weight:800; }
+  .cal-cell.absent{ background:#fbe0da; border-color:#e9b3a8; }
+  .cal-cell.absent .cal-hrs{ color:#8f1d10; font-size:11px; font-weight:800; }
+  .cal-badge.absent{ background:#8f1d10; }
+  .pill.holiday{ background:#e7e2f7; color:#5b3fa8; }
+  .cal-cell.holiday{ background:#efeafb; border-color:#cfc4ee; }
+  .cal-cell.holiday .cal-hrs{ color:#5b3fa8; font-size:10px; font-weight:700; }
+  .cal-badge.holiday{ background:#5b3fa8; }
+  .tab-badge{ display:inline-block; min-width:18px; margin-left:6px; padding:1px 6px; border-radius:9px;
+              background:var(--bad); color:#fff; font-size:11px; font-weight:800; line-height:16px; text-align:center; }
+  .db-state{ font-size:11px; color:#5b6b78; padding:3px 9px; border-radius:10px; background:#eef1f5; white-space:nowrap; }
+  .db-state.ok{ background:var(--good-bg); color:var(--good); }
+  .db-state.bad{ background:#fbe6e2; color:var(--bad); }
+  .warn-box{ margin-top:10px; padding:10px 12px; border-radius:8px; font-size:12px; line-height:1.7;
+             background:#fbe6e2; border:1px solid #f0c8c0; color:#8f1d10; }
+  .warn-box.soft{ background:#fdf3e2; border-color:#e8d29a; color:var(--warn); }
+  .type-annual{ color:var(--leave); } .type-sick{ color:#c07a1a; } .type-personal{ color:#1665c0; }
+  .type-sick_doc{ color:#c07a1a; } .type-absent{ color:#8f1d10; }
+  .tab{ padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; background:#fff; border:1px solid var(--line); color:#5b6b78; width:auto; }
+  .tab.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+
+  .mark-btns button{ width:auto; padding:4px 10px; font-size:11px; margin-right:4px; }
+  .row-click{ cursor:pointer; }
+  .row-click:hover td{ background:#f3f7fd; }
+  .back-link{ font-size:13px; color:var(--navy); cursor:pointer; font-weight:700; display:inline-block; margin-bottom:12px; }
+
+  /* ---- 日曆式月總表 ---- */
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; flex-wrap:wrap; }
+  .cal-title{ font-size:18px; font-weight:800; color:var(--navy); letter-spacing:0.5px; }
+  .cal-emp-select{ min-width:200px; }
+  .cal-nav{ display:flex; gap:6px; }
+  .cal-nav button{ width:34px; height:34px; padding:0; border:1px solid var(--line); background:#fff; color:var(--navy); font-size:16px; border-radius:6px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-dow{ text-align:center; font-size:12px; font-weight:700; color:#8a94a0; padding:6px 0; }
+  .cal-dow.sun{ color:var(--bad); } .cal-dow.sat{ color:var(--navy); }
+  .cal-cell{
+    min-height:64px; border:1px solid var(--line); border-radius:8px; padding:6px 8px;
+    background:#fff; position:relative; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .cal-cell.empty{ background:transparent; border:none; }
+  .cal-cell.weekend{ background:#f6f8fb; }
+  .cal-cell.today{ box-shadow:0 0 0 2px var(--navy) inset; }
+  .cal-daynum{ font-size:13px; font-weight:700; color:#5b6b78; }
+  .cal-daynum .off{ color:#c2cad4; }
+  .cal-hrs{ font-family:var(--mono); font-size:13px; font-weight:800; }
+  .cal-cell.green{ background:var(--good-bg); border-color:#bfe3cd; }
+  .cal-cell.green .cal-hrs{ color:var(--good); }
+  .cal-cell.red .cal-hrs{ color:var(--bad); }
+  .cal-cell.leave{ background:var(--leave-bg); border-color:#d9cdf3; }
+  .cal-cell.leave .cal-hrs{ color:var(--leave); font-size:12px; }
+  .cal-cell.biz{ background:#e2eefb; border-color:#bcd7f5; }
+  .cal-cell.biz .cal-hrs{ color:#1665c0; font-size:11px; }
+  .cal-badge{ position:absolute; top:6px; right:7px; width:9px; height:9px; border-radius:50%; }
+  .cal-badge.green{ background:var(--good); } .cal-badge.red{ background:var(--bad); } .cal-badge.leave{ background:var(--leave); } .cal-badge.biz{ background:#1665c0; }
+  .cal-total{ margin-top:14px; padding:12px 16px; background:var(--navy-soft); border-radius:8px; font-size:14px; display:flex; justify-content:space-between; align-items:center; }
+  .cal-total b{ color:var(--navy); font-family:var(--mono); font-size:16px; }
+
+  /* ---- Custom date / time picker (locale-independent) ---- */
+  .dp-wrap,.tp-wrap{ position:relative; }
+  .dp-btn,.tp-btn{
+    width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:6px;
+    font-size:15px; background:#fdfefe; font-family:inherit; text-align:left; color:var(--ink);
+    cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+  }
+  .dp-btn:focus,.tp-btn:focus{ outline:none; border-color:var(--navy); }
+  .dp-btn .ic,.tp-btn .ic{ color:#8a94a0; font-size:13px; }
+  .dp-pop,.tp-pop{
+    position:absolute; top:calc(100% + 6px); left:0; z-index:40; background:#fff;
+    border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 24px rgba(20,40,70,0.14);
+    padding:12px; display:none;
+  }
+  .dp-pop.open,.tp-pop.open{ display:block; }
+  .dp-pop{ width:260px; }
+  .dp-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .dp-head .t{ font-size:13px; font-weight:800; color:var(--navy); }
+  .dp-head button{ width:26px; height:26px; padding:0; border:1px solid var(--line); background:#fff; color:var(--navy); border-radius:5px; font-size:14px; }
+  .dp-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .dp-dow{ text-align:center; font-size:11px; color:#8a94a0; padding:4px 0; font-weight:700; }
+  .dp-day{ text-align:center; font-size:12px; padding:7px 0; border-radius:5px; cursor:pointer; color:var(--ink); }
+  .dp-day:hover{ background:var(--navy-soft); }
+  .dp-day.empty{ cursor:default; }
+  .dp-day.sel{ background:var(--navy); color:#fff; font-weight:700; }
+  .dp-day.today:not(.sel){ box-shadow:0 0 0 1px var(--navy) inset; }
+  .tp-pop{ width:236px; }
+  .tp-pop.open{ display:block; }
+  .tp-cols{ display:flex; gap:6px; }
+  .tp-done{ margin-top:8px; }
+  .tp-done button{ width:100%; padding:8px; font-size:12px; background:var(--navy); color:#fff; }
+  .tp-col{ flex:1; }
+  .tp-label{ font-size:11px; color:#8a94a0; text-align:center; margin-bottom:4px; font-weight:700; }
+  .tp-list{ max-height:160px; overflow-y:auto; border:1px solid var(--line); border-radius:6px; }
+  .tp-opt{ padding:7px 0; text-align:center; font-size:13px; font-family:var(--mono); cursor:pointer; color:var(--ink); }
+  .tp-opt:hover{ background:var(--navy-soft); }
+  .tp-opt.sel{ background:var(--navy); color:#fff; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="page"><div class="wrap">
+
+  <!-- ===== LOGIN ===== -->
+  <div id="loginView">
+    <div class="card">
+      <div class="login-top"><button class="lang-toggle" id="langToggleLogin">EN</button></div>
+      <div class="login-logo">
+        <img id="loginLogo" alt="LOGO">
+        <div class="t" data-i18n="sys_title">員工打卡系統</div>
+      </div>
+      <div class="ip-banner" id="ipBanner">…</div>
+      <div class="field">
+        <label data-i18n="login_user">公司 Email</label>
+        <input type="email" id="loginId" placeholder="name@company.com" autocomplete="username" autocapitalize="none">
+      </div>
+      <div class="field">
+        <label data-i18n="login_pw_email">密碼</label>
+        <input type="password" id="loginPw" placeholder="" autocomplete="current-password" autocapitalize="none">
+      </div>
+      <button class="btn-primary" id="loginBtn" data-i18n="login_btn">登入</button>
+      <div class="msg err" id="loginMsg"></div>
+      <div style="text-align:right;margin-top:2px;">
+        <a href="#" id="forgotPwLink" style="font-size:12px;color:#5b6b78;text-decoration:underline;" data-i18n="forgot_pw">忘記密碼？</a>
+      </div>
+      <div class="demo-accounts" data-i18n="login_help">請用完整的公司 Email 登入。忘記密碼可點上方連結重寄。</div>
+    </div>
+  </div>
+
+  <!-- ===== APP (after login) ===== -->
+  <div id="appView" style="display:none;">
+    <div class="topbar">
+      <div class="brand"><img id="brandLogo" alt=""><h1 data-i18n="sys_title">員工打卡系統</h1></div>
+      <div class="topbar-right">
+        <span class="clock" id="liveClock">--:--:--</span>
+        <span class="db-state" id="dbState"></span>
+        <span class="role-badge" id="roleBadge">—</span>
+        <button class="lang-toggle" id="langToggle">EN</button>
+        <button class="btn-ghost" id="logoutBtn" data-i18n="logout">登出</button>
+      </div>
+    </div>
+
+    <!-- ===== EMPLOYEE UI ===== -->
+    <div id="empUI" style="display:none;">
+      <div class="tabbar">
+        <button class="tab active" data-etab="clock" data-i18n="etab_clock">打卡</button>
+        <button class="tab" data-etab="leave" data-i18n="etab_leave">請假</button>
+      </div>
+
+      <div class="epanel" id="epanel-clock">
+      <div class="card">
+        <div class="ident">
+          <div class="avatar" id="empAvatar"></div>
+          <div>
+            <div class="ident-name" id="empName">—</div>
+            <div class="ident-meta" id="empMeta">—</div>
+          </div>
+        </div>
+        <div class="clock-actions">
+          <button class="btn-in" id="btnClockIn" data-i18n="clock_in">上班打卡</button>
+          <button class="btn-out" id="btnClockOut" data-i18n="clock_out">下班打卡</button>
+        </div>
+        <div class="clock-flash" id="clockFlash"></div>
+        <div class="divider"></div>
+        <p class="section-title" data-i18n="change_pw">更改密碼</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="field" style="flex:1;min-width:180px;margin:0;">
+            <label data-i18n="new_pw">新密碼（至少 6 碼）</label>
+            <input type="password" id="newPw" autocomplete="new-password">
+          </div>
+          <button class="btn-mini" id="changePwBtn" style="padding:10px 16px" data-i18n="save">儲存</button>
+        </div>
+        <div class="msg" id="pwMsg"></div>
+        <p class="hint" data-i18n="emp_rule">上班取當天最早、下班取當天最晚。重複打卡不覆蓋。</p>
+      </div>
+
+      <div class="card">
+        <p class="section-title" data-i18n="my_log">我的考勤紀錄</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;">
+          <div class="field" style="max-width:170px;margin:0;">
+            <label data-i18n="export_month">下載月份</label>
+            <input type="month" id="empYm">
+          </div>
+          <button class="btn-mini" style="padding:10px 14px" id="empPdfBtn" data-i18n="export_mine">下載我的紀錄 PDF</button>
+        </div>
+
+        <div class="tbl-scroll">
+          <table id="empLogTable"></table>
+        </div>
+      </div>
+      </div>
+
+      <div class="epanel" id="epanel-leave" style="display:none;">
+        <div class="card">
+          <p class="section-title" data-i18n="leave_balance_title">我的休假額度</p>
+          <div class="quota-cards" id="empQuotaCards"></div>
+          <p class="hint" data-i18n="leave_rule">請假一律先扣特休的剩餘額度；特休用完之後，超出的時數才會記到病假／事假的累計，累計沒有上限。</p>
+        </div>
+        <div class="card">
+          <p class="section-title" data-i18n="apply_leave">申請請假</p>
+          <div class="leave-form">
+            <div class="field"><label data-i18n="leave_type">請假類別</label>
+              <select id="reqType"></select>
+            </div>
+            <div class="field"><label data-i18n="date">日期</label>
+              <input type="hidden" id="reqDate">
+              <div class="dp-wrap" id="reqDateWrap"></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <div class="field" style="flex:1;"><label data-i18n="from_time">起</label>
+                <input type="hidden" id="reqStart" value="08:00">
+                <div class="tp-wrap" id="reqStartWrap"></div>
+              </div>
+              <div class="field" style="flex:1;"><label data-i18n="to_time">迄</label>
+                <input type="hidden" id="reqEnd" value="12:00">
+                <div class="tp-wrap" id="reqEndWrap"></div>
+              </div>
+            </div>
+            <div class="calc-hint" id="reqCalc">—</div>
+            <div class="field"><label data-i18n="note_opt">備註（選填）</label><input type="text" id="reqNote" placeholder=""></div>
+            <button class="btn-primary" id="submitReqBtn" data-i18n="submit_request">送出申請</button>
+            <div class="msg" id="reqMsg"></div>
+          </div>
+        </div>
+        <div class="card">
+          <p class="section-title" data-i18n="my_requests">我的假單</p>
+          <div class="tbl-scroll"><table id="myReqTable"></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ADMIN UI ===== -->
+    <div id="adminUI" style="display:none;">
+      <div class="tabbar">
+        <button class="tab active" data-tab="monthly" data-i18n="tab_monthly">月總表</button>
+        <button class="tab" data-tab="daily" data-i18n="tab_daily">每日狀況</button>
+        <button class="tab" data-tab="employees" data-i18n="tab_emp">員工設定</button>
+        <button class="tab" data-tab="leavereview"><span data-i18n="tab_leave_review">請假審核</span><span class="tab-badge" id="pendingBadge" style="display:none"></span></button>
+      </div>
+
+      <!-- Monthly overview (calendar style) -->
+      <div class="card tabpanel" id="panel-monthly">
+        <p class="section-title" data-i18n="admin_month_title">月總表</p>
+        <div class="cal-head">
+          <select class="field cal-emp-select" id="calEmp" style="margin:0;"></select>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="cal-title" id="calTitle">—</span>
+            <div class="cal-nav">
+              <button id="calPrev" aria-label="prev">‹</button>
+              <button id="calNext" aria-label="next">›</button>
+            </div>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="quota-cards" id="calStats" style="margin-top:14px;"></div>
+        <div id="calWarn"></div>
+        <div class="legend">
+          <span><i class="dot green"></i><span data-i18n="lg_green">出勤完整（有上、下班紀錄）</span></span>
+          <span><i class="dot red"></i><span data-i18n="lg_red">缺打卡（紅字）</span></span>
+          <span><i class="dot leave"></i><span data-i18n="lg_leave">休假（主控端標記）</span></span>
+          <span><i class="dot" style="background:#1665c0"></i><span data-i18n="lg_biz">公出（可填時間）</span></span>
+          <span><i class="dot" style="background:#c07a1a"></i><span data-i18n="st_sick_doc">病假·有證明</span></span>
+          <span><i class="dot" style="background:#8f1d10"></i><span data-i18n="st_absent">曠職</span></span>
+          <span><i class="dot" style="background:#5b3fa8"></i><span data-i18n="st_holiday">國定假日（有薪）</span></span>
+        </div>
+      </div>
+
+      <!-- Daily status -->
+      <div class="card tabpanel" id="panel-daily" style="display:none;">
+        <p class="section-title" data-i18n="admin_daily_title">每日打卡狀況</p>
+        <div class="field" style="max-width:220px;">
+          <label data-i18n="select_date">選擇日期</label>
+          <input type="date" id="dailyDate">
+        </div>
+        <div class="tbl-scroll"><table id="dailyTable"></table></div>
+        <p class="hint" data-i18n="daily_hint">下方的橫列紀錄可用「選擇員工」切換，或直接點表格任一列。「編輯」可改上／下班時間與狀態。</p>
+
+        <!-- 個人橫列紀錄：預設一定開啟 -->
+        <div class="divider"></div>
+        <div class="ident" style="margin-bottom:14px;">
+          <div class="avatar" id="drillAvatar"></div>
+          <div><div class="ident-name" id="drillName">—</div><div class="ident-meta" id="drillMeta">—</div></div>
+        </div>
+        <p class="section-title" data-i18n="row_log">橫列式打卡紀錄</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="field" style="max-width:220px;margin:0;">
+            <label data-i18n="select_emp">選擇員工</label>
+            <select id="drillEmp"></select>
+          </div>
+          <div class="field" style="max-width:170px;margin:0;">
+            <label data-i18n="export_month">下載月份</label>
+            <input type="month" id="drillYm">
+          </div>
+          <button class="btn-mini" style="padding:10px 14px" id="drillPdfBtn" data-i18n="export_one">下載這位員工 PDF</button>
+          <button class="btn-mini" style="padding:10px 14px" id="drillPdfAllBtn" data-i18n="export_all">下載全部員工 PDF</button>
+          <button class="btn-mini" style="padding:10px 14px" id="drillCsvBtn" data-i18n="export_csv">CSV</button>
+        </div>
+        <div class="tbl-scroll"><table id="drillTable"></table></div>
+      </div>
+
+      <!-- Employee management -->
+      <div class="card tabpanel" id="panel-employees" style="display:none;">
+        <p class="section-title" data-i18n="admin_emp_title">員工資料設定（照片 / 姓名 / 編號）</p>
+        <div id="empAdminList"></div>
+        <p class="hint" data-i18n="emp_hint">照片留空時顯示人形圖示，可貼圖片網址替換。</p>
+      </div>
+
+      <!-- Leave review -->
+      <div class="card tabpanel" id="panel-leavereview" style="display:none;">
+        <p class="section-title" data-i18n="balance_dash_title">員工休假餘額</p>
+        <div id="leaveBalanceDash"></div>
+        <div class="divider"></div>
+        <p class="section-title" data-i18n="admin_leave_title">請假審核</p>
+        <div class="field" style="max-width:220px;">
+          <label data-i18n="filter_status">狀態篩選</label>
+          <select id="reqFilter">
+            <option value="all" data-i18n="f_all">全部</option>
+            <option value="pending" data-i18n="f_pending">待審核</option>
+            <option value="approved" data-i18n="f_approved">已核准</option>
+            <option value="rejected" data-i18n="f_rejected">已駁回</option>
+          </select>
+        </div>
+        <div class="tbl-scroll"><table id="allReqTable"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 編輯時間 Modal -->
+  <div id="timeModal" style="display:none; position:fixed; inset:0; background:rgba(20,40,70,0.35); z-index:50; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:10px; padding:24px; width:min(360px,92vw); box-shadow:0 8px 30px rgba(0,0,0,0.2);">
+      <p class="section-title" id="modalTitle" style="margin-bottom:6px;">編輯時間</p>
+      <p class="ident-meta" id="modalSub" style="margin-bottom:16px;">—</p>
+      <div class="field"><label data-i18n="m_status">狀態</label>
+        <select id="modalStatus">
+          <option value="work" data-i18n="m_work">上班</option>
+          <option value="business" data-i18n="m_business">公出</option>
+          <option value="leave" data-i18n="m_leave">休假</option>
+          <option value="sick_doc" data-i18n="m_sick_doc">病假（有證明）</option>
+          <option value="absent" data-i18n="m_absent">曠職（缺席／無醫生證明）</option>
+        </select>
+      </div>
+      <div id="modalTimes">
+        <div class="field"><label data-i18n="th_in">上班時間</label><input type="time" id="modalIn" step="1"></div>
+        <div class="field"><label data-i18n="th_out">下班時間</label><input type="time" id="modalOut" step="1"></div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button class="btn-ghost" id="modalCancel" style="flex:1" data-i18n="cancel">取消</button>
+        <button class="btn-primary" id="modalSave" style="flex:1" data-i18n="save">儲存</button>
+      </div>
+    </div>
+  </div>
+
+</div></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ============================================================
+   正式版 — Firebase Authentication 登入 + Firestore 儲存
+   專案：office-checkin-855a6
+   ============================================================ */
+
+/* ---- LOGO（base64，稍後由注入腳本填入）---- */
+const LOGO_DATA_URL = "data:image/png;base64,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";
+
+/* ---- 設定 ---- */
+/* 彈性上班：上班窗 08:00–08:30，應下班 = 上班(鎖進窗) + 8.5h（含午休）。
+   落在窗內都算正常；超過窗尾 + 緩衝才算遲到。 */
+const FLEX_START="08:00", FLEX_END="08:30";   // 彈性上班窗
+const STANDARD_SPAN_MIN=510;                   // 上班到下班的跨距（含午休）＝8.5 小時
+const SHIFT_START=FLEX_START, SHIFT_END="16:30"; // 相容舊變數
+const LUNCH_START="13:00", LUNCH_END="13:30";  // 午休（扣除）
+const FULL_HOURS=8;   // 標準工時（扣午休後）
+const MIN_HOURS=8;
+const GRACE_MINUTES=10;   // 遲到緩衝：超過窗尾 08:30 再加 10 分（08:40）才算遲到
+
+/* ============================================================
+   ★ 公司 IP 鎖定（只有在公司網路才能登入）
+   ============================================================ */
+const IP_LOCK_ENABLED      = true;                 // 要暫時關掉改成 false
+const ALLOWED_IPS          = ["78.168.69.*"];      // 可多筆；* 為萬用字元，也可寫完整 IP "78.168.69.113"
+const ALLOW_ADMIN_ANYWHERE = true;                 // 主控端不受 IP 限制（出差時仍可登入）
+const BLOCK_IF_IP_UNKNOWN  = true;                 // 查不到 IP 時：true=擋下, false=放行
+let CLIENT_IP = null;
+let IP_STATE  = 'checking';   // checking | ok | blocked | error | off
+
+/* ---- 員工資料 ----
+   ★ 帳號 = 姓名（大小寫不拘，也可以打四碼編號）
+   ★ 密碼 = email
+   ★ 請把下面的 email 換成同仁真實信箱，換掉之後密碼就跟著變。 */
+/* ============================================================
+   ★ Firebase（正式資料儲存）
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDau5hZr9h9Iqt_JfLWH8VtQVHw-0fb4to",
+  authDomain: "office-checkin-855a6.firebaseapp.com",
+  databaseURL: "https://office-checkin-855a6-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "office-checkin-855a6",
+  storageBucket: "office-checkin-855a6.firebasestorage.app",
+  messagingSenderId: "507140006307",
+  appId: "1:507140006307:web:bf51eccf49377e1bb4fa16"
+};
+firebase.initializeApp(FIREBASE_CONFIG);
+const AUTH = firebase.auth();
+const DB   = firebase.firestore();
+/* 第二個 app 實例：主控端新增員工帳號時用，才不會把自己的登入狀態換掉 */
+let CREATOR_APP = null;
+function creatorAuth(){
+  if(!CREATOR_APP) CREATOR_APP = firebase.initializeApp(FIREBASE_CONFIG,'creator');
+  return CREATOR_APP.auth();
+}
+AUTH.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(()=>{});
+
+/* 員工資料由 Firestore 帶入，key = Auth 的 uid */
+let EMPLOYEES = {};
+const PLACEHOLDER_MAIL = /@example\.com$/i;
+function empNoOf(id){ const e=EMPLOYEES[id]; return (e&&(e.empNo||e.id))||id; }
+
+/* ---- i18n ---- */
+const I18N = {
+  'zh-Hant':{
+    emp_id:"員工編號（四碼）", password:"密碼", login_btn:"登入", logout:"登出",
+    sys_title:"員工打卡系統",
+    login_user:"公司 Email", login_pw_email:"密碼",
+    login_help:"請用完整的公司 Email 登入。忘記密碼可點上方連結重寄。",
+    forgot_pw:"忘記密碼？", need_email_first:"請先在上面欄位輸入你的公司 Email",
+    fp_sent:"已寄出重設密碼信，請至信箱查收（含垃圾信匣）。",
+    ip_checking:"⏳ 正在確認網路位置…",
+    ip_ok:"✅ 公司網路，可以打卡",
+    ip_blocked:"🔒 非公司網路，無法登入打卡。你目前的 IP：",
+    ip_error:"⚠️ 無法確認網路位置，請改用公司網路或聯絡主控端。",
+    ip_off:"IP 鎖定目前關閉。",
+    ip_need_office:"請在公司網路登入打卡。目前 IP：",
+    email_pw:"Email（登入帳號）", no_email:"尚未設定 Email", mail_placeholder:"⚠ 請改成真實 Email",
+    bad_email:"請填 Email 或另設密碼，兩者至少要有一個。",
+    pw_field:"另設密碼（留空＝用 Email 當密碼）", custom_pw:"自訂密碼",
+    clock_in:"上班打卡", clock_out:"下班打卡",
+    emp_rule:"上班取當天最早、下班取當天最晚。重複打卡不覆蓋。",
+    my_log:"我的考勤紀錄",
+    tab_monthly:"月總表", tab_daily:"每日狀況", tab_emp:"員工設定",
+    admin_month_title:"月總表 — 每人每日工時", select_month:"選擇月份",
+    lg_green:"出勤完整（有上、下班紀錄）", lg_red:"缺打卡（紅字）", lg_leave:"休假（主控端標記）",
+    admin_daily_title:"每日打卡狀況", select_date:"選擇日期",
+    daily_hint:"下方的橫列紀錄可用「選擇員工」切換，或直接點表格任一列。「編輯」可改上／下班時間與狀態。",
+    admin_emp_title:"員工資料設定（照片 / 姓名 / 編號）",
+    emp_hint:"照片留空時顯示人形圖示，可貼圖片網址替換。",
+    back:"返回", row_log:"橫列式打卡紀錄",
+    role_admin:"主控端", role_emp:"員工",
+    th_date:"日期", th_weekday:"星期", th_in:"上班時間", th_out:"下班時間", th_hours:"工時", th_status:"狀態",
+    th_id:"員工工號", th_name:"員工姓名", th_dept:"部門", th_shift:"班別",
+    th_in_state:"上班狀態", th_out_state:"下班狀態",
+    st_normal:"正常", st_late:"遲到", st_leave:"休假", st_business:"公出", st_pending:"進行中", st_off:"—",
+    mark_leave:"標記休假", unmark_leave:"取消休假",
+    edit_time:"編輯時間 / 狀態", cancel:"取消", m_status:"狀態", m_work:"上班", m_business:"公出", m_leave:"休假",
+    lg_biz:"公出（可填時間）",
+    edit:"編輯", save:"儲存", name:"姓名", emp_no:"員工編號", photo_url:"照片網址", dept:"部門",
+    upload_photo:"上傳照片", emp_id_account:"員工編號（即帳號，四碼）", login_pw:"登入密碼", role:"角色",
+    add_employee:"新增員工", add_save:"確定新增", delete:"刪除", confirm_delete:"確定要刪除這位員工及其打卡資料嗎？", id_taken:"此編號已存在，請換一個。",
+    total:"當月加總", total_hours:"當月工時加總", clocked_in_at:"上班打卡 ", clocked_out_at:"下班打卡 ",
+    login_fail:"姓名或密碼錯誤，請再確認一次。", id_format:"請輸入四位數字編號。",
+    hours_unit:"時",
+    etab_clock:"打卡", etab_leave:"請假", tab_leave_review:"請假審核",
+    leave_balance_title:"我的休假額度", apply_leave:"申請請假", leave_type:"請假類別",
+    from_time:"起", to_time:"迄", submit_request:"送出申請", my_requests:"我的假單",
+    admin_leave_title:"請假審核", filter_status:"狀態篩選", balance_dash_title:"員工休假餘額",
+    f_all:"全部", f_pending:"待審核", f_approved:"已核准", f_rejected:"已駁回",
+    type_annual:"特休", type_sick:"病假", type_personal:"事假",
+    type_sick_doc:"病假（有證明）", type_absent:"曠職",
+    m_sick:"病假", st_sick:"病假", st_missing:"缺卡",
+    m_sick_doc:"病假（有證明）", m_absent:"曠職（缺席／無醫生證明）",
+    st_sick_doc:"病假·有證明", st_absent:"曠職",
+    calc_hours:"計算時數", time_range:"時段", note_col:"備註", no_requests:"目前沒有假單",
+    need_date:"請選擇日期。", bad_time:"迄時間需晚於起時間。", submitted:"已送出，等待審核。",
+    rs_pending:"待審核", rs_approved:"已核准", rs_rejected:"已駁回",
+    approve:"核准", reject:"駁回", reset:"改回待審", days_unit:"天",
+    q_annual:"特休額度(時)", q_sick:"病假額度(時)", q_personal:"事假額度(時)",
+    q_annual_auto:"法定特休（依到職日自動計算）",
+    q_annual_auto_hint:"本年度特休剩餘由主控端自行調整；每到到職周年日，依完整年資自動增加 14／20／26 天。",
+    q_carry:"累積結轉（小時）",
+    q_carry_hint:"舊資料相容欄位；新的特休餘額由主控端自行調整，並於到職周年日自動增加法定天數。",
+    q_remaining:"剩餘", q_accrued:"累計已請", done:"完成",
+    q_annual_this_year:"特休剩餘天數", q_annual_remaining:"特休剩餘天數", q_can_carry:"特休剩餘天數",
+    q_annual_used_year:"今年已請特休", q_sick_used_year:"今年已請病假",
+    q_biz_days_year:"今年出差天數",
+    total_days:"當月出勤天數", sum_counted:"計入", sum_excluded:"未計入", select_emp:"選擇員工",
+    st_holiday:"國定假日（有薪）", sum_holiday:"國定假日", half_day:"半天",
+    export_month:"下載月份", export_one:"⬇ 下載這位員工 PDF", export_all:"⬇ 下載全部員工 PDF",
+    export_mine:"⬇ 下載我的紀錄 PDF", export_csv:"CSV（給會計）",
+    report_title:"員工考勤紀錄表", sign_emp:"員工簽名", sign_admin:"主管簽名",
+    generated_at:"產生時間", popup_blocked:"瀏覽器擋掉了新視窗，請允許此網站的彈出視窗後再試一次。", csv_paid:"公司支薪", csv_summary:"月統計",
+    csv_file:"打卡紀錄", yes:"是", no:"否",
+    th_emp_no:"員工工號", th_emp_name:"員工姓名",
+    hire_date:"到職日", tenure:"年資", tenure_y:"年", tenure_m:"個月",
+    not_yet_1y:"未滿一年", anniv_soon:"再 %d 天滿一年", next_anniv:"距下次到職周年 %d 天，將增加 %h 天特休", suggest_annual:"建議特休",
+    quota_low:"特休額度低於建議值，建議調成 %h 小時", no_hire_date:"未填到職日",
+    no_attendance:"不列入打卡名單（不需打卡）",
+    signing_in:"登入中…", net_error:"連不上伺服器，請檢查網路後再試。",
+    no_profile:"這個帳號還沒有員工資料，請找主控端設定。",
+    db_loading:"⏳ 連線中", db_ok:"☁ 已連線", db_error:"⚠ 連線異常",
+    save_fail:"儲存失敗，請再試一次（或檢查網路／權限）。", saved:"已儲存。",
+    creating:"建立帳號中…", email_taken:"這個 Email 已經有帳號了。",
+    pw_too_short:"密碼至少 6 碼。", name_taken:"這個名字已經有人用了（登入要靠名字，不能重複）。",
+    need_name:"請輸入姓名。",
+    emp_no:"員工工號（四碼）", init_pw:"初始密碼（至少 6 碼）",
+    pw_reset_hint:"密碼", send_reset:"寄送重設密碼信",
+    reset_sent:"重設密碼信已寄出：", deleted_note:"員工資料已刪除。Auth 帳號請到 Firebase Console 的 Authentication 一併移除。",
+    change_pw:"更改密碼", new_pw:"新密碼（至少 6 碼）", pw_changed:"密碼已更新。",
+    pw_relogin:"為了安全，請先登出重新登入再改密碼。",
+    total_paid_days:"公司支薪天數",
+    warn_absent2:"⚠ 本月有連續 2 個工作日曠職。依土耳其勞動法第 25/II-g 條，這可能構成雇主正當解雇事由（不需給資遣費）。實際處理前請先與當地法務／會計確認。",
+    warn_absent3:"⚠ 本月曠職已達 3 個工作日。依土耳其勞動法第 25/II-g 條，一個月內累計 3 個工作日曠職也可能構成正當解雇事由。請與當地法務／會計確認。",
+    leave_rule:"病假（有證明）不扣特休、公司照給薪，時數只做累計；第 3 天起公司可再向 SGK 請領 2/3 日薪。特休與事假一律先扣特休剩餘額度，扣完之後超出的時數才進事假累計。沒有醫生證明的缺席不算病假，會被記為曠職且不支薪。",
+    date:"日期", employee:"員工", note_opt:"備註（選填）",
+    am:"上午", pm:"下午", dp_hour:"時", dp_minute:"分", dp_period:"上午/下午"
+  },
+  'en':{
+    emp_id:"Employee ID (4 digits)", password:"Password", login_btn:"Log In", logout:"Log Out",
+    sys_title:"Staff Check-In",
+    login_user:"Company Email", login_pw_email:"Password",
+    login_help:"Log in with your full company email. Forgot your password? Use the link above to get a reset email.",
+    forgot_pw:"Forgot password?", need_email_first:"Please enter your company email above first",
+    fp_sent:"A password reset email has been sent — please check your inbox (and spam folder).",
+    ip_checking:"⏳ Checking your network…",
+    ip_ok:"✅ Office network — you can clock in",
+    ip_blocked:"🔒 Not the office network, login is disabled. Your IP: ",
+    ip_error:"⚠️ Could not check your network. Please use the office network or contact the admin.",
+    ip_off:"IP lock is currently off.",
+    ip_need_office:"Please log in from the office network. Current IP: ",
+    email_pw:"Email (login account)", no_email:"No email set", mail_placeholder:"⚠ Replace with a real email",
+    bad_email:"Enter an email or set a password — at least one is required.",
+    pw_field:"Custom password (blank = use email)", custom_pw:"Custom password",
+    clock_in:"Clock In", clock_out:"Clock Out",
+    emp_rule:"Earliest clock-in and latest clock-out per day are kept; repeats don't overwrite.",
+    my_log:"My attendance",
+    tab_monthly:"Monthly", tab_daily:"Daily", tab_emp:"Employees",
+    admin_month_title:"Monthly overview — daily hours per person", select_month:"Month",
+    lg_green:"Complete attendance (clock-in & clock-out on file)", lg_red:"Missing punch (red)", lg_leave:"Leave (marked by admin)",
+    admin_daily_title:"Daily attendance", select_date:"Date",
+    daily_hint:"Switch the row-style log below with the employee selector, or just click any row here. Use Edit to change times or status.",
+    admin_emp_title:"Employee profiles (photo / name / ID)",
+    emp_hint:"Blank photo shows a person icon; paste an image URL to replace. (Demo: edits stay on screen only.)",
+    back:"Back", row_log:"Row-style attendance log",
+    role_admin:"Admin", role_emp:"Employee",
+    th_date:"Date", th_weekday:"Day", th_in:"Clock In", th_out:"Clock Out", th_hours:"Hours", th_status:"Status",
+    th_id:"ID", th_name:"Name", th_dept:"Dept.", th_shift:"Shift",
+    th_in_state:"In state", th_out_state:"Out state",
+    st_normal:"Normal", st_late:"Late", st_leave:"Leave", st_business:"Business", st_pending:"In progress", st_off:"—",
+    mark_leave:"Mark leave", unmark_leave:"Unmark",
+    edit_time:"Edit time / status", cancel:"Cancel", m_status:"Status", m_work:"Work", m_business:"Business trip", m_leave:"Leave",
+    lg_biz:"Business trip (editable time)",
+    edit:"Edit", save:"Save", name:"Name", emp_no:"Emp. No.", photo_url:"Photo URL", dept:"Dept.",
+    upload_photo:"Upload photo", emp_id_account:"Employee ID (account, 4 digits)", login_pw:"Login password", role:"Role",
+    add_employee:"Add employee", add_save:"Add", delete:"Delete", confirm_delete:"Delete this employee and their attendance data?", id_taken:"This ID already exists, choose another.",
+    total:"Month total", total_hours:"Monthly total hours", clocked_in_at:"Clock In ", clocked_out_at:"Clock Out ",
+    login_fail:"Wrong name or password, please check again.", id_format:"Please enter a 4-digit number.",
+    hours_unit:"h",
+    etab_clock:"Clock", etab_leave:"Leave", tab_leave_review:"Leave review",
+    leave_balance_title:"My leave balance", apply_leave:"Apply for leave", leave_type:"Leave type",
+    from_time:"From", to_time:"To", submit_request:"Submit", my_requests:"My requests",
+    admin_leave_title:"Leave review", filter_status:"Filter status", balance_dash_title:"Employee leave balances",
+    f_all:"All", f_pending:"Pending", f_approved:"Approved", f_rejected:"Rejected",
+    type_annual:"Annual", type_sick:"Sick", type_personal:"Personal",
+    type_sick_doc:"Sick (with report)", type_absent:"Absent",
+    m_sick:"Sick leave", st_sick:"Sick", st_missing:"Missing",
+    m_sick_doc:"Sick leave (with report)", m_absent:"Absent (no doctor's report)",
+    st_sick_doc:"Sick·report", st_absent:"Absent",
+    calc_hours:"Hours", time_range:"Time", note_col:"Note", no_requests:"No requests yet",
+    need_date:"Please choose a date.", bad_time:"End must be after start.", submitted:"Submitted, pending review.",
+    rs_pending:"Pending", rs_approved:"Approved", rs_rejected:"Rejected",
+    approve:"Approve", reject:"Reject", reset:"Reset", days_unit:"d",
+    q_annual:"Annual (h)", q_sick:"Sick (h)", q_personal:"Personal (h)",
+    q_annual_auto:"Statutory annual leave (from hire date)",
+    q_annual_auto_hint:"The current annual leave balance is adjusted by the admin; on each work anniversary, 14/20/26 days are added automatically according to completed service years.",
+    q_carry:"Carry-over (hours)",
+    q_carry_hint:"Legacy field kept for compatibility. The admin now adjusts the current remaining balance, and statutory days are added automatically on each work anniversary.",
+    q_remaining:"Remaining", q_accrued:"Accrued", done:"Done",
+    q_annual_this_year:"Remaining annual leave", q_annual_remaining:"Remaining annual leave", q_can_carry:"Remaining annual leave",
+    q_annual_used_year:"Annual leave used this year", q_sick_used_year:"Sick leave used this year",
+    q_biz_days_year:"Business trip days this year",
+    total_days:"Days worked this month", sum_counted:"Counted", sum_excluded:"Not counted", select_emp:"Select employee",
+    st_holiday:"Public holiday ", sum_holiday:"Public holidays", half_day:"half day",
+    export_month:"Month", export_one:"⬇ This employee (PDF)", export_all:"⬇ Everyone (PDF)",
+    export_mine:"⬇ My log (PDF)", export_csv:"CSV",
+    report_title:"Attendance Record", sign_emp:"Employee signature", sign_admin:"Manager signature",
+    generated_at:"Generated", popup_blocked:"Your browser blocked the new window. Allow pop-ups for this site and try again.", csv_paid:"Paid by company", csv_summary:"monthly summary",
+    csv_file:"attendance", yes:"Yes", no:"No",
+    th_emp_no:"Staff ID", th_emp_name:"Name",
+    hire_date:"Start date", tenure:"Tenure", tenure_y:"y", tenure_m:"m",
+    not_yet_1y:"under 1 year", anniv_soon:"1 year in %d days", next_anniv:"Next work anniversary in %d days; add %h days annual leave", suggest_annual:"Suggested annual",
+    quota_low:"Annual leave is below the suggested %h hours", no_hire_date:"No start date",
+    no_attendance:"Not on the clock-in roster",
+    signing_in:"Signing in…", net_error:"Can't reach the server. Check your connection and try again.",
+    no_profile:"This account has no employee profile yet. Ask the admin to set it up.",
+    db_loading:"⏳ Connecting", db_ok:"☁ Synced", db_error:"⚠ Connection problem",
+    save_fail:"Save failed. Please try again (check network or permissions).", saved:"Saved.",
+    creating:"Creating account…", email_taken:"That email already has an account.",
+    pw_too_short:"Password must be at least 6 characters.", name_taken:"That name is already taken (names are used to log in).",
+    need_name:"Please enter a name.",
+    emp_no:"Staff ID (4 digits)", init_pw:"Initial password (min 6 chars)",
+    pw_reset_hint:"Password", send_reset:"Send password reset email",
+    reset_sent:"Password reset email sent to ", deleted_note:"Employee profile deleted. Remove the Auth user in the Firebase Console as well.",
+    change_pw:"Change password", new_pw:"New password (min 6 chars)", pw_changed:"Password updated.",
+    pw_relogin:"For security, please sign out and back in before changing your password.",
+    total_paid_days:"Paid days this month",
+    warn_absent2:"⚠ Two consecutive working days of absence this month. Under Article 25/II-g of the Turkish Labour Law this may give the employer just cause for termination without severance. Confirm with local legal/accounting before acting.",
+    warn_absent3:"⚠ Three working days of absence this month. Under Article 25/II-g of the Turkish Labour Law three working days of absence within one month may also give just cause for termination. Confirm with local legal/accounting.",
+    leave_rule:"Sick leave with a doctor's report is paid by the company and does not touch your annual balance — the hours are only tallied. From the 3rd day the company can also claim 2/3 of the daily wage from SGK. Annual and personal leave draw on your remaining annual balance first. An absence without a doctor's report is not sick leave — it is unpaid absenteeism.",
+    date:"Date", employee:"Employee", note_opt:"Note (optional)",
+    am:"AM", pm:"PM", dp_hour:"Hour", dp_minute:"Min", dp_period:"AM/PM"
+  }
+};
+let LANG='zh-Hant';
+const t=k=>(I18N[LANG]&&I18N[LANG][k])||k;
+function applyI18n(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.getAttribute('data-i18n')));
+  const label = LANG==='zh-Hant'?'EN':'中';
+  ['langToggle','langToggleLogin'].forEach(id=>{ const b=document.getElementById(id); if(b) b.textContent=label; });
+  // 角色徽章不是 data-i18n，要另外換
+  if(CURRENT){
+    const rb=document.getElementById('roleBadge');
+    if(rb) rb.textContent = CURRENT.role==='admin'?t('role_admin'):t('role_emp');
+  }
+  renderIpBanner();
+  // 每個區塊各自 try/catch：任何一塊出錯都不會擋住其他表格換語言
+  if(CURRENT) renderAll();
+}
+
+/* ---- 假打卡資料：本月每人每日 in/out（毫秒）---- */
+const WEEKDAY = ['日','一','二','三','四','五','六'];
+const WEEKDAY_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function pad(n){ return String(n).padStart(2,'0'); }
+function ymd(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+/* 產生本月假資料：工作日隨機上下班時間，穿插幾天遲到/休假 */
+const LEAVE_MARKS = {}; // key: id|date -> true  （休假，主控端標記）
+const BIZ_MARKS = {};   // key: id|date -> true  （公出，主控端標記；仍保留 ATT 上/下班時間）
+const SICK_MARKS   = {};  // key: id|date -> 'doc'   （有醫生證明的病假整日標記）
+const ABSENT_MARKS = {};  // key: id|date -> true    （曠職：缺席且沒有醫生證明）
+const ATT = {};         // key: id|date -> {inMs,outMs}
+const HOURS_PER_DAY = 8;
+
+/* 請假單（新系統）：每筆 {id(單號), empId, type:'annual|sick|personal', date, startMin, endMin, hours, status:'pending|approved|rejected', note} */
+const LEAVE_REQUESTS = [];
+let REQ_SEQ = 1;
+const LEAVE_TYPES = ['annual','sick_doc','personal']; // 特休 / 病假(有證明) / 事假
+/* 沒有醫生證明的缺席不是病假，而是曠職，不走請假流程，由主控端在「每日狀況」標記。 */
+
+/* 每種假是否要「先扣特休剩餘額度」。
+   sick_doc=false：有醫生證明的病假不動特休，時數直接進「病假（有證明）」累計。
+   要改回「有證明也先扣特休」就把 sick_doc 改成 true。 */
+const ANNUAL_FIRST_FOR = { annual:true, sick_doc:false, personal:true };
+
+/* SGK 病假給付：每一張醫生證明（連續的病假期間）前 2 天無給付，第 3 天起由 SGK 給付 2/3 日薪。
+   雇主全程不支薪。要改天數把 SGK_WAIT_DAYS 改掉即可。 */
+const SGK_WAIT_DAYS = 2;
+
+/* ============================================================
+   ★ 土耳其國定假日 2026（有薪，公司要照付）
+   half:true = 半天（arife 下午起放假）
+   來源：2026 年公告的 resmi tatil 行事曆；宗教節日日期以每年公告為準。
+   ============================================================ */
+const HOLIDAYS = {
+  '2026-01-01': { zh:'元旦',                 en:'New Year',                    tr:'Yılbaşı' },
+  '2026-03-19': { zh:'開齋節前夕（半天）',   en:'Eid al-Fitr eve (half day)',  tr:'Ramazan Bayramı Arifesi', half:true },
+  '2026-03-20': { zh:'開齋節 第1天',         en:'Eid al-Fitr day 1',           tr:'Ramazan Bayramı 1. Gün' },
+  '2026-03-21': { zh:'開齋節 第2天',         en:'Eid al-Fitr day 2',           tr:'Ramazan Bayramı 2. Gün' },
+  '2026-03-22': { zh:'開齋節 第3天',         en:'Eid al-Fitr day 3',           tr:'Ramazan Bayramı 3. Gün' },
+  '2026-04-23': { zh:'國家主權與兒童節',     en:'National Sovereignty & Children\'s Day', tr:'Ulusal Egemenlik ve Çocuk Bayramı' },
+  '2026-05-01': { zh:'勞動節',               en:'Labour Day',                  tr:'Emek ve Dayanışma Günü' },
+  '2026-05-19': { zh:'青年與體育節',         en:'Youth & Sports Day',          tr:'Atatürk’ü Anma, Gençlik ve Spor Bayramı' },
+  '2026-05-26': { zh:'宰牲節前夕（半天）',   en:'Eid al-Adha eve (half day)',  tr:'Kurban Bayramı Arifesi', half:true },
+  '2026-05-27': { zh:'宰牲節 第1天',         en:'Eid al-Adha day 1',           tr:'Kurban Bayramı 1. Gün' },
+  '2026-05-28': { zh:'宰牲節 第2天',         en:'Eid al-Adha day 2',           tr:'Kurban Bayramı 2. Gün' },
+  '2026-05-29': { zh:'宰牲節 第3天',         en:'Eid al-Adha day 3',           tr:'Kurban Bayramı 3. Gün' },
+  '2026-05-30': { zh:'宰牲節 第4天',         en:'Eid al-Adha day 4',           tr:'Kurban Bayramı 4. Gün' },
+  '2026-07-15': { zh:'民主與全國團結日',     en:'Democracy & National Unity Day', tr:'Demokrasi ve Milli Birlik Günü' },
+  '2026-08-30': { zh:'勝利節',               en:'Victory Day',                 tr:'Zafer Bayramı' },
+  '2026-10-28': { zh:'共和國日前夕（半天）', en:'Republic Day eve (half day)', tr:'Cumhuriyet Bayramı Arifesi', half:true },
+  '2026-10-29': { zh:'共和國日',             en:'Republic Day',                tr:'Cumhuriyet Bayramı' }
+};
+function holidayOf(date){ return HOLIDAYS[date]||null; }
+function holidayName(h){ return (LANG==='zh-Hant'? h.zh : h.en) + ' · ' + h.tr; }
+function holidayShort(h){ return LANG==='zh-Hant'? h.zh : h.en; }
+
+function dayStatus(id,date){
+  const key=`${id}|${date}`;
+  if(LEAVE_MARKS[key]) return 'leave';
+  if(SICK_MARKS[key]) return 'sick_doc';
+  if(ABSENT_MARKS[key]) return 'absent';
+  if(BIZ_MARKS[key]) return 'business';
+  return 'work';
+}
+/* 沒有出勤紀錄的日子（病假、曠職、休假）不顯示上下班時間 */
+function noPunchDay(st){ return st==='leave'||st==='sick_doc'||st==='absent'; }
+/* 需要打卡的員工名單（noAttendance:true 的人不列入） */
+/* ---- 到職日 / 年資 ----
+   土耳其勞動法的特休級距：滿 1 年未滿 5 年 14 天、5–15 年 20 天、超過 15 年 26 天。 */
+function tenureMonths(hireDate){
+  if(!hireDate) return null;
+  const h=new Date(hireDate+'T00:00:00'); if(isNaN(h)) return null;
+  const n=new Date();
+  let mo=(n.getFullYear()-h.getFullYear())*12+(n.getMonth()-h.getMonth());
+  if(n.getDate()<h.getDate()) mo--;
+  return Math.max(0,mo);
+}
+function tenureText(hireDate){
+  const mo=tenureMonths(hireDate);
+  if(mo==null) return t('no_hire_date');
+  const y=Math.floor(mo/12), m=mo%12;
+  return (y?`${y}${t('tenure_y')} `:'')+`${m}${t('tenure_m')}`;
+}
+/* 土耳其勞動法特休天數（依完整服務年資）
+   滿 1 年～未滿 5 年：14 天
+   滿 5 年～未滿 15 年：20 天
+   滿 15 年及以上：26 天
+   未滿 1 年：0 天 */
+function suggestedAnnualDays(hireDate){
+  const mo=tenureMonths(hireDate);
+  if(mo==null || mo<12) return 0;
+  const y=Math.floor(mo/12);
+  return y>=15 ? 26 : (y>=5 ? 20 : 14);
+}
+/* 法定特休時數（天 × 8）。
+   特休餘額以「主控端設定的目前剩餘時數」為基準；
+   每到員工到職周年日，再依當時完整年資自動增加法定特休。 */
+function baseAnnualHours(hireDate){
+  return suggestedAnnualDays(hireDate) * HOURS_PER_DAY;
+}
+function carryHoursOf(emp){
+  /* 舊資料相容：仍讀取舊的 carry 欄位，但新的介面不再把它當成主要調整欄位。 */
+  if(!emp||!emp.quota) return 0;
+  const c = emp.quota.carry;
+  if(c==null || c==='') return 0;
+  const n = parseFloat(c);
+  return isNaN(n) ? 0 : Math.round(n*2)/2;
+}
+function annualQuotaHours(emp){
+  if(!emp) return 0;
+  return baseAnnualHours(emp.hireDate) + carryHoursOf(emp);
+}
+function annualRemainingSeedHours(emp){
+  if(!emp || !emp.quota) return null;
+  const v = Number(emp.quota.annualRemainingHours);
+  return Number.isFinite(v) ? Math.max(0, Math.round(v*2)/2) : null;
+}
+function annualBalanceAsOf(emp){
+  const v = emp && emp.quota && emp.quota.annualBalanceAsOf;
+  return v && /^\\d{4}-\\d{2}-\\d{2}$/.test(v) ? v : ymd(new Date());
+}
+function statutoryDaysForServiceYears(years){
+  const y=Number(years)||0;
+  return y>=15 ? 26 : (y>=5 ? 20 : (y>=1 ? 14 : 0));
+}
+function anniversaryDate(hireDate, years){
+  if(!hireDate) return null;
+  const h=new Date(hireDate+'T00:00:00');
+  if(isNaN(h)) return null;
+  const d=new Date(h);
+  d.setFullYear(h.getFullYear()+years);
+  return d;
+}
+/* 從「目前餘額最後調整日」一路檢查到今天。
+   只要跨過到職周年日，就把該周年對應的法定天數自動加回餘額。 */
+function anniversaryAccrualHours(emp){
+  if(!emp || !emp.hireDate || annualRemainingSeedHours(emp)==null) return 0;
+  const fromStr=annualBalanceAsOf(emp);
+  const from=new Date(fromStr+'T00:00:00');
+  const hire=new Date(emp.hireDate+'T00:00:00');
+  const today=new Date(); today.setHours(0,0,0,0);
+  if(isNaN(from)||isNaN(hire)||from>=today) return 0;
+
+  let total=0;
+  const maxYears=Math.max(0,today.getFullYear()-hire.getFullYear()+1);
+  for(let y=1;y<=maxYears;y++){
+    const ann=anniversaryDate(emp.hireDate,y);
+    if(!ann || ann<=from || ann>today) continue;
+    total += statutoryDaysForServiceYears(y) * HOURS_PER_DAY;
+  }
+  return total;
+}
+/* 舊資料沒有 annualRemainingHours 時，沿用原本系統算出的「目前餘額」，
+   但不追溯自動補發周年額度；主控端第一次儲存後即進入新制度。 */
+function legacyAnnualRemainingHours(emp){
+  if(!emp) return 0;
+  const quota=annualQuotaHours(emp);
+  const used=(typeof LEAVE_REQUESTS!=='undefined')
+    ? LEAVE_REQUESTS
+        .filter(r=>r.empId===emp.id && r.status==='approved' && ANNUAL_FIRST_FOR[r.type]!==false)
+        .reduce((s,r)=>s+r.hours,0)
+    : 0;
+  return Math.max(0, quota-used);
+}
+function currentAnnualRemainingHours(emp){
+  const seed=annualRemainingSeedHours(emp);
+  if(seed==null) return legacyAnnualRemainingHours(emp);
+  return seed + anniversaryAccrualHours(emp);
+}
+function daysToAnniversary(hireDate){
+  const mo=tenureMonths(hireDate);
+  if(mo==null || mo>=12) return null;
+  const h=new Date(hireDate+'T00:00:00');
+  const target=new Date(h.getFullYear()+1,h.getMonth(),h.getDate());
+  return Math.ceil((target-new Date())/86400000);
+}
+function nextAnniversaryText(hireDate){
+  if(!hireDate) return t('no_hire_date');
+  const h=new Date(hireDate+'T00:00:00');
+  if(isNaN(h)) return t('no_hire_date');
+  const today=new Date(); today.setHours(0,0,0,0);
+  let years=Math.max(1,today.getFullYear()-h.getFullYear());
+  let next=anniversaryDate(hireDate,years);
+  if(next<=today){ years++; next=anniversaryDate(hireDate,years); }
+  if(!next) return t('no_hire_date');
+  const days=Math.ceil((next-today)/86400000);
+  const addDays=statutoryDaysForServiceYears(years);
+  return t('next_anniv').replace('%d',days).replace('%h',addDays);
+}
+function tenureBadge(e){
+  const mo=tenureMonths(e.hireDate);
+  if(mo==null) return `<span style="color:var(--warn)">⚠ ${t('no_hire_date')}</span>`;
+  const txt=`${e.hireDate} · ${t('tenure')} ${tenureText(e.hireDate)}`;
+  if(mo<12){
+    const d=daysToAnniversary(e.hireDate);
+    return `${txt} · <span style="color:#5b6b78">${t('anniv_soon').replace('%d',d)}</span>`;
+  }
+  const sug=suggestedAnnualDays(e.hireDate);
+  const carry=carryHoursOf(e);
+  const carryTxt = carry ? ` + ${t('q_carry')} ${carry}${t('hours_unit')}` : '';
+  return `${txt} · ${t('suggest_annual')} ${sug} ${t('days_unit')}${carryTxt}`;
+}
+function rosterIds(){ return Object.keys(EMPLOYEES).filter(k=>!EMPLOYEES[k].noAttendance); }
+/* 特休額度：依法定年資自動計算 + 可手動加「累積結轉」小時；其他假別仍讀 quota */
+function quotaOf(empId,type){
+  const e=EMPLOYEES[empId];
+  if(!e) return 0;
+  if(type==='annual') return currentAnnualRemainingHours(e);
+  return (e.quota && e.quota[type]!=null) ? e.quota[type] : 0;
+}
+/* 已核准的請假時數（依類別加總，未分攤前的原始值） */
+function usedLeaveHours(empId,type){
+  return LEAVE_REQUESTS
+    .filter(r=>r.empId===empId && r.type===type && r.status==='approved')
+    .reduce((s,r)=>s+r.hours,0);
+}
+/* ---- 休假帳本 ----
+   規則：不管請哪一種假，一律先扣「特休（個人休假）」的剩餘額度；
+         特休扣完之後，超出的時數才依假別記到「病假／事假」的累計裡（累計沒有上限）。
+   另外額外統計「今年」已請特休／病假／出差天數，供老闆儀表板顯示。 */
+function accBucket(type){
+  if(type==='sick_doc'||type==='sick') return 'sick_doc';
+  return 'personal';
+}
+function currentYearPrefix(){
+  return String(new Date().getFullYear())+'-';
+}
+function isThisYear(dateStr){
+  return dateStr && String(dateStr).startsWith(currentYearPrefix());
+}
+/* 計算某員工今年被標記為公出（出差）的天數 */
+function countBizDaysThisYear(empId){
+  let n=0;
+  Object.keys(BIZ_MARKS).forEach(k=>{
+    if(!k.startsWith(empId+'|')) return;
+    const date=k.split('|')[1];
+    if(isThisYear(date)) n++;
+  });
+  return n;
+}
+/* 計算某員工今年被標記為「病假·有證明」的整天數（主控端標記） */
+function countSickMarkDaysThisYear(empId){
+  let n=0;
+  Object.keys(SICK_MARKS).forEach(k=>{
+    if(!k.startsWith(empId+'|')) return;
+    const date=k.split('|')[1];
+    if(isThisYear(date)) n++;
+  });
+  return n;
+}
+function leaveLedger(empId){
+  const emp=EMPLOYEES[empId]||{};
+  const annualQuota=quotaOf(empId,'annual');
+  let left=annualQuota;
+  const acc={sick_doc:0, personal:0};
+  const balanceAsOf=annualBalanceAsOf(emp);
+  const hasManagedBalance=annualRemainingSeedHours(emp)!=null;
+  /* 今年已用（時數） */
+  let yearAnnualUsed=0;   // 今年從特休額度扣掉的時數
+  let yearSickHours=0;    // 今年病假時數（請假單，不扣特休）
+  let yearPersonalHours=0;
+  LEAVE_REQUESTS
+    .filter(r=>r.empId===empId && r.status==='approved')
+    .sort((a,b)=> a.date===b.date ? a.reqId-b.reqId : (a.date<b.date?-1:1))
+    .forEach(r=>{
+      /* 新制度下，主控端調整日前的歷史假單已包含在「目前剩餘天數」裡，
+         因此只從調整日之後的核准假單繼續扣除。 */
+      const afterBalanceDate = !hasManagedBalance || !r.date || r.date>=balanceAsOf;
+      const useAnnual = afterBalanceDate && ANNUAL_FIRST_FOR[r.type]!==false;
+      const fromAnnual = useAnnual ? Math.min(left, r.hours) : 0;
+      left-=fromAnnual;
+      const rest=r.hours-fromAnnual;
+      if(rest>0) acc[accBucket(r.type)]+=rest;
+      if(isThisYear(r.date)){
+        yearAnnualUsed += fromAnnual;
+        if(r.type==='sick_doc'||r.type==='sick') yearSickHours += r.hours;
+        else if(r.type==='personal') yearPersonalHours += rest; // 超出特休的部分
+      }
+    });
+  /* 主控端整天標記的病假也算進今年病假（以 1 天 = HOURS_PER_DAY 時） */
+  const sickMarkDays = countSickMarkDaysThisYear(empId);
+  yearSickHours += sickMarkDays * HOURS_PER_DAY;
+  const bizDays = countBizDaysThisYear(empId);
+  return {
+    annualQuota, annualLeft:left, annualUsed:annualQuota-left,
+    sick_doc:acc.sick_doc + sickMarkDays*HOURS_PER_DAY, personal:acc.personal,
+    yearAnnualUsed, yearSickHours, yearPersonalHours, bizDays
+  };
+}
+function remainingLeave(empId){ return leaveLedger(empId).annualLeft; }
+/* ---- 時間工具 ---- */
+function fmtTime(ms){ if(ms==null) return '—'; const d=new Date(ms); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function shiftMin(hhmm){ const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
+function hoursBetween(inMs,outMs){
+  let ms = outMs - inMs;
+  // 扣除與午休時段重疊的部分
+  const d = new Date(inMs);
+  const [ls_h,ls_m]=LUNCH_START.split(':').map(Number);
+  const [le_h,le_m]=LUNCH_END.split(':').map(Number);
+  const lunchStart=new Date(d.getFullYear(),d.getMonth(),d.getDate(),ls_h,ls_m,0).getTime();
+  const lunchEnd  =new Date(d.getFullYear(),d.getMonth(),d.getDate(),le_h,le_m,0).getTime();
+  const overlap = Math.max(0, Math.min(outMs,lunchEnd) - Math.max(inMs,lunchStart));
+  ms -= overlap;
+  return ms/3600000;
+}
+function fmtHMS(hoursFloat){
+  const totalSec=Math.round(hoursFloat*3600);
+  const h=Math.floor(totalSec/3600), m=Math.floor((totalSec%3600)/60), s=totalSec%60;
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+function isLate(inMs){
+  // 遲到 = 上班時間晚於彈性窗尾(08:30) + 緩衝分鐘
+  const d=new Date(inMs);
+  const mins=d.getHours()*60+d.getMinutes();
+  return mins > shiftMin(FLEX_END)+GRACE_MINUTES;
+}
+/* 把實際上班時間鎖進彈性窗：早於 08:00 當 08:00，08:00–08:30 照實際，晚於 08:30 以實際為準 */
+function anchoredInMin(inMs){
+  const d=new Date(inMs);
+  const mins=d.getHours()*60+d.getMinutes();
+  const lo=shiftMin(FLEX_START), hi=shiftMin(FLEX_END);
+  if(mins<lo) return lo;      // 早到，仍以 08:00 起算應下班
+  return mins;                // 08:00 以後（含遲到）以實際上班起算
+}
+/* 應下班時間(當天毫秒) = 鎖進窗的上班 + 8.5 小時跨距 */
+function expectedOutMs(inMs){
+  const d=new Date(inMs);
+  const outMin=anchoredInMin(inMs)+STANDARD_SPAN_MIN;
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate(),0,0,0).getTime()+outMin*60000;
+}
+/* 該日是否滿勤(綠燈)：實際下班 ≥ 應下班（給 1 分鐘容差） */
+function isFullDay(inMs,outMs){
+  if(inMs==null||outMs==null) return false;
+  return outMs >= expectedOutMs(inMs) - 60000;
+}
+
+/* ---- Session ---- */
+let CURRENT=null; // employee object
+
+function personSvg(){ return `<svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zm0 2.4c-3.3 0-9.8 1.6-9.8 4.9v2.5h19.6v-2.5c0-3.3-6.5-4.9-9.8-4.9z"/></svg>`; }
+function avatarInner(url){ return (url&&url.trim())? `<img class="avatar" src="${url}" style="width:100%;height:100%;border:none" onerror="this.replaceWith(document.createRange().createContextualFragment('${personSvg().replace(/'/g,"\\'")}'))">` : personSvg(); }
+
+/* ============================================================
+   公司 IP 檢查
+   ============================================================ */
+function ipMatches(ip){
+  return ALLOWED_IPS.some(pat=>{
+    if(pat.indexOf('*')>=0){
+      const re=new RegExp('^'+pat.replace(/\./g,'\\.').replace(/\*/g,'.*')+'$');
+      return re.test(ip);
+    }
+    return pat===ip;
+  });
+}
+function renderIpBanner(){
+  const el=document.getElementById('ipBanner');
+  if(!el) return;
+  el.className='ip-banner';
+  if(!IP_LOCK_ENABLED){ el.classList.add('ok'); el.textContent=t('ip_off'); return; }
+  if(IP_STATE==='checking'){ el.textContent=t('ip_checking'); return; }
+  if(IP_STATE==='ok'){ el.classList.add('ok'); el.textContent=t('ip_ok'); return; }
+  if(IP_STATE==='error'){ el.classList.add('error'); el.textContent=t('ip_error'); return; }
+  el.classList.add('blocked');
+  el.innerHTML=t('ip_blocked')+'<b>'+(CLIENT_IP||'?')+'</b>';
+}
+async function checkClientIP(){
+  if(!IP_LOCK_ENABLED){ IP_STATE='off'; renderIpBanner(); return; }
+  const sources=['https://api.ipify.org?format=json','https://api64.ipify.org?format=json','https://ipapi.co/json/'];
+  for(const url of sources){
+    try{
+      const r=await fetch(url,{cache:'no-store'});
+      if(!r.ok) continue;
+      const j=await r.json();
+      const ip=j.ip||j.query;
+      if(ip){ CLIENT_IP=ip; IP_STATE=ipMatches(ip)?'ok':'blocked'; renderIpBanner(); return; }
+    }catch(e){ /* 換下一個來源 */ }
+  }
+  IP_STATE='error'; renderIpBanner();
+}
+function ipAllowedFor(acc){
+  if(!IP_LOCK_ENABLED) return true;
+  if(ALLOW_ADMIN_ANYWHERE && acc.role==='admin') return true;
+  if(IP_STATE==='error') return !BLOCK_IF_IP_UNKNOWN;
+  return IP_STATE==='ok';
+}
+function ipBlockMessage(){
+  if(IP_STATE==='error') return t('ip_error');
+  if(IP_STATE==='checking') return t('ip_checking');
+  return t('ip_need_office')+(CLIENT_IP||'?');
+}
+
+/* ---- 登入：帳號＝公司 Email，密碼由 Firebase Authentication 驗證 ---- */
+/* 不再用姓名對照 email（roster 已停用，避免未登入也能讀到全體姓名與信箱） */
+async function doLogin(){
+  const email=(document.getElementById('loginId').value||'').trim().toLowerCase();
+  const pw=document.getElementById('loginPw').value;
+  const msg=document.getElementById('loginMsg');
+  const btn=document.getElementById('loginBtn');
+  msg.className='msg err'; msg.textContent='';
+  if(!email || !pw){ msg.textContent=t('login_fail'); return; }
+  btn.disabled=true; btn.textContent=t('signing_in');
+  try{
+    await AUTH.signInWithEmailAndPassword(email,pw);
+    /* 之後交給 onAuthStateChanged 處理 */
+  }catch(err){
+    console.error('[login]',err);
+    msg.textContent = (err.code==='auth/network-request-failed') ? t('net_error') : t('login_fail');
+  }finally{
+    btn.disabled=false; btn.textContent=t('login_btn');
+  }
+}
+
+/* ---- 忘記密碼：登入頁直接寄重設信，不需要先登入 ---- */
+window.forgotPassword=async ()=>{
+  const email=(document.getElementById('loginId').value||'').trim().toLowerCase();
+  const msg=document.getElementById('loginMsg');
+  msg.className='msg err'; msg.textContent='';
+  if(!email || email.indexOf('@')<0){ msg.textContent=t('need_email_first'); return; }
+  try{
+    await AUTH.sendPasswordResetEmail(email);
+    msg.className='msg ok'; msg.textContent=t('fp_sent');
+  }catch(err){
+    console.error('[reset]',err);
+    if(err.code==='auth/network-request-failed'){ msg.textContent=t('net_error'); return; }
+    /* 帳號不存在等其他錯誤仍顯示已寄出，避免洩漏哪些 Email 有註冊 */
+    msg.className='msg ok'; msg.textContent=t('fp_sent');
+  }
+};
+document.getElementById('forgotPwLink').onclick=(e)=>{ e.preventDefault(); forgotPassword(); };
+
+/* ---- 登入狀態改變 ---- */
+let UNSUBS=[];
+function stopListeners(){ UNSUBS.forEach(fn=>{ try{fn();}catch(e){} }); UNSUBS=[]; }
+AUTH.onAuthStateChanged(async (user)=>{
+  if(!user){
+    stopListeners(); CURRENT=null; EMPLOYEES={};
+    document.getElementById('appView').style.display='none';
+    document.getElementById('loginView').style.display='block';
+    document.getElementById('loginPw').value='';
+    return;
+  }
+  const msg=document.getElementById('loginMsg');
+  try{
+    const snap=await DB.collection('employees').doc(user.uid).get();
+    if(!snap.exists){
+      msg.className='msg err'; msg.textContent=t('no_profile');
+      await AUTH.signOut(); return;
+    }
+    const me={ id:user.uid, ...snap.data() };
+    if(!ipAllowedFor(me)){
+      msg.className='msg err'; msg.textContent=ipBlockMessage();
+      await AUTH.signOut(); return;
+    }
+    CURRENT=me;
+    document.getElementById('loginView').style.display='none';
+    document.getElementById('appView').style.display='block';
+    document.getElementById('empUI').style.display = CURRENT.role==='employee'?'block':'none';
+    document.getElementById('adminUI').style.display = CURRENT.role==='admin'?'block':'none';
+    document.getElementById('roleBadge').textContent = CURRENT.role==='admin'?t('role_admin'):t('role_emp');
+    startListeners();
+  }catch(err){
+    console.error('[profile]',err);
+    msg.className='msg err'; msg.textContent=t('net_error');
+    try{ await AUTH.signOut(); }catch(e){}
+  }
+});
+
+/* ---- 即時同步 ---- */
+function setDbState(txt,cls){
+  const el=document.getElementById('dbState');
+  if(!el) return;
+  el.textContent=txt; el.className='db-state '+(cls||'');
+}
+function startListeners(){
+  stopListeners();
+  setDbState(t('db_loading'),'');
+  UNSUBS.push(DB.collection('employees').onSnapshot(qs=>{
+    const next={};
+    qs.forEach(d=>{ next[d.id]={ id:d.id, ...d.data() }; });
+    EMPLOYEES=next;
+    if(CURRENT && EMPLOYEES[CURRENT.id]) CURRENT=EMPLOYEES[CURRENT.id];
+    setDbState(t('db_ok'),'ok'); renderAll();
+  }, err=>{ console.error('[employees]',err); setDbState(t('db_error'),'bad'); }));
+
+  UNSUBS.push(DB.collection('attendance').onSnapshot(qs=>{
+    Object.keys(ATT).forEach(k=>delete ATT[k]);
+    [LEAVE_MARKS,BIZ_MARKS,SICK_MARKS,ABSENT_MARKS].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
+    qs.forEach(d=>{
+      const r=d.data(); if(!r||!r.uid||!r.date) return;
+      const key=`${r.uid}|${r.date}`;
+      if(r.inMs!=null||r.outMs!=null) ATT[key]={ inMs:r.inMs??null, outMs:r.outMs??null };
+      if(r.status==='leave')     LEAVE_MARKS[key]=true;
+      if(r.status==='business')  BIZ_MARKS[key]=true;
+      if(r.status==='sick_doc')  SICK_MARKS[key]='doc';
+      if(r.status==='absent')    ABSENT_MARKS[key]=true;
+    });
+    setDbState(t('db_ok'),'ok'); renderAll();
+  }, err=>{ console.error('[attendance]',err); setDbState(t('db_error'),'bad'); }));
+
+  UNSUBS.push(DB.collection('requests').onSnapshot(qs=>{
+    LEAVE_REQUESTS.length=0;
+    qs.forEach(d=>{ const r=d.data(); LEAVE_REQUESTS.push({ reqId:d.id, empId:r.uid, ...r }); });
+    setDbState(t('db_ok'),'ok'); renderAll();
+  }, err=>{ console.error('[requests]',err); setDbState(t('db_error'),'bad'); }));
+}
+document.getElementById('loginBtn').onclick=doLogin;
+document.getElementById('loginPw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('loginId').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('logoutBtn').onclick=()=>{ AUTH.signOut(); };
+function toggleLang(){ LANG = LANG==='zh-Hant'?'en':'zh-Hant'; applyI18n(); }
+document.getElementById('langToggle').onclick=toggleLang;
+document.getElementById('langToggleLogin').onclick=toggleLang;
+
+/* ---- 統一渲染 ---- */
+function safe(fn,label){ try{ fn(); }catch(err){ console.error('[render '+label+']',err); } }
+function renderAll(){
+  if(!CURRENT) return;
+  if(CURRENT.role==='employee'){
+    safe(renderEmployee,'employee');
+  }else{
+    safe(renderMonthCalendar,'monthly');
+    safe(renderDaily,'daily');
+    safe(renderEmpAdmin,'employees');
+    safe(renderAllRequests,'requests');
+  }
+}
+
+/* ============================================================
+   員工 UI
+   ============================================================ */
+function renderEmployee(){
+  const e=CURRENT;
+  document.getElementById('empAvatar').innerHTML=avatarInner(e.photoUrl);
+  document.getElementById('empName').textContent=e.name;
+  document.getElementById('empMeta').textContent=`#${e.id}`;
+  renderEmpLog(e.id);
+  renderEmpLeavePage(e.id);
+}
+function collectDays(id){
+  // 回傳該員工本月有紀錄或休假的日期，新到舊
+  const keys=new Set();
+  Object.keys(ATT).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
+  Object.keys(LEAVE_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
+  Object.keys(BIZ_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
+  Object.keys(SICK_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
+  Object.keys(ABSENT_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
+  return [...keys].sort().reverse();
+}
+function weekdayLabel(dateStr){ const d=new Date(dateStr+'T00:00:00'); return (LANG==='zh-Hant'?WEEKDAY:WEEKDAY_EN)[d.getDay()]; }
+
+function renderEmpLog(id){
+  const rows = collectDays(id).map(date=>{
+    const st=dayStatus(id,date);
+    const rec = ATT[`${id}|${date}`];
+    let inTxt='—',outTxt='—',hrsTxt='—';
+    if(!noPunchDay(st) && rec && rec.inMs){
+      inTxt=fmtTime(rec.inMs); outTxt=rec.outMs?fmtTime(rec.outMs):'—';
+      if(rec.outMs) hrsTxt=fmtHMS(hoursBetween(rec.inMs,rec.outMs));
+    }
+    return `<tr>
+      <td class="mono">${date}</td>
+      <td>${weekdayLabel(date)}</td>
+      <td class="mono">${inTxt}</td>
+      <td class="mono">${outTxt}</td>
+      <td class="mono">${hrsTxt}</td>
+      <td>${statusPillFor(id,date)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('empLogTable').innerHTML=`
+    <tr><th>${t('th_date')}</th><th>${t('th_weekday')}</th><th>${t('th_in')}</th><th>${t('th_out')}</th><th>${t('th_hours')}(24H)</th><th>${t('th_status')}</th></tr>
+    ${rows}`;
+}
+
+/* 模擬打卡（不寫入 Firebase）*/
+async function simClock(kind){
+  if(!CURRENT) return;
+  const flash=document.getElementById('clockFlash');
+  if(IP_LOCK_ENABLED && CURRENT.role!=='admin' && IP_STATE!=='ok'){
+    flash.textContent=ipBlockMessage(); return;
+  }
+  const now=new Date(), date=ymd(now), key=`${CURRENT.id}|${date}`;
+  const rec=Object.assign({},ATT[key]||{});
+  const nowMs=now.getTime();
+  if(kind==='in'){ if(!rec.inMs || nowMs<rec.inMs) rec.inMs=nowMs; }   // 保留最早
+  else           { if(!rec.outMs || nowMs>rec.outMs) rec.outMs=nowMs; } // 保留最晚
+  const payload={ uid:CURRENT.id, date, inMs:rec.inMs??null, outMs:rec.outMs??null };
+  flash.textContent=(kind==='in'?t('clocked_in_at'):t('clocked_out_at'))+fmtTime(nowMs);
+  try{
+    await DB.collection('attendance').doc(`${CURRENT.id}_${date}`).set(payload,{merge:true});
+  }catch(err){ console.error('[clock]',err); flash.textContent=t('save_fail'); }
+}
+document.getElementById('changePwBtn').onclick=async ()=>{
+  const v=document.getElementById('newPw').value.trim();
+  const msg=document.getElementById('pwMsg');
+  msg.className='msg err';
+  if(v.length<6){ msg.textContent=t('pw_too_short'); return; }
+  try{
+    await AUTH.currentUser.updatePassword(v);
+    document.getElementById('newPw').value='';
+    msg.className='msg ok'; msg.textContent=t('pw_changed');
+  }catch(err){
+    console.error('[pw]',err);
+    msg.textContent = err.code==='auth/requires-recent-login' ? t('pw_relogin') : t('save_fail');
+  }
+};
+/* 主控端寄重設密碼信 */
+window.sendReset=(id)=>{
+  const e=EMPLOYEES[id]; if(!e||!e.email) return;
+  AUTH.sendPasswordResetEmail(e.email)
+    .then(()=>alert(t('reset_sent')+e.email))
+    .catch(err=>{ console.error('[reset]',err); alert(t('save_fail')); });
+};
+document.getElementById('btnClockIn').onclick=()=>simClock('in');
+document.getElementById('btnClockOut').onclick=()=>simClock('out');
+
+/* ============================================================
+   請假系統
+   ============================================================ */
+const LEAVE_TYPE_LABELS = ()=>({
+  annual:t('type_annual'), sick_doc:t('type_sick_doc'),
+  sick:t('type_sick'), personal:t('type_personal')
+});
+function typeLabel(ty){ return LEAVE_TYPE_LABELS()[ty]||ty; }
+/* 依起訖時段算時數（扣午休重疊，四捨五入到 0.5） */
+function calcLeaveHours(startMin,endMin){
+  if(endMin<=startMin) return 0;
+  let mins=endMin-startMin;
+  const ls=shiftMin(LUNCH_START), le=shiftMin(LUNCH_END);
+  const overlap=Math.max(0, Math.min(endMin,le)-Math.max(startMin,ls));
+  mins-=overlap;
+  return Math.round((mins/60)*2)/2; // 0.5 單位
+}
+function hhmmToMin(v){ if(!v) return 0; const [h,m]=v.split(':').map(Number); return h*60+m; }
+
+function populateReqTypeSelect(){
+  const sel=document.getElementById('reqType');
+  sel.innerHTML=LEAVE_TYPES.map(ty=>`<option value="${ty}">${typeLabel(ty)}</option>`).join('');
+}
+/* 小時 → 天（保留最多 1 位小數，支援 0.5 天 = 4 小時） */
+function dayStr(h){
+  const d = Math.round((Number(h)||0) / HOURS_PER_DAY * 10) / 10;
+  return (d % 1 === 0) ? String(d) : d.toFixed(1);
+}
+/* 對齊 0.5 小時 */
+function snapHalfHour(h){
+  const n = parseFloat(h);
+  if(isNaN(n)) return 0;
+  return Math.round(n * 2) / 2;
+}
+function statCard(labelKey,count){
+  return `<div class="quota-card">
+      <div class="qt">${t(labelKey)}</div>
+      <div class="qv">${count} ${t('days_unit')}</div>
+    </div>`;
+}
+function accCard(cls,label,hours){
+  return `<div class="quota-card">
+      <div class="qt ${cls}">${label}</div>
+      <div class="qtag acc">${t('q_accrued')}</div>
+      <div class="qv">${hours} ${t('hours_unit')}</div>
+      <div class="qsub">${dayStr(hours)} ${t('days_unit')}</div>
+    </div>`;
+}
+/* 老闆要看的四大指標：今年特休額度（可累積）、今年已請特休、今年已請病假、今年出差天數 */
+function quotaCardsHtml(id){
+  const L=leaveLedger(id);
+  const y = new Date().getFullYear();
+  const annualTotalDays = dayStr(L.annualQuota);
+  const annualLeftDays  = dayStr(L.annualLeft);
+  const annualUsedDays  = dayStr(L.yearAnnualUsed);
+  const sickDays        = dayStr(L.yearSickHours);
+  const bizDays         = L.bizDays;
+  const emp = EMPLOYEES[id]||{};
+  const nextAnn = nextAnniversaryText(emp.hireDate);
+  return `
+    <div class="quota-card">
+      <div class="qt type-annual">${t('q_annual_this_year')}</div>
+      <div class="qtag">${t('q_annual_remaining')}</div>
+      <div class="qv">${annualLeftDays} ${t('days_unit')}</div>
+      <div class="qsub">${L.annualLeft} ${t('hours_unit')} · ${nextAnn}</div>
+    </div>
+    <div class="quota-card">
+      <div class="qt type-annual">${t('q_annual_used_year')}</div>
+      <div class="qtag acc">${y}</div>
+      <div class="qv">${annualUsedDays} ${t('days_unit')}</div>
+      <div class="qsub">${L.yearAnnualUsed} ${t('hours_unit')}</div>
+    </div>
+    <div class="quota-card">
+      <div class="qt type-sick_doc">${t('q_sick_used_year')}</div>
+      <div class="qtag acc">${y}</div>
+      <div class="qv">${sickDays} ${t('days_unit')}</div>
+      <div class="qsub">${L.yearSickHours} ${t('hours_unit')}</div>
+    </div>
+    <div class="quota-card">
+      <div class="qt" style="color:#1665c0">${t('q_biz_days_year')}</div>
+      <div class="qtag acc">${y}</div>
+      <div class="qv">${bizDays} ${t('days_unit')}</div>
+      <div class="qsub">${t('st_business')}</div>
+    </div>`;
+}
+function renderEmpLeavePage(id){
+  populateReqTypeSelect();
+  document.getElementById('empQuotaCards').innerHTML=quotaCardsHtml(id);
+  initDatePicker('reqDate','reqDateWrap');
+  initTimePicker('reqStart','reqStartWrap');
+  initTimePicker('reqEnd','reqEndWrap');
+  updateReqCalc();
+  renderMyRequests(id);
+}
+
+/* ---- 自訂日期／時間選擇器（不受瀏覽器系統語系影響）---- */
+function closeAllPickers(except){
+  document.querySelectorAll('.dp-pop.open,.tp-pop.open').forEach(p=>{ if(p!==except) p.classList.remove('open'); });
+}
+/* 捕獲階段：不管內層有沒有 stopPropagation，點到選擇器以外的地方一定收起來 */
+document.addEventListener('click',(e)=>{
+  const inside = e.target && e.target.closest && e.target.closest('.dp-wrap,.tp-wrap');
+  if(!inside) closeAllPickers();
+}, true);
+document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeAllPickers(); });
+window.addEventListener('scroll',()=>closeAllPickers(), true);
+
+function fmtDateDisplay(dateStr){
+  if(!dateStr) return LANG==='zh-Hant' ? '請選擇日期' : 'Select date';
+  const d=new Date(dateStr+'T00:00:00');
+  return LANG==='zh-Hant'
+    ? `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`
+    : d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+}
+function initDatePicker(hiddenId, wrapId){
+  const hidden=document.getElementById(hiddenId);
+  const wrap=document.getElementById(wrapId);
+  if(!hidden||!wrap) return;
+  let vy, vm;
+  const now=new Date();
+  if(hidden.value){ const d=new Date(hidden.value+'T00:00:00'); vy=d.getFullYear(); vm=d.getMonth(); }
+  else { vy=now.getFullYear(); vm=now.getMonth(); }
+
+  function render(){
+    const dowLabels = LANG==='zh-Hant'?WEEKDAY:WEEKDAY_EN;
+    const dim=daysInMonth(vy,vm);
+    const firstDow=new Date(vy,vm,1).getDay();
+    const title = LANG==='zh-Hant' ? `${vy}年${vm+1}月` : new Date(vy,vm,1).toLocaleDateString('en-US',{year:'numeric',month:'long'});
+    let daysHtml='';
+    dowLabels.forEach(d=>{ daysHtml+=`<div class="dp-dow">${d}</div>`; });
+    for(let i=0;i<firstDow;i++) daysHtml+=`<div class="dp-day empty"></div>`;
+    for(let day=1; day<=dim; day++){
+      const ds=`${vy}-${pad(vm+1)}-${pad(day)}`;
+      const isSel = ds===hidden.value;
+      const isToday = ds===ymd(now);
+      daysHtml+=`<div class="dp-day${isSel?' sel':''}${isToday?' today':''}" data-date="${ds}">${day}</div>`;
+    }
+    wrap.innerHTML = `
+      <button type="button" class="dp-btn" id="${wrapId}_btn"><span>${fmtDateDisplay(hidden.value)}</span><span class="ic">&#128197;</span></button>
+      <div class="dp-pop" id="${wrapId}_pop">
+        <div class="dp-head">
+          <button type="button" id="${wrapId}_prev">&lsaquo;</button>
+          <span class="t">${title}</span>
+          <button type="button" id="${wrapId}_next">&rsaquo;</button>
+        </div>
+        <div class="dp-grid">${daysHtml}</div>
+        <div class="tp-done"><button type="button" id="${wrapId}_done">✓ ${t('done')}</button></div>
+      </div>`;
+    const btn=document.getElementById(`${wrapId}_btn`), pop=document.getElementById(`${wrapId}_pop`);
+    btn.onclick=(e)=>{ e.stopPropagation(); const willOpen=!pop.classList.contains('open'); closeAllPickers(); if(willOpen) pop.classList.add('open'); };
+    document.getElementById(`${wrapId}_done`).onclick=(e)=>{ e.stopPropagation(); closeAllPickers(); };
+    document.getElementById(`${wrapId}_prev`).onclick=(e)=>{ e.stopPropagation(); vm--; if(vm<0){vm=11;vy--;} render(); document.getElementById(`${wrapId}_pop`).classList.add('open'); };
+    document.getElementById(`${wrapId}_next`).onclick=(e)=>{ e.stopPropagation(); vm++; if(vm>11){vm=0;vy++;} render(); document.getElementById(`${wrapId}_pop`).classList.add('open'); };
+    wrap.querySelectorAll('.dp-day[data-date]').forEach(el=>{
+      el.onclick=(e)=>{
+        e.stopPropagation();
+        hidden.value=el.getAttribute('data-date');
+        hidden.dispatchEvent(new Event('change'));
+        render();
+      };
+    });
+  }
+  render();
+}
+
+function initTimePicker(hiddenId, wrapId){
+  const hidden=document.getElementById(hiddenId);
+  const wrap=document.getElementById(wrapId);
+  if(!hidden||!wrap) return;
+  function parseVal(v){
+    const [h,m]=(v||'08:00').split(':').map(Number);
+    const period = h<12 ? 'am':'pm';
+    let h12 = h%12; if(h12===0) h12=12;
+    return {h12, period, m:(m<30?0:30)};
+  }
+  function fmtDisplay(v){
+    if(!v) return '--:--';
+    const {h12,period,m}=parseVal(v);
+    const pLabel=t(period);
+    return LANG==='zh-Hant' ? `${pLabel} ${h12}:${pad(m)}` : `${h12}:${pad(m)} ${pLabel}`;
+  }
+  function to24(h12,period,m){ let h=h12%12; if(period==='pm') h+=12; return `${pad(h)}:${pad(m)}`; }
+  function render(){
+    const cur=parseVal(hidden.value);
+    let hoursHtml='', minsHtml='', periodHtml='';
+    for(let h=1; h<=12; h++) hoursHtml+=`<div class="tp-opt${h===cur.h12?' sel':''}" data-h="${h}">${h}</div>`;
+    [0,30].forEach(m=>{ minsHtml+=`<div class="tp-opt${m===cur.m?' sel':''}" data-m="${m}">${pad(m)}</div>`; });
+    ['am','pm'].forEach(p=>{ periodHtml+=`<div class="tp-opt${p===cur.period?' sel':''}" data-p="${p}">${t(p)}</div>`; });
+    wrap.innerHTML = `
+      <button type="button" class="tp-btn" id="${wrapId}_btn"><span>${fmtDisplay(hidden.value)}</span><span class="ic">&#128336;</span></button>
+      <div class="tp-pop" id="${wrapId}_pop">
+        <div class="tp-cols">
+          <div class="tp-col"><div class="tp-label">${t('dp_hour')}</div><div class="tp-list">${hoursHtml}</div></div>
+          <div class="tp-col"><div class="tp-label">${t('dp_minute')}</div><div class="tp-list">${minsHtml}</div></div>
+          <div class="tp-col"><div class="tp-label">${t('dp_period')}</div><div class="tp-list">${periodHtml}</div></div>
+        </div>
+        <div class="tp-done"><button type="button" id="${wrapId}_done">✓ ${t('done')}</button></div>
+      </div>`;
+    const btn=document.getElementById(`${wrapId}_btn`), pop=document.getElementById(`${wrapId}_pop`);
+    btn.onclick=(e)=>{ e.stopPropagation(); const willOpen=!pop.classList.contains('open'); closeAllPickers(); if(willOpen) pop.classList.add('open'); };
+    document.getElementById(`${wrapId}_done`).onclick=(e)=>{ e.stopPropagation(); closeAllPickers(); };
+    function pick(nh12,nperiod,nm){
+      hidden.value=to24(nh12,nperiod,nm);
+      hidden.dispatchEvent(new Event('change'));
+      render();
+      document.getElementById(`${wrapId}_pop`).classList.add('open');
+    }
+    wrap.querySelectorAll('[data-h]').forEach(el=>{ el.onclick=(e)=>{ e.stopPropagation(); const s=parseVal(hidden.value); pick(Number(el.dataset.h), s.period, s.m); }; });
+    wrap.querySelectorAll('[data-m]').forEach(el=>{ el.onclick=(e)=>{ e.stopPropagation(); const s=parseVal(hidden.value); pick(s.h12, s.period, Number(el.dataset.m)); }; });
+    wrap.querySelectorAll('[data-p]').forEach(el=>{ el.onclick=(e)=>{ e.stopPropagation(); const s=parseVal(hidden.value); pick(s.h12, el.dataset.p, s.m); }; });
+  }
+  render();
+}
+function updateReqCalc(){
+  const s=hhmmToMin(document.getElementById('reqStart').value);
+  const e=hhmmToMin(document.getElementById('reqEnd').value);
+  const hrs=calcLeaveHours(s,e);
+  document.getElementById('reqCalc').textContent=`${t('calc_hours')}: ${hrs} ${t('hours_unit')}`;
+  return hrs;
+}
+['reqStart','reqEnd'].forEach(idn=>document.getElementById(idn).addEventListener('change',updateReqCalc));
+document.getElementById('submitReqBtn').onclick=()=>{
+  const empId=CURRENT.id;
+  const type=document.getElementById('reqType').value;
+  const date=document.getElementById('reqDate').value;
+  const s=hhmmToMin(document.getElementById('reqStart').value);
+  const e=hhmmToMin(document.getElementById('reqEnd').value);
+  const msg=document.getElementById('reqMsg');
+  msg.className='msg'; msg.textContent='';
+  if(!date){ msg.classList.add('err'); msg.textContent=t('need_date'); return; }
+  const hrs=calcLeaveHours(s,e);
+  if(hrs<=0){ msg.classList.add('err'); msg.textContent=t('bad_time'); return; }
+  DB.collection('requests').add({
+    uid:empId, type, date, startMin:s, endMin:e, hours:hrs, status:'pending',
+    note:document.getElementById('reqNote').value.trim(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{
+    document.getElementById('reqNote').value='';
+    msg.classList.add('ok'); msg.textContent=t('submitted');
+  }).catch(err=>{
+    console.error('[submitReq]',err);
+    msg.classList.add('err'); msg.textContent=t('save_fail');
+  });
+};
+function minToHHMM(min){ return `${pad(Math.floor(min/60))}:${pad(min%60)}`; }
+function reqStatusPill(st){ return `<span class="pill ${st}">${t('rs_'+st)}</span>`; }
+function renderMyRequests(id){
+  const list=LEAVE_REQUESTS.filter(r=>r.empId===id).sort((a,b)=>b.reqId-a.reqId);
+  const rows=list.map(r=>`<tr>
+    <td class="mono">${r.date}</td>
+    <td class="type-${r.type}">${typeLabel(r.type)}</td>
+    <td class="mono">${minToHHMM(r.startMin)}–${minToHHMM(r.endMin)}</td>
+    <td class="mono">${r.hours}</td>
+    <td>${reqStatusPill(r.status)}</td>
+    <td>${r.note||''}</td>
+  </tr>`).join('');
+  document.getElementById('myReqTable').innerHTML=`
+    <tr><th>${t('date')}</th><th>${t('leave_type')}</th><th>${t('time_range')}</th><th>${t('hours_unit')}</th><th>${t('th_status')}</th><th>${t('note_col')}</th></tr>
+    ${rows||`<tr><td colspan="6" style="color:#8a94a0">${t('no_requests')}</td></tr>`}`;
+}
+
+function updatePendingBadge(){
+  const b=document.getElementById('pendingBadge');
+  if(!b) return;
+  const n=LEAVE_REQUESTS.filter(r=>r.status==='pending').length;
+  b.textContent=n;
+  b.style.display = n>0 ? 'inline-block' : 'none';
+}
+function renderLeaveBalanceDash(){
+  const box=document.getElementById('leaveBalanceDash');
+  if(!box) return;
+  box.innerHTML = rosterIds().map(id=>{
+    const e=EMPLOYEES[id];
+    return `<div class="subcard">
+      <div class="emp-row" style="border-bottom:none;padding:0 0 10px;">
+        <div class="avatar">${avatarInner(e.photoUrl)}</div>
+        <div class="emp-info"><div class="n">${e.name||'(—)'}</div><div class="e">#${e.empNo||''}</div></div>
+      </div>
+      <div class="quota-cards">${quotaCardsHtml(id)}</div>
+    </div>`;
+  }).join('');
+}
+function renderAllRequests(){
+  renderLeaveBalanceDash();
+  updatePendingBadge();
+  const filter=document.getElementById('reqFilter').value;
+  const list=LEAVE_REQUESTS.filter(r=>filter==='all'||r.status===filter).sort((a,b)=>b.reqId-a.reqId);
+  const rows=list.map(r=>{
+    const emp=EMPLOYEES[r.empId];
+    const actions = r.status==='pending'
+      ? `<button class="btn-mini" style="background:var(--good-bg);color:var(--good)" onclick="approveReq('${r.reqId}')">${t('approve')}</button>
+         <button class="btn-mini" style="background:#f2e7e5;color:var(--bad)" onclick="rejectReq('${r.reqId}')">${t('reject')}</button>`
+      : `<button class="btn-mini" onclick="resetReq('${r.reqId}')">${t('reset')}</button>`;
+    return `<tr>
+      <td>${emp?emp.name:r.empId}<br><span class="ident-meta">#${empNoOf(r.empId)}</span></td>
+      <td class="type-${r.type}">${typeLabel(r.type)}</td>
+      <td class="mono">${r.date}</td>
+      <td class="mono">${minToHHMM(r.startMin)}–${minToHHMM(r.endMin)}</td>
+      <td class="mono">${r.hours}</td>
+      <td>${reqStatusPill(r.status)}</td>
+      <td>${r.note||''}</td>
+      <td style="white-space:nowrap">${actions}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('allReqTable').innerHTML=`
+    <tr><th>${t('employee')}</th><th>${t('leave_type')}</th><th>${t('date')}</th><th>${t('time_range')}</th><th>${t('hours_unit')}</th><th>${t('th_status')}</th><th>${t('note_col')}</th><th></th></tr>
+    ${rows||`<tr><td colspan="8" style="color:#8a94a0">${t('no_requests')}</td></tr>`}`;
+}
+function findReq(reqId){ return LEAVE_REQUESTS.find(r=>r.reqId===reqId); }
+function setReqStatus(reqId,status){
+  DB.collection('requests').doc(String(reqId)).update({status})
+    .catch(err=>{ console.error('[review]',err); alert(t('save_fail')); });
+}
+window.approveReq=(reqId)=>setReqStatus(reqId,'approved');
+window.rejectReq =(reqId)=>setReqStatus(reqId,'rejected');
+window.resetReq  =(reqId)=>setReqStatus(reqId,'pending');
+function afterReqChange(r){
+  renderAllRequests();
+  if(CURRENT && CURRENT.id===r.empId) renderEmpLeavePage(r.empId);
+}
+document.getElementById('reqFilter').addEventListener('change',renderAllRequests);
+
+document.querySelectorAll('[data-etab]').forEach(tab=>{
+  tab.onclick=()=>{
+    document.querySelectorAll('[data-etab]').forEach(x=>x.classList.remove('active'));
+    tab.classList.add('active');
+    ['clock','leave'].forEach(p=>{ document.getElementById('epanel-'+p).style.display=(p===tab.dataset.etab)?'block':'none'; });
+  };
+});
+
+/* ============================================================
+   主控端 UI
+   ============================================================ */
+document.querySelectorAll('[data-tab]').forEach(tab=>{
+  tab.onclick=()=>{
+    document.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('active'));
+    tab.classList.add('active');
+    ['monthly','daily','employees','leavereview'].forEach(p=>{
+      document.getElementById('panel-'+p).style.display = (p===tab.dataset.tab)?'block':'none';
+    });
+    if(tab.dataset.tab==='leavereview') renderAllRequests();
+  };
+});
+
+function renderAdmin(){
+  safe(renderMonthCalendar,'monthly');
+  safe(renderDaily,'daily');
+  safe(renderEmpAdmin,'employees');
+  safe(renderAllRequests,'requests');
+}
+
+/* --- 月總表（日曆式） --- */
+function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+let CAL_Y, CAL_M, CAL_EMP; // 目前顯示的年、月(0-based)、員工id
+function hoursClass(h){ if(h>=FULL_HOURS) return 'hrs-green'; if(h<MIN_HOURS) return 'hrs-red'; return 'hrs-normal'; }
+
+function initCalendarState(){
+  const n=new Date();
+  if(CAL_Y==null){ CAL_Y=n.getFullYear(); CAL_M=n.getMonth(); }
+  // 員工下拉
+  const sel=document.getElementById('calEmp');
+  const roster=rosterIds();
+  sel.innerHTML=roster.map(id=>`<option value="${id}">${EMPLOYEES[id].name}（#${EMPLOYEES[id].empNo||''}）</option>`).join('');
+  if(CAL_EMP==null || !EMPLOYEES[CAL_EMP] || EMPLOYEES[CAL_EMP].noAttendance) CAL_EMP=roster[0];
+  sel.value=CAL_EMP;
+}
+function renderMonthCalendar(){
+  initCalendarState();
+  const y=CAL_Y, m=CAL_M, id=CAL_EMP;
+  const now=new Date();
+  const dim=daysInMonth(y,m);
+  const firstDow=new Date(y,m,1).getDay(); // 0=Sun
+  const dowLabels=(LANG==='zh-Hant')?['日','一','二','三','四','五','六']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  document.getElementById('calTitle').textContent =
+    (LANG==='zh-Hant') ? `${y}年${m+1}月` : new Date(y,m,1).toLocaleDateString('en-US',{year:'numeric',month:'long'});
+
+  let cells='';
+  dowLabels.forEach((d,i)=>{ cells+=`<div class="cal-dow ${i===0?'sun':(i===6?'sat':'')}">${d}</div>`; });
+  for(let i=0;i<firstDow;i++) cells+=`<div class="cal-cell empty"></div>`;
+
+  /* 出勤天數＝實際到班（上班）＋公出。
+     病假(有證明) 不算曠職，但公司不支薪，另外列出並依 SGK 規則拆成前2天／第3天起。
+     曠職（沒有醫生證明的缺席）無薪，且要提醒連續天數。 */
+  const cnt={work:0, biz:0, sick_doc:0, absent:0, leave:0, missing:0, holiday:0, holidayHalf:0};
+  const stByDay={};
+  for(let day=1; day<=dim; day++){
+    const date=`${y}-${pad(m+1)}-${pad(day)}`;
+    const dd=new Date(y,m,day);
+    const weekend=(dd.getDay()===0||dd.getDay()===6);
+    const isToday=(y===now.getFullYear()&&m===now.getMonth()&&day===now.getDate());
+    const st=dayStatus(id,date);
+    const rec=ATT[`${id}|${date}`];
+
+    let cls='cal-cell', badge='', hrsHtml='', eff='';
+    if(isToday) cls+=' today';
+    if(weekend) cls+=' weekend';
+
+    if(st==='leave'){
+      cnt.leave++; eff='leave';
+      cls+=' leave'; badge='<span class="cal-badge leave"></span>';
+      hrsHtml=`<span class="cal-hrs">${t('st_leave')} ✓</span>`;
+    } else if(st==='sick_doc'){
+      cnt.sick_doc++; eff='sick_doc';
+      cls+=' sick'; badge='<span class="cal-badge sick"></span>';
+      hrsHtml=`<span class="cal-hrs">${t('st_sick_doc')} ✓</span>`;
+    } else if(st==='absent'){
+      cnt.absent++; eff='absent';
+      cls+=' absent'; badge='<span class="cal-badge absent"></span>';
+      hrsHtml=`<span class="cal-hrs">${t('st_absent')}</span>`;
+    } else if(st==='business'){
+      cnt.biz++; eff='biz';
+      cls+=' biz'; badge='<span class="cal-badge biz"></span>';
+      hrsHtml=`<span class="cal-hrs">${t('st_business')} ✓</span>`;
+    } else if(rec && rec.inMs && rec.outMs && dd<=now){
+      cnt.work++; eff='work';
+      cls+=' green'; badge='<span class="cal-badge green"></span>';
+      hrsHtml=`<span class="cal-hrs">✓</span>`;
+    } else if(holidayOf(date)){
+      const h=holidayOf(date);
+      if(h.half) cnt.holidayHalf++; else cnt.holiday++;
+      eff='holiday';
+      cls+=' holiday'; badge='<span class="cal-badge holiday"></span>';
+      hrsHtml=`<span class="cal-hrs">${holidayShort(h)} ✓</span>`;
+    } else if(rec && rec.inMs && !rec.outMs && dd<=now){
+      cnt.missing++; eff='missing';
+      cls+=' red'; badge='<span class="cal-badge red"></span>';
+      hrsHtml=`<span class="cal-hrs">${t('st_missing')}</span>`;
+    }
+    stByDay[day]=eff;
+    cells+=`<div class="${cls}" title="${date}">
+      ${badge}
+      <div class="cal-daynum ${weekend?'off':''}">${day}</div>
+      ${hrsHtml}
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML=cells;
+
+  /* --- 曠職：只看工作日（一～五）的連續天數 --- */
+  let absRun=0, absMaxRun=0, absWorkdays=0;
+  for(let day=1; day<=dim; day++){
+    const dow=new Date(y,m,day).getDay();
+    if(dow===0||dow===6) continue;            // 週末不列入連續計算
+    const hd=holidayOf(`${y}-${pad(m+1)}-${pad(day)}`);
+    if(hd && !hd.half) continue;              // 國定假日不是工作日
+    if(stByDay[day]==='absent'){ absRun++; absWorkdays++; absMaxRun=Math.max(absMaxRun,absRun); }
+    else absRun=0;
+  }
+
+  document.getElementById('calStats').innerHTML = statCard('m_work',cnt.work)
+    + statCard('st_business',cnt.biz)
+    + statCard('st_sick_doc',cnt.sick_doc)
+    + statCard('st_leave',cnt.leave);
+
+  const warn=document.getElementById('calWarn');
+  if(absMaxRun>=2)        warn.innerHTML=`<div class="warn-box">${t('warn_absent2')}</div>`;
+  else if(absWorkdays>=3) warn.innerHTML=`<div class="warn-box soft">${t('warn_absent3')}</div>`;
+  else                    warn.innerHTML='';
+}
+document.getElementById('calEmp').addEventListener('change',e=>{ CAL_EMP=e.target.value; renderMonthCalendar(); });
+document.getElementById('calPrev').onclick=()=>{ CAL_M--; if(CAL_M<0){CAL_M=11;CAL_Y--;} renderMonthCalendar(); };
+document.getElementById('calNext').onclick=()=>{ CAL_M++; if(CAL_M>11){CAL_M=0;CAL_Y++;} renderMonthCalendar(); };
+
+/* --- 狀態 pill 產生器 --- */
+function statusPillFor(id,date){
+  const st=dayStatus(id,date);
+  const rec=ATT[`${id}|${date}`];
+  if(st==='leave')    return `<span class="pill leave">${t('st_leave')}</span>`;
+  if(st==='sick_doc') return `<span class="pill sick">${t('st_sick_doc')}</span>`;
+  if(st==='absent')   return `<span class="pill absent">${t('st_absent')}</span>`;
+  if(st==='work' && !ATT[`${id}|${date}`] && holidayOf(date))
+    return `<span class="pill holiday">${holidayShort(holidayOf(date))}</span>`;
+  if(st==='business') return `<span class="pill biz">${t('st_business')}</span>`;
+  if(rec && rec.inMs) return isLate(rec.inMs)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`;
+  return `<span class="pill">${t('st_off')}</span>`;
+}
+
+/* --- 每日狀況（橫列，如附件1） --- */
+let DRILL_ID=null; // 下方橫列紀錄目前顯示哪位員工
+function renderDaily(){
+  const dateInput=document.getElementById('dailyDate');
+  if(!dateInput.value) dateInput.value=ymd(new Date());
+  const date=dateInput.value;
+  let rows='';
+  rosterIds().forEach(id=>{
+    const e=EMPLOYEES[id];
+    const st=dayStatus(id,date);
+    const rec=ATT[`${id}|${date}`];
+    let inTxt='—',outTxt='—',inState=`<span class="pill">${t('st_off')}</span>`,outState=`<span class="pill">${t('st_off')}</span>`,hrs='—';
+    if(st==='leave'){
+      inState=outState=`<span class="pill leave">${t('st_leave')}</span>`;
+    }else if(st==='sick_doc'){
+      inState=outState=`<span class="pill sick">${t('st_sick_doc')}</span>`;
+    }else if(st==='absent'){
+      inState=outState=`<span class="pill absent">${t('st_absent')}</span>`;
+    }else if(!(rec&&rec.inMs) && holidayOf(date)){
+      inState=outState=`<span class="pill holiday">${holidayShort(holidayOf(date))}</span>`;
+    }else{
+      if(rec && rec.inMs){
+        inTxt=fmtTime(rec.inMs);
+        inState = st==='business'
+          ? `<span class="pill biz">${t('st_business')}</span>`
+          : (isLate(rec.inMs)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`);
+        if(rec.outMs){ outTxt=fmtTime(rec.outMs); outState= st==='business'?`<span class="pill biz">${t('st_business')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`; hrs=fmtHMS(hoursBetween(rec.inMs,rec.outMs)); }
+        else { outState=`<span class="pill">${t('st_pending')}</span>`; }
+      }
+    }
+    const active = (id===DRILL_ID)?' style="background:#eef4fc"':'';
+    rows+=`<tr class="row-click"${active} onclick="drill('${id}')">
+      <td class="mono">${e.empNo||''}</td>
+      <td>${e.name}</td>
+      <td class="mono">${inTxt}</td>
+      <td>${inState}</td>
+      <td class="mono">${outTxt}</td>
+      <td>${outState}</td>
+      <td class="mono">${hrs}</td>
+      <td class="mark-btns" style="white-space:nowrap">
+        <button class="btn-mini" onclick="event.stopPropagation();openTimeModal('${id}','${date}')">${t('edit')}</button>
+      </td>
+    </tr>`;
+  });
+  document.getElementById('dailyTable').innerHTML=`
+    <tr><th>${t('th_id')}</th><th>${t('th_name')}</th>
+        <th>${t('th_in')}</th><th>${t('th_in_state')}</th>
+        <th>${t('th_out')}</th><th>${t('th_out_state')}</th>
+        <th>${t('th_hours')}</th><th></th></tr>
+    ${rows}`;
+  // 橫列紀錄預設一定開啟：若尚未選人，預設第一位
+  if(!DRILL_ID || !EMPLOYEES[DRILL_ID] || EMPLOYEES[DRILL_ID].noAttendance) DRILL_ID=rosterIds()[0];
+  renderDrill(DRILL_ID);
+}
+document.getElementById('dailyDate').addEventListener('change',renderDaily);
+document.getElementById('drillEmp').addEventListener('change',e=>{ DRILL_ID=e.target.value; renderDaily(); });
+document.getElementById('drillYm').value=currentYm();
+document.getElementById('empYm').value=currentYm();
+document.getElementById('drillPdfBtn').onclick=()=>{ if(DRILL_ID) exportOnePdf(DRILL_ID,'drillYm'); };
+document.getElementById('drillPdfAllBtn').onclick=()=>exportAllPdf('drillYm');
+document.getElementById('drillCsvBtn').onclick=()=>exportAll('drillYm');
+document.getElementById('empPdfBtn').onclick=()=>{ if(CURRENT) exportOnePdf(CURRENT.id,'empYm'); };
+
+/* --- 個人 drilldown（橫列打卡紀錄，如附件3）--- */
+/* ============================================================
+   打卡紀錄匯出（CSV，Excel 可直接開）
+   ============================================================ */
+function csvCell(v){
+  const t=String(v==null?'':v);
+  return /[",\n]/.test(t) ? '"'+t.replace(/"/g,'""')+'"' : t;
+}
+function statusTextFor(id,date){
+  const st=dayStatus(id,date);
+  if(st==='leave')    return t('st_leave');
+  if(st==='sick_doc') return t('st_sick_doc');
+  if(st==='absent')   return t('st_absent');
+  if(st==='business') return t('st_business');
+  const h=holidayOf(date);
+  const rec=ATT[`${id}|${date}`];
+  if(!rec && h) return holidayShort(h);
+  if(rec && rec.inMs && !rec.outMs) return t('st_missing');
+  if(rec && rec.inMs) return isLate(rec.inMs)?t('st_late'):t('st_normal');
+  return t('st_off');
+}
+/* 這一天公司要不要支薪 */
+function isPaidDay(id,date){
+  const st=dayStatus(id,date);
+  if(st==='absent') return false;
+  if(st==='leave'||st==='sick_doc'||st==='business') return true;
+  const rec=ATT[`${id}|${date}`];
+  if(rec && rec.inMs && rec.outMs) return true;
+  if(!rec && holidayOf(date)) return true;
+  return false;
+}
+function monthDates(ym){
+  const [y,m]=ym.split('-').map(Number);
+  const dim=new Date(y,m,0).getDate();
+  const out=[];
+  for(let d=1;d<=dim;d++) out.push(`${y}-${pad(m)}-${pad(d)}`);
+  return out;
+}
+function buildCsv(ids,ym){
+  const head=[t('th_emp_no'),t('th_emp_name'),t('th_date'),t('th_weekday'),
+              t('th_in'),t('th_out'),t('th_hours'),t('th_status'),t('csv_paid')];
+  const lines=[head.map(csvCell).join(',')];
+  ids.forEach(id=>{
+    const e=EMPLOYEES[id]; if(!e) return;
+    const cnt={work:0,paid:0,absent:0,sick:0,leave:0};
+    monthDates(ym).forEach(date=>{
+      const st=dayStatus(id,date);
+      const rec=ATT[`${id}|${date}`];
+      let inTxt='',outTxt='',hrsTxt='';
+      if(!noPunchDay(st) && rec && rec.inMs){
+        inTxt=fmtTime(rec.inMs);
+        outTxt=rec.outMs?fmtTime(rec.outMs):'';
+        if(rec.outMs) hrsTxt=fmtHMS(hoursBetween(rec.inMs,rec.outMs));
+      }
+      const paid=isPaidDay(id,date);
+      if(paid) cnt.paid++;
+      if(st==='work' && rec && rec.inMs && rec.outMs) cnt.work++;
+      if(st==='business') cnt.work++;
+      if(st==='absent') cnt.absent++;
+      if(st==='sick_doc') cnt.sick++;
+      if(st==='leave') cnt.leave++;
+      lines.push([e.empNo||'',e.name||'',date,weekdayLabel(date),inTxt,outTxt,hrsTxt,
+                  statusTextFor(id,date), paid?t('yes'):t('no')].map(csvCell).join(','));
+    });
+    lines.push('');
+    lines.push([`${e.name} ${t('csv_summary')}`,
+                `${t('total_days')}: ${cnt.work}`,
+                `${t('total_paid_days')}: ${cnt.paid}`,
+                `${t('st_sick_doc')}: ${cnt.sick}`,
+                `${t('st_leave')}: ${cnt.leave}`,
+                `${t('st_absent')}: ${cnt.absent}`].map(csvCell).join(','));
+    lines.push('');
+  });
+  return lines.join('\r\n');
+}
+function downloadCsv(ids,ym,fname){
+  if(!ids.length) return;
+  const blob=new Blob(['\ufeff'+buildCsv(ids,ym)],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=fname; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function currentYm(){ const n=new Date(); return `${n.getFullYear()}-${pad(n.getMonth()+1)}`; }
+/* ---- PDF：開一個列印用視窗，使用者在列印對話框選「另存為 PDF」 ---- */
+function monthTitle(ym){
+  const [y,m]=ym.split('-').map(Number);
+  return LANG==='zh-Hant' ? `${y} 年 ${m} 月` :
+    new Date(y,m-1,1).toLocaleDateString('en-US',{year:'numeric',month:'long'});
+}
+function empReportHtml(id,ym){
+  const e=EMPLOYEES[id]; if(!e) return '';
+  const cnt={work:0,paid:0,sick:0,leave:0,absent:0,missing:0,holiday:0};
+  const rows=monthDates(ym).map(date=>{
+    const st=dayStatus(id,date);
+    const rec=ATT[`${id}|${date}`];
+    let inTxt='—',outTxt='—',hrsTxt='—';
+    if(!noPunchDay(st) && rec && rec.inMs){
+      inTxt=fmtTime(rec.inMs);
+      outTxt=rec.outMs?fmtTime(rec.outMs):'—';
+      if(rec.outMs) hrsTxt=fmtHMS(hoursBetween(rec.inMs,rec.outMs));
+    }
+    const paid=isPaidDay(id,date);
+    if(paid) cnt.paid++;
+    if(st==='absent') cnt.absent++;
+    else if(st==='sick_doc') cnt.sick++;
+    else if(st==='leave') cnt.leave++;
+    else if(st==='business') cnt.work++;
+    else if(rec && rec.inMs && rec.outMs) cnt.work++;
+    else if(rec && rec.inMs) cnt.missing++;
+    else if(holidayOf(date)) cnt.holiday++;
+    const d=new Date(date+'T00:00:00'), weekend=(d.getDay()===0||d.getDay()===6);
+    return `<tr class="${weekend?'we':''}">
+      <td class="mono">${date}</td><td>${weekdayLabel(date)}</td>
+      <td class="mono">${inTxt}</td><td class="mono">${outTxt}</td>
+      <td class="mono">${hrsTxt}</td><td>${statusTextFor(id,date)}</td>
+      <td class="c">${paid?'●':''}</td>
+    </tr>`;
+  }).join('');
+  const box=(label,val)=>`<div class="box"><div class="bl">${label}</div><div class="bv">${val}</div></div>`;
+  const tenure=e.hireDate?`${t('hire_date')} ${e.hireDate} · ${t('tenure')} ${tenureText(e.hireDate)}`:'';
+  return `
+  <section>
+    <div class="rhead">
+      <div>
+        <div class="rtitle">${t('report_title')}</div>
+        <div class="rsub">${monthTitle(ym)}</div>
+      </div>
+      <div class="rwho">
+        <div class="rname">${e.name}</div>
+        <div class="rmeta">#${e.empNo||''}${e.email?' · '+e.email:''}</div>
+        <div class="rmeta">${tenure}</div>
+      </div>
+    </div>
+    <div class="boxes">
+      ${box(t('total_days'),cnt.work)}
+      ${box(t('total_paid_days'),cnt.paid)}
+      ${box(t('st_sick_doc'),cnt.sick)}
+      ${box(t('st_leave'),cnt.leave)}
+      ${box(t('sum_holiday'),cnt.holiday)}
+      ${box(t('st_absent'),cnt.absent)}
+      ${box(t('st_missing'),cnt.missing)}
+    </div>
+    <table>
+      <thead><tr>
+        <th>${t('th_date')}</th><th>${t('th_weekday')}</th><th>${t('th_in')}</th>
+        <th>${t('th_out')}</th><th>${t('th_hours')}</th><th>${t('th_status')}</th><th>${t('csv_paid')}</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="sign">
+      <div><span>${t('sign_emp')}</span></div>
+      <div><span>${t('sign_admin')}</span></div>
+    </div>
+    <div class="foot">${t('generated_at')} ${ymd(new Date())} ${fmtTime(Date.now())}</div>
+  </section>`;
+}
+function exportPdf(ids,ym){
+  if(!ids.length) return;
+  const body=ids.map(id=>empReportHtml(id,ym)).join('');
+  const win=window.open('','_blank');
+  if(!win){ alert(t('popup_blocked')); return; }
+  win.document.write(`<!DOCTYPE html><html lang="${LANG}"><head><meta charset="utf-8">
+  <title>${t('report_title')} ${ym}</title>
+  <style>
+    @page{ size:A4; margin:14mm 12mm; }
+    *{ box-sizing:border-box; }
+    body{ font-family:'Noto Sans TC','Microsoft JhengHei',-apple-system,'Segoe UI',Arial,sans-serif;
+          color:#1d2b36; margin:0; font-size:11px; }
+    .mono{ font-family:'SFMono-Regular',Consolas,monospace; }
+    section{ page-break-after:always; padding:0 0 6px; }
+    section:last-child{ page-break-after:auto; }
+    .rhead{ display:flex; justify-content:space-between; align-items:flex-start;
+            border-bottom:2px solid #123a6b; padding-bottom:8px; margin-bottom:12px; }
+    .rtitle{ font-size:17px; font-weight:800; color:#123a6b; }
+    .rsub{ font-size:12px; color:#5b6b78; margin-top:2px; }
+    .rwho{ text-align:right; }
+    .rname{ font-size:15px; font-weight:800; }
+    .rmeta{ font-size:10px; color:#5b6b78; }
+    .boxes{ display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+    .box{ flex:1; min-width:72px; border:1px solid #d7dee6; border-radius:5px; padding:6px 8px; text-align:center; }
+    .bl{ font-size:9px; color:#5b6b78; }
+    .bv{ font-size:16px; font-weight:800; color:#123a6b; }
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ border:1px solid #d7dee6; padding:3px 6px; text-align:left; }
+    th{ background:#eef2f7; font-size:10px; }
+    thead{ display:table-header-group; }
+    tr.we td{ background:#fafbfc; color:#7b8794; }
+    td.c{ text-align:center; }
+    .sign{ display:flex; gap:40px; margin-top:22px; }
+    .sign div{ flex:1; border-top:1px solid #9aa7b2; padding-top:4px; font-size:10px; color:#5b6b78; }
+    .foot{ margin-top:10px; font-size:9px; color:#8b97a2; }
+    @media screen{ body{ padding:20px; background:#f4f6f8; } section{ background:#fff; padding:24px; margin:0 auto 18px; max-width:820px; box-shadow:0 1px 4px rgba(0,0,0,.1); } }
+  </style></head><body>${body}</body></html>`);
+  win.document.close();
+  setTimeout(()=>{ win.focus(); win.print(); },400);
+}
+window.exportOnePdf=(id,ymInputId)=>{
+  const ym=document.getElementById(ymInputId).value||currentYm();
+  exportPdf([id],ym);
+};
+window.exportAllPdf=(ymInputId)=>{
+  const ym=document.getElementById(ymInputId).value||currentYm();
+  exportPdf(rosterIds(),ym);
+};
+window.exportOne=(id,ymInputId)=>{
+  const ym=document.getElementById(ymInputId).value||currentYm();
+  const e=EMPLOYEES[id]; if(!e) return;
+  downloadCsv([id],ym,`${t('csv_file')}_${e.name}_${ym}.csv`);
+};
+window.exportAll=(ymInputId)=>{
+  const ym=document.getElementById(ymInputId).value||currentYm();
+  downloadCsv(rosterIds(),ym,`${t('csv_file')}_ALL_${ym}.csv`);
+};
+
+function renderDrill(id){
+  const e=EMPLOYEES[id];
+  const sel=document.getElementById('drillEmp');
+  sel.innerHTML=rosterIds().map(k=>`<option value="${k}"${k===id?' selected':''}>${EMPLOYEES[k].name}（#${EMPLOYEES[k].empNo||''}）</option>`).join('');
+  document.getElementById('drillAvatar').innerHTML=avatarInner(e.photoUrl);
+  document.getElementById('drillName').textContent=e.name;
+  document.getElementById('drillMeta').textContent=`#${e.empNo||''}`;
+  const rows=collectDays(id).map(date=>{
+    const st=dayStatus(id,date);
+    const rec=ATT[`${id}|${date}`];
+    let inTxt='—',outTxt='—',hrsTxt='—';
+    if(!noPunchDay(st) && rec && rec.inMs){
+      inTxt=fmtTime(rec.inMs); outTxt=rec.outMs?fmtTime(rec.outMs):'—';
+      if(rec.outMs) hrsTxt=fmtHMS(hoursBetween(rec.inMs,rec.outMs));
+    }
+    return `<tr>
+      <td class="mono">${date}</td><td>${weekdayLabel(date)}</td>
+      <td class="mono">${inTxt}</td><td class="mono">${outTxt}</td>
+      <td class="mono">${hrsTxt}</td><td>${statusPillFor(id,date)}</td>
+      <td><button class="btn-mini" onclick="openTimeModal('${id}','${date}')">${t('edit')}</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('drillTable').innerHTML=`
+    <tr><th>${t('th_date')}</th><th>${t('th_weekday')}</th><th>${t('th_in')}</th><th>${t('th_out')}</th><th>${t('th_hours')}(24H)</th><th>${t('th_status')}</th><th></th></tr>${rows}`;
+}
+window.drill=(id)=>{ DRILL_ID=id; renderDaily(); };
+
+/* --- 編輯時間 / 狀態 Modal（公出、休假、上班時間）--- */
+let MODAL_CTX=null; // {id,date}
+function hhmmss(ms){ if(ms==null) return ''; const d=new Date(ms); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+window.openTimeModal=(id,date)=>{
+  MODAL_CTX={id,date};
+  const e=EMPLOYEES[id];
+  const rec=ATT[`${id}|${date}`]||{};
+  document.getElementById('modalTitle').textContent=t('edit_time');
+  document.getElementById('modalSub').textContent=`${e.name}（#${e.id}）· ${date}`;
+  document.getElementById('modalStatus').value=dayStatus(id,date);
+  document.getElementById('modalIn').value=hhmmss(rec.inMs);
+  document.getElementById('modalOut').value=hhmmss(rec.outMs);
+  toggleModalTimes();
+  document.getElementById('timeModal').style.display='flex';
+};
+function toggleModalTimes(){
+  // 休假/病假時隱藏時間欄位；上班/公出顯示
+  const st=document.getElementById('modalStatus').value;
+  document.getElementById('modalTimes').style.display = noPunchDay(st)?'none':'block';
+}
+document.getElementById('modalStatus').addEventListener('change',toggleModalTimes);
+document.getElementById('modalCancel').onclick=()=>{ document.getElementById('timeModal').style.display='none'; MODAL_CTX=null; };
+document.getElementById('timeModal').addEventListener('click',e=>{ if(e.target.id==='timeModal'){ e.currentTarget.style.display='none'; MODAL_CTX=null; } });
+document.getElementById('modalSave').onclick=async ()=>{
+  if(!MODAL_CTX) return;
+  const {id,date}=MODAL_CTX;
+  const st=document.getElementById('modalStatus').value;
+  const payload={ uid:id, date, status:(st==='work'?null:st) };
+  if(noPunchDay(st)){
+    payload.inMs=null; payload.outMs=null;
+  }else{
+    const parse=(v)=>{ if(!v) return null; const p=v.split(':').map(Number); const d=new Date(date+'T00:00:00'); d.setHours(p[0]||0,p[1]||0,p[2]||0,0); return d.getTime(); };
+    payload.inMs=parse(document.getElementById('modalIn').value);
+    payload.outMs=parse(document.getElementById('modalOut').value);
+  }
+  document.getElementById('timeModal').style.display='none'; MODAL_CTX=null; DRILL_ID=id;
+  try{
+    await DB.collection('attendance').doc(`${id}_${date}`).set(payload,{merge:true});
+  }catch(err){ console.error('[modalSave]',err); alert(t('save_fail')); }
+};
+
+/* --- 員工設定（可新增、可改編號/密碼/照片/姓名）--- */
+function empEditForm(id, isNew){
+  const e = isNew ? {id:'',name:'',empNo:'',email:'',role:'employee',photoUrl:'',hireDate:'',quota:{annualRemainingHours:0,sick:0,personal:0}} : EMPLOYEES[id];
+  const key = isNew ? 'new' : id;
+  return `<div class="subcard" id="edit_${key}" style="display:${isNew?'block':'none'};">
+      <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <div class="avatar" id="preview_${key}" style="width:72px;height:72px;">${avatarInner(e.photoUrl)}</div>
+          <label class="btn-mini" style="display:inline-block;margin-top:8px;cursor:pointer;">
+            ${t('upload_photo')}
+            <input type="file" accept="image/*" style="display:none" onchange="handlePhoto('${key}',this)">
+          </label>
+          <input type="hidden" id="photodata_${key}" value="${e.photoUrl||''}">
+        </div>
+        <div style="flex:1; min-width:200px;">
+          <div class="field"><label>${t('name')}</label><input id="name_${key}" value="${e.name||''}"></div>
+          <div class="field"><label>${t('emp_no')}</label><input id="id_${key}" value="${e.empNo||''}" maxlength="4" inputmode="numeric" placeholder="0003"></div>
+          <div class="field"><label>${t('email_pw')}</label><input id="email_${key}" value="${e.email||''}" placeholder="name@company.com" autocapitalize="none"></div>
+          ${isNew?`<div class="field"><label>${t('init_pw')}</label><input id="pw_new" placeholder="至少 6 碼"></div>`:`<div class="field"><label>${t('pw_reset_hint')}</label><button class="btn-mini" onclick="sendReset('${key}')">${t('send_reset')}</button></div>`}
+          <div class="field"><label>${t('role')}</label>
+            <select id="role_${key}">
+              <option value="employee" ${e.role==='employee'?'selected':''}>${t('role_emp')}</option>
+              <option value="admin" ${e.role==='admin'?'selected':''}>${t('role_admin')}</option>
+            </select>
+          </div>
+          <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="noatt_${key}" ${e.noAttendance?'checked':''} style="width:auto;margin:0">
+            <span>${t('no_attendance')}</span>
+          </label></div>
+          <div class="field"><label>${t('hire_date')}</label><input type="date" id="hire_${key}" value="${e.hireDate||''}" onchange="updateAnnualPreview('${key}')"></div>
+          <div class="field"><label>${t('q_annual_remaining')}</label>
+            <input id="qar_${key}" type="number" min="0" step="0.5" value="${dayStr(leaveLedger(e.id||key).annualLeft)}" placeholder="0">
+            <div class="hint" style="margin-top:4px">${t('q_annual_auto_hint')}</div>
+          </div>
+          <div class="field"><label>${t('q_annual_auto')}</label>
+            <div id="qa_preview_${key}" style="padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:#f7f9fc;font-family:var(--mono);font-weight:700;color:var(--navy);">
+              ${suggestedAnnualDays(e.hireDate)} ${t('days_unit')}（${baseAnnualHours(e.hireDate)} ${t('hours_unit')}）
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        ${isNew
+          ? `<button class="btn-primary" style="width:auto;padding:9px 20px" onclick="addEmployee()">${t('add_save')}</button>
+             <button class="btn-ghost" onclick="cancelAdd()">${t('cancel')}</button>`
+          : `<button class="btn-primary" style="width:auto;padding:9px 20px" onclick="saveEmp('${id}')">${t('save')}</button>
+             ${id===CURRENT.id?'':`<button class="btn-ghost" style="color:var(--bad)" onclick="deleteEmp('${id}')">${t('delete')}</button>`}`}
+      </div>
+      <div class="msg err" id="editMsg_${key}"></div>
+    </div>`;
+}
+function rosterLabel(e){ return e.noAttendance ? ' · <span style="color:#5b6b78">'+t('no_attendance')+'</span>' : ''; }
+function mailLabel(e){
+  if(!e.email) return '<span style="color:var(--bad)">⚠ '+t('no_email')+'</span>';
+  if(PLACEHOLDER_MAIL.test(e.email)) return '<span style="color:var(--warn)">'+e.email+' · '+t('mail_placeholder')+'</span>';
+  return e.email;
+}
+function renderEmpAdmin(){
+  const box=document.getElementById('empAdminList');
+  let html=`<button class="btn-primary" style="width:auto;padding:10px 20px;margin-bottom:16px" onclick="showAddForm()">＋ ${t('add_employee')}</button>`;
+  html+=`<div id="addFormSlot"></div>`;
+  html+=Object.keys(EMPLOYEES).map(id=>{
+    const e=EMPLOYEES[id];
+    return `<div class="emp-row">
+      <div class="avatar">${avatarInner(e.photoUrl)}</div>
+      <div class="emp-info"><div class="n">${e.name||'(—)'}</div><div class="e">#${e.empNo||''} · ${t('role_'+(e.role==='admin'?'admin':'emp'))} · ${mailLabel(e)}${rosterLabel(e)}<br>${tenureBadge(e)}</div></div>
+      <button class="btn-mini" onclick="toggleEdit('${id}')">${t('edit')}</button>
+    </div>
+    ${empEditForm(id,false)}`;
+  }).join('');
+  box.innerHTML=html;
+}
+window.toggleEdit=(id)=>{ const el=document.getElementById('edit_'+id); el.style.display=el.style.display==='none'?'block':'none'; };
+window.showAddForm=()=>{ document.getElementById('addFormSlot').innerHTML=empEditForm(null,true); };
+window.cancelAdd=()=>{ document.getElementById('addFormSlot').innerHTML=''; };
+
+window.handlePhoto=(key,input)=>{
+  const file=input.files&&input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const dataUrl=reader.result;
+    document.getElementById('photodata_'+key).value=dataUrl;
+    document.getElementById('preview_'+key).innerHTML=`<img class="avatar" src="${dataUrl}" style="width:100%;height:100%;border:none">`;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.saveEmp=async (id)=>{
+  const e=EMPLOYEES[id];
+  const msg=document.getElementById('editMsg_'+id);
+  msg.className='msg err'; msg.textContent='';
+  const empNo=document.getElementById('id_'+id).value.trim();
+  const email=document.getElementById('email_'+id).value.trim();
+  if(!/^[0-9]{4}$/.test(empNo)){ msg.textContent=t('id_format'); return; }
+  if(!email){ msg.textContent=t('bad_email'); return; }
+  const patch={
+    name:document.getElementById('name_'+id).value.trim()||e.name,
+    empNo, email:email.toLowerCase(),
+    role:document.getElementById('role_'+id).value,
+    photoUrl:document.getElementById('photodata_'+id).value,
+    noAttendance:document.getElementById('noatt_'+id).checked,
+    hireDate:document.getElementById('hire_'+id).value||'',
+    quota:{
+      annualRemainingHours: snapHalfHour((parseFloat(document.getElementById('qar_'+id).value)||0) * HOURS_PER_DAY),
+      annualBalanceAsOf: ymd(new Date()),
+      sick:0, personal:0
+    }
+  };
+  try{
+    await DB.collection('employees').doc(id).set(patch,{merge:true});
+    msg.className='msg ok'; msg.textContent=t('saved');
+  }catch(err){ console.error('[saveEmp]',err); msg.textContent=t('save_fail'); }
+};
+window.updateAnnualPreview=(key)=>{
+  const hireEl=document.getElementById('hire_'+key);
+  const prev=document.getElementById('qa_preview_'+key);
+  if(!hireEl||!prev) return;
+  const days=suggestedAnnualDays(hireEl.value);
+  const hrs=baseAnnualHours(hireEl.value);
+  prev.textContent=`${days} ${t('days_unit')}（${hrs} ${t('hours_unit')}）`;
+};
+
+window.addEmployee=async ()=>{
+  const msg=document.getElementById('editMsg_new');
+  msg.className='msg err'; msg.textContent='';
+  const empNo=document.getElementById('id_new').value.trim();
+  const email=document.getElementById('email_new').value.trim().toLowerCase();
+  const pw=document.getElementById('pw_new').value.trim();
+  const name=document.getElementById('name_new').value.trim();
+  if(!/^[0-9]{4}$/.test(empNo)){ msg.textContent=t('id_format'); return; }
+  if(!name){ msg.textContent=t('need_name'); return; }
+  if(!email){ msg.textContent=t('bad_email'); return; }
+  if(pw.length<6){ msg.textContent=t('pw_too_short'); return; }
+  if(Object.values(EMPLOYEES).some(x=>(x.name||'').trim().toLowerCase()===name.toLowerCase())){
+    msg.textContent=t('name_taken'); return;
+  }
+  msg.className='msg'; msg.textContent=t('creating');
+  try{
+    /* 用第二個 app 建帳號，主控端自己不會被登出 */
+    const ca=creatorAuth();
+    const cred=await ca.createUserWithEmailAndPassword(email,pw);
+    const uid=cred.user.uid;
+    await ca.signOut();
+    await DB.collection('employees').doc(uid).set({
+      name, empNo, email, role:document.getElementById('role_new').value,
+      photoUrl:document.getElementById('photodata_new').value,
+      noAttendance:document.getElementById('noatt_new').checked,
+      hireDate:document.getElementById('hire_new').value||'',
+      quota:{
+        annualRemainingHours: snapHalfHour((parseFloat((document.getElementById('qar_new')||{}).value)||0) * HOURS_PER_DAY),
+        annualBalanceAsOf: ymd(new Date()),
+        sick:0, personal:0
+      }
+    });
+    document.getElementById('addFormSlot').innerHTML='';
+  }catch(err){
+    console.error('[addEmployee]',err);
+    msg.className='msg err';
+    msg.textContent = err.code==='auth/email-already-in-use' ? t('email_taken')
+                    : err.code==='auth/weak-password'        ? t('pw_too_short')
+                    : t('save_fail');
+  }
+};
+
+window.deleteEmp=async (id)=>{
+  if(id===CURRENT.id) return; // 不能刪自己
+  if(!confirm(t('confirm_delete'))) return;
+  try{
+    await DB.collection('employees').doc(id).delete();
+    if(DRILL_ID===id) DRILL_ID=null;
+    if(CAL_EMP===id) CAL_EMP=null;
+    alert(t('deleted_note'));
+  }catch(err){ console.error('[deleteEmp]',err); alert(t('save_fail')); }
+};
+
+/* ---- 時鐘 ---- */
+function tickClock(){ const n=new Date(); document.getElementById('liveClock').textContent=`${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`; }
+setInterval(tickClock,1000); tickClock();
+
+/* ---- LOGO 注入 ---- */
+(function injectLogo(){
+  document.documentElement.style.setProperty('--logo-url', `url("${LOGO_DATA_URL}")`);
+  document.getElementById('loginLogo').src=LOGO_DATA_URL;
+  document.getElementById('brandLogo').src=LOGO_DATA_URL;
+})();
+
+applyI18n();
+checkClientIP();
+</script>
+</body>
+</html>
