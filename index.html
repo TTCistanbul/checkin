@@ -507,6 +507,8 @@
             <option value="rejected" data-i18n="f_rejected">已駁回</option>
           </select>
         </div>
+        <button class="btn-mini" id="resyncAttBtn" style="margin-bottom:12px;" data-i18n="resync_att">🔄 重新同步已核准假單到月總表</button>
+        <div class="msg" id="resyncMsg"></div>
         <div class="tbl-scroll"><table id="allReqTable"></table></div>
       </div>
     </div>
@@ -558,9 +560,9 @@
    4. Account → General，複製 Public Key
    5. 把下面三個值換成你自己申請到的（換掉引號內容即可，其他都不用動）
    ============================================================ */
-const EMAILJS_PUBLIC_KEY  = "Q46vK3u-QVDdZKyIq";
-const EMAILJS_SERVICE_ID  = "service_xw31aja";
-const EMAILJS_TEMPLATE_ID = "template_n76is2m";
+const EMAILJS_PUBLIC_KEY  = "YOUR_PUBLIC_KEY";
+const EMAILJS_SERVICE_ID  = "YOUR_SERVICE_ID";
+const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
 const LEAVE_NOTIFY_EMAIL  = "istanbul@taitra.org.tw";
 const EMAILJS_CONFIGURED  = ![EMAILJS_PUBLIC_KEY,EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID].some(v=>v.startsWith('YOUR_'));
 if(window.emailjs && EMAILJS_CONFIGURED){ emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
@@ -689,6 +691,7 @@ const I18N = {
     range_end_before_start:"結束日不可早於起始日。", no_workday_in_range:"這段期間沒有需要請假的工作日（全部是週末或國定假日）。",
     submitted_multi:"已送出 %d 天的請假申請，等待審核。",
     admin_leave_title:"請假審核", filter_status:"狀態篩選", balance_dash_title:"員工休假餘額",
+    resync_att:"🔄 重新同步已核准假單到月總表", resyncing:"同步中…", resync_done:"已同步 %d 筆已核准假單。",
     f_all:"全部", f_pending:"待審核", f_approved:"已核准", f_rejected:"已駁回",
     type_annual:"特休", type_sick:"病假", type_personal:"事假",
     type_sick_doc:"病假（有證明）", type_absent:"曠職",
@@ -788,6 +791,7 @@ const I18N = {
     range_end_before_start:"End date cannot be before start date.", no_workday_in_range:"There are no working days in this range (all weekends or public holidays).",
     submitted_multi:"Submitted requests for %d day(s), pending review.",
     admin_leave_title:"Leave review", filter_status:"Filter status", balance_dash_title:"Employee leave balances",
+    resync_att:"🔄 Resync approved requests to monthly report", resyncing:"Syncing…", resync_done:"Synced %d approved request(s).",
     f_all:"All", f_pending:"Pending", f_approved:"Approved", f_rejected:"Rejected",
     type_annual:"Annual", type_sick:"Sick", type_personal:"Personal",
     type_sick_doc:"Sick (with report)", type_absent:"Absent",
@@ -1905,6 +1909,20 @@ function afterReqChange(r){
   if(CURRENT && CURRENT.id===r.empId) renderEmpLeavePage(r.empId);
 }
 document.getElementById('reqFilter').addEventListener('change',renderAllRequests);
+/* 補救用：把「已經核准、但因為當初系統版本較舊而沒寫進 attendance」的假單，重新同步一次。
+   可重複點擊，不會造成重複或錯誤（每筆都是用假單自己的 uid+date 覆蓋寫入）。 */
+document.getElementById('resyncAttBtn').onclick=async ()=>{
+  const btn=document.getElementById('resyncAttBtn');
+  const msg=document.getElementById('resyncMsg');
+  const approved=LEAVE_REQUESTS.filter(r=>r.status==='approved');
+  btn.disabled=true; msg.className='msg'; msg.textContent=t('resyncing');
+  try{
+    for(const r of approved){ await syncAttendanceForReq(r,'approved'); }
+    msg.classList.add('ok'); msg.textContent=t('resync_done').replace('%d',approved.length);
+  }catch(err){
+    console.error('[resync]',err); msg.classList.add('err'); msg.textContent=t('save_fail');
+  }finally{ btn.disabled=false; }
+};
 
 document.querySelectorAll('[data-etab]').forEach(tab=>{
   tab.onclick=()=>{
