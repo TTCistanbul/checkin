@@ -372,11 +372,27 @@
             <div class="field"><label data-i18n="leave_type">請假類別</label>
               <select id="reqType"></select>
             </div>
-            <div class="field"><label data-i18n="date">日期</label>
-              <input type="hidden" id="reqDate">
-              <div class="dp-wrap" id="reqDateWrap"></div>
+            <div class="field" style="display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:14px;">
+              <label style="display:flex; align-items:center; gap:6px; font-weight:500; cursor:pointer; margin:0;">
+                <input type="checkbox" id="reqMultiDay" style="width:16px;height:16px;">
+                <span data-i18n="multi_day">連續多天</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:500; cursor:pointer; margin:0;">
+                <input type="checkbox" id="reqWholeDay" style="width:16px;height:16px;">
+                <span data-i18n="whole_day">整天請假</span>
+              </label>
             </div>
             <div style="display:flex; gap:10px;">
+              <div class="field" style="flex:1;"><label id="reqDateLabel" data-i18n="date">日期</label>
+                <input type="hidden" id="reqDate">
+                <div class="dp-wrap" id="reqDateWrap"></div>
+              </div>
+              <div class="field" style="flex:1;display:none;" id="reqDateEndField"><label data-i18n="date_end">結束日</label>
+                <input type="hidden" id="reqDateEnd">
+                <div class="dp-wrap" id="reqDateEndWrap"></div>
+              </div>
+            </div>
+            <div style="display:flex; gap:10px;" id="reqTimeRow">
               <div class="field" style="flex:1;"><label data-i18n="from_time">起</label>
                 <input type="hidden" id="reqStart" value="08:00">
                 <div class="tp-wrap" id="reqStartWrap"></div>
@@ -387,6 +403,7 @@
               </div>
             </div>
             <div class="calc-hint" id="reqCalc">—</div>
+            <div class="calc-hint" id="reqSkipHint" style="font-weight:400;color:#8a94a0;font-size:12px;"></div>
             <div class="field"><label data-i18n="note_opt">備註（選填）</label><input type="text" id="reqNote" placeholder=""></div>
             <button class="btn-primary" id="submitReqBtn" data-i18n="submit_request">送出申請</button>
             <div class="msg" id="reqMsg"></div>
@@ -633,6 +650,10 @@ const I18N = {
     etab_clock:"打卡", etab_leave:"請假", tab_leave_review:"請假審核",
     leave_balance_title:"我的休假額度", apply_leave:"申請請假", leave_type:"請假類別",
     from_time:"起", to_time:"迄", submit_request:"送出申請", my_requests:"我的假單",
+    multi_day:"連續多天", whole_day:"整天請假", date_start:"起始日", date_end:"結束日",
+    calc_days_hours:"共 %d 個工作日，合計 %h 小時", skip_hint:"（已自動跳過週末與國定假日）",
+    range_end_before_start:"結束日不可早於起始日。", no_workday_in_range:"這段期間沒有需要請假的工作日（全部是週末或國定假日）。",
+    submitted_multi:"已送出 %d 天的請假申請，等待審核。",
     admin_leave_title:"請假審核", filter_status:"狀態篩選", balance_dash_title:"員工休假餘額",
     f_all:"全部", f_pending:"待審核", f_approved:"已核准", f_rejected:"已駁回",
     type_annual:"特休", type_sick:"病假", type_personal:"事假",
@@ -728,6 +749,10 @@ const I18N = {
     etab_clock:"Clock", etab_leave:"Leave", tab_leave_review:"Leave review",
     leave_balance_title:"My leave balance", apply_leave:"Apply for leave", leave_type:"Leave type",
     from_time:"From", to_time:"To", submit_request:"Submit", my_requests:"My requests",
+    multi_day:"Multiple days", whole_day:"Whole day", date_start:"Start date", date_end:"End date",
+    calc_days_hours:"%d working day(s), %h hours total", skip_hint:"(weekends & public holidays are skipped automatically)",
+    range_end_before_start:"End date cannot be before start date.", no_workday_in_range:"There are no working days in this range (all weekends or public holidays).",
+    submitted_multi:"Submitted requests for %d day(s), pending review.",
     admin_leave_title:"Leave review", filter_status:"Filter status", balance_dash_title:"Employee leave balances",
     f_all:"All", f_pending:"Pending", f_approved:"Approved", f_rejected:"Rejected",
     type_annual:"Annual", type_sick:"Sick", type_personal:"Personal",
@@ -1307,7 +1332,11 @@ document.getElementById('loginBtn').onclick=doLogin;
 document.getElementById('loginPw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('loginId').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('logoutBtn').onclick=()=>{ AUTH.signOut(); };
-function toggleLang(){ LANG = LANG==='zh-Hant'?'en':'zh-Hant'; applyI18n(); }
+function toggleLang(){
+  LANG = LANG==='zh-Hant'?'en':'zh-Hant';
+  applyI18n();
+  if(document.getElementById('reqDateLabel')) updateReqFormVisibility();
+}
 document.getElementById('langToggle').onclick=toggleLang;
 document.getElementById('langToggleLogin').onclick=toggleLang;
 
@@ -1503,10 +1532,52 @@ function renderEmpLeavePage(id){
   populateReqTypeSelect();
   document.getElementById('empQuotaCards').innerHTML=quotaCardsHtml(id);
   initDatePicker('reqDate','reqDateWrap');
+  initDatePicker('reqDateEnd','reqDateEndWrap');
   initTimePicker('reqStart','reqStartWrap');
   initTimePicker('reqEnd','reqEndWrap');
-  updateReqCalc();
+  setupReqFormToggles();
+  updateReqFormVisibility();
   renderMyRequests(id);
+}
+
+/* ---- 連續多天 / 整天請假 切換 ---- */
+let REQ_TOGGLES_BOUND=false;
+function setupReqFormToggles(){
+  if(REQ_TOGGLES_BOUND) return; // 只綁一次事件，避免重複觸發
+  REQ_TOGGLES_BOUND=true;
+  document.getElementById('reqMultiDay').addEventListener('change',()=>{
+    updateReqFormVisibility();
+    initDatePicker('reqDate','reqDateWrap'); // 重繪，讓月曆重新定位
+    initDatePicker('reqDateEnd','reqDateEndWrap');
+  });
+  document.getElementById('reqWholeDay').addEventListener('change',updateReqFormVisibility);
+  document.getElementById('reqDate').addEventListener('change',updateReqCalc);
+  document.getElementById('reqDateEnd').addEventListener('change',updateReqCalc);
+}
+function updateReqFormVisibility(){
+  const multi=document.getElementById('reqMultiDay').checked;
+  const whole=document.getElementById('reqWholeDay').checked;
+  document.getElementById('reqDateEndField').style.display = multi ? '' : 'none';
+  document.getElementById('reqDateLabel').textContent = t(multi ? 'date_start' : 'date');
+  document.getElementById('reqTimeRow').style.display = whole ? 'none' : 'flex';
+  updateReqCalc();
+}
+/* 起訖日期間（含頭尾）所有日期字串陣列 */
+function dateRangeList(startStr,endStr){
+  const out=[];
+  let d=new Date(startStr+'T00:00:00');
+  const end=new Date(endStr+'T00:00:00');
+  while(d<=end){ out.push(ymd(d)); d.setDate(d.getDate()+1); }
+  return out;
+}
+function isWeekendDate(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const dow=d.getDay();
+  return dow===0||dow===6;
+}
+/* 過濾掉週末＋國定假日，只留下需要請假的工作日 */
+function workDaysInRange(startStr,endStr){
+  return dateRangeList(startStr,endStr).filter(ds=>!isWeekendDate(ds) && !holidayOf(ds));
 }
 
 /* ---- 自訂日期／時間選擇器（不受瀏覽器系統語系影響）---- */
@@ -1627,32 +1698,65 @@ function initTimePicker(hiddenId, wrapId){
   }
   render();
 }
+/* 目前表單設定的請假時段：整天請假 → 固定用公司上下班時間；否則用使用者選的起訖時間 */
+function getReqTimeWindow(){
+  const whole=document.getElementById('reqWholeDay').checked;
+  if(whole) return { s:shiftMin(SHIFT_START), e:shiftMin(SHIFT_END) };
+  return {
+    s:hhmmToMin(document.getElementById('reqStart').value),
+    e:hhmmToMin(document.getElementById('reqEnd').value)
+  };
+}
 function updateReqCalc(){
-  const s=hhmmToMin(document.getElementById('reqStart').value);
-  const e=hhmmToMin(document.getElementById('reqEnd').value);
-  const hrs=calcLeaveHours(s,e);
-  document.getElementById('reqCalc').textContent=`${t('calc_hours')}: ${hrs} ${t('hours_unit')}`;
-  return hrs;
+  const multi=document.getElementById('reqMultiDay').checked;
+  const {s,e}=getReqTimeWindow();
+  const hrsPerDay=calcLeaveHours(s,e);
+  const calcEl=document.getElementById('reqCalc');
+  const hintEl=document.getElementById('reqSkipHint');
+  if(!multi){
+    calcEl.textContent=`${t('calc_hours')}: ${hrsPerDay} ${t('hours_unit')}`;
+    hintEl.textContent='';
+    return hrsPerDay;
+  }
+  const startDate=document.getElementById('reqDate').value;
+  const endDate=document.getElementById('reqDateEnd').value;
+  if(!startDate||!endDate){ calcEl.textContent='—'; hintEl.textContent=''; return 0; }
+  if(endDate<startDate){ calcEl.textContent='—'; hintEl.textContent=''; return 0; }
+  const workDays=workDaysInRange(startDate,endDate);
+  const totalHrs=Math.round(workDays.length*hrsPerDay*2)/2;
+  calcEl.textContent=t('calc_days_hours').replace('%d',workDays.length).replace('%h',totalHrs);
+  hintEl.textContent=t('skip_hint');
+  return totalHrs;
 }
 ['reqStart','reqEnd'].forEach(idn=>document.getElementById(idn).addEventListener('change',updateReqCalc));
 document.getElementById('submitReqBtn').onclick=()=>{
   const empId=CURRENT.id;
   const type=document.getElementById('reqType').value;
-  const date=document.getElementById('reqDate').value;
-  const s=hhmmToMin(document.getElementById('reqStart').value);
-  const e=hhmmToMin(document.getElementById('reqEnd').value);
+  const multi=document.getElementById('reqMultiDay').checked;
+  const startDate=document.getElementById('reqDate').value;
+  const endDate=multi ? document.getElementById('reqDateEnd').value : startDate;
+  const {s,e}=getReqTimeWindow();
   const msg=document.getElementById('reqMsg');
   msg.className='msg'; msg.textContent='';
-  if(!date){ msg.classList.add('err'); msg.textContent=t('need_date'); return; }
-  const hrs=calcLeaveHours(s,e);
-  if(hrs<=0){ msg.classList.add('err'); msg.textContent=t('bad_time'); return; }
-  DB.collection('requests').add({
-    uid:empId, type, date, startMin:s, endMin:e, hours:hrs, status:'pending',
-    note:document.getElementById('reqNote').value.trim(),
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>{
+  if(!startDate || (multi && !endDate)){ msg.classList.add('err'); msg.textContent=t('need_date'); return; }
+  if(multi && endDate<startDate){ msg.classList.add('err'); msg.textContent=t('range_end_before_start'); return; }
+  const hrsPerDay=calcLeaveHours(s,e);
+  if(hrsPerDay<=0){ msg.classList.add('err'); msg.textContent=t('bad_time'); return; }
+  const workDays=workDaysInRange(startDate,endDate);
+  if(workDays.length===0){ msg.classList.add('err'); msg.textContent=t('no_workday_in_range'); return; }
+  const note=document.getElementById('reqNote').value.trim();
+  const batch=DB.batch();
+  workDays.forEach(date=>{
+    const ref=DB.collection('requests').doc();
+    batch.set(ref,{
+      uid:empId, type, date, startMin:s, endMin:e, hours:hrsPerDay, status:'pending',
+      note, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+  batch.commit().then(()=>{
     document.getElementById('reqNote').value='';
-    msg.classList.add('ok'); msg.textContent=t('submitted');
+    msg.classList.add('ok');
+    msg.textContent = workDays.length>1 ? t('submitted_multi').replace('%d',workDays.length) : t('submitted');
   }).catch(err=>{
     console.error('[submitReq]',err);
     msg.classList.add('err'); msg.textContent=t('save_fail');
