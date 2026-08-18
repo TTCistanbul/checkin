@@ -542,6 +542,40 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+/* ============================================================
+   ★ 請假申請 Email 通知（送出申請時，寄信通知主控端信箱審核）
+   用的是 EmailJS（免費方案每月 200 封），不需要自己架後端。
+   設定步驟：
+   1. 到 https://www.emailjs.com/ 免費註冊帳號
+   2. Email Services → Add New Service（可串 Gmail／Outlook），拿到 Service ID
+   3. Email Templates → Create New Template，收件人填 istanbul@taitra.org.tw，
+      內文可用下面這些變數：
+      {{employee_name}} {{employee_no}} {{leave_type}} {{date_range}}
+      {{days_count}} {{hours_total}} {{note}}
+      存檔後拿到 Template ID
+   4. Account → General，複製 Public Key
+   5. 把下面三個值換成你自己申請到的（換掉引號內容即可，其他都不用動）
+   ============================================================ */
+const EMAILJS_PUBLIC_KEY  = "Q46vK3u-QVDdZKyIq";
+const EMAILJS_SERVICE_ID  = "service_xw31aja";
+const EMAILJS_TEMPLATE_ID = "template_n76is2m";
+const LEAVE_NOTIFY_EMAIL  = "istanbul@taitra.org.tw";
+const EMAILJS_CONFIGURED  = ![EMAILJS_PUBLIC_KEY,EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID].some(v=>v.startsWith('YOUR_'));
+if(window.emailjs && EMAILJS_CONFIGURED){ emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
+/* 送出請假申請後呼叫：尚未設定 EmailJS 前會自動略過（在 console 留一行提醒），不影響假單照常送出 */
+function notifyLeaveRequest(payload){
+  if(!window.emailjs || !EMAILJS_CONFIGURED){
+    console.warn('[emailjs] 尚未設定 EMAILJS_PUBLIC_KEY / SERVICE_ID / TEMPLATE_ID，略過寄信通知。');
+    return;
+  }
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    to_email: LEAVE_NOTIFY_EMAIL,
+    ...payload
+  }).catch(err=>console.error('[emailjs]',err));
+}
+</script>
 <script>
 /* ============================================================
    正式版 — Firebase Authentication 登入 + Firestore 儲存
@@ -833,6 +867,7 @@ const LEAVE_MARKS = {}; // key: id|date -> true  （休假，主控端標記）
 const BIZ_MARKS = {};   // key: id|date -> true  （公出，主控端標記；仍保留 ATT 上/下班時間）
 const SICK_MARKS   = {};  // key: id|date -> 'doc'   （有醫生證明的病假整日標記）
 const ABSENT_MARKS = {};  // key: id|date -> true    （曠職：缺席且沒有醫生證明）
+const ATT_FROM_REQ = {};  // key: id|date -> reqId  （這筆 attendance 標記是哪張已核准假單自動寫入的）
 const ATT = {};         // key: id|date -> {inMs,outMs}
 const HOURS_PER_DAY = 8;
 
@@ -1309,7 +1344,7 @@ function startListeners(){
 
   UNSUBS.push(DB.collection('attendance').onSnapshot(qs=>{
     Object.keys(ATT).forEach(k=>delete ATT[k]);
-    [LEAVE_MARKS,BIZ_MARKS,SICK_MARKS,ABSENT_MARKS].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
+    [LEAVE_MARKS,BIZ_MARKS,SICK_MARKS,ABSENT_MARKS,ATT_FROM_REQ].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
     qs.forEach(d=>{
       const r=d.data(); if(!r||!r.uid||!r.date) return;
       const key=`${r.uid}|${r.date}`;
@@ -1318,6 +1353,7 @@ function startListeners(){
       if(r.status==='business')  BIZ_MARKS[key]=true;
       if(r.status==='sick_doc')  SICK_MARKS[key]='doc';
       if(r.status==='absent')    ABSENT_MARKS[key]=true;
+      if(r.fromReq)              ATT_FROM_REQ[key]=r.fromReq;
     });
     setDbState(t('db_ok'),'ok'); renderAll();
   }, err=>{ console.error('[attendance]',err); setDbState(t('db_error'),'bad'); }));
@@ -1757,6 +1793,16 @@ document.getElementById('submitReqBtn').onclick=()=>{
     document.getElementById('reqNote').value='';
     msg.classList.add('ok');
     msg.textContent = workDays.length>1 ? t('submitted_multi').replace('%d',workDays.length) : t('submitted');
+    const dateRangeText = workDays.length>1 ? `${workDays[0]} ~ ${workDays[workDays.length-1]}` : workDays[0];
+    notifyLeaveRequest({
+      employee_name: (EMPLOYEES[empId]||{}).name || empId,
+      employee_no:   (EMPLOYEES[empId]||{}).empNo || empId,
+      leave_type:    typeLabel(type),
+      date_range:    dateRangeText,
+      days_count:    workDays.length,
+      hours_total:   Math.round(workDays.length*hrsPerDay*2)/2,
+      note:          note || '-'
+    });
   }).catch(err=>{
     console.error('[submitReq]',err);
     msg.classList.add('err'); msg.textContent=t('save_fail');
@@ -1827,9 +1873,29 @@ function renderAllRequests(){
     ${rows||`<tr><td colspan="8" style="color:#8a94a0">${t('no_requests')}</td></tr>`}`;
 }
 function findReq(reqId){ return LEAVE_REQUESTS.find(r=>r.reqId===reqId); }
-function setReqStatus(reqId,status){
-  DB.collection('requests').doc(String(reqId)).update({status})
-    .catch(err=>{ console.error('[review]',err); alert(t('save_fail')); });
+/* 假單狀態變動時，同步把「已核准」的假別寫進 attendance 集合，讓月總表/每日狀況跟著顯示休假；
+   駁回或改回待審時，只清掉「當初由這張假單自動寫入」的標記，不動主控端手動編輯過的紀錄。 */
+async function syncAttendanceForReq(r,status){
+  if(!r) return;
+  const attKey=`${r.empId}_${r.date}`;
+  const markKey=`${r.empId}|${r.date}`;
+  if(status==='approved'){
+    const attStatus = r.type==='sick_doc' ? 'sick_doc' : 'leave';
+    await DB.collection('attendance').doc(attKey).set({
+      uid:r.empId, date:r.date, status:attStatus, inMs:null, outMs:null, fromReq:r.reqId
+    },{merge:true});
+  }else if(ATT_FROM_REQ[markKey]===r.reqId){
+    await DB.collection('attendance').doc(attKey).set({
+      status:null, fromReq:firebase.firestore.FieldValue.delete()
+    },{merge:true});
+  }
+}
+async function setReqStatus(reqId,status){
+  const r=findReq(reqId);
+  try{
+    await DB.collection('requests').doc(String(reqId)).update({status});
+    await syncAttendanceForReq(r,status);
+  }catch(err){ console.error('[review]',err); alert(t('save_fail')); }
 }
 window.approveReq=(reqId)=>setReqStatus(reqId,'approved');
 window.rejectReq =(reqId)=>setReqStatus(reqId,'rejected');
