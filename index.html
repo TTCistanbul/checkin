@@ -227,6 +227,21 @@
   .cal-cell.biz .cal-hrs{ color:#1665c0; font-size:11px; }
   .cal-badge{ position:absolute; top:6px; right:7px; width:9px; height:9px; border-radius:50%; }
   .cal-badge.green{ background:var(--good); } .cal-badge.red{ background:var(--bad); } .cal-badge.leave{ background:var(--leave); } .cal-badge.biz{ background:#1665c0; }
+
+  /* 總覽儀表板：全體員工 × 整月 表格 */
+  .ov-table{ border-collapse:collapse; font-size:12px; }
+  .ov-table th, .ov-table td{ border:1px solid #e3e8ef; padding:5px 4px; text-align:center; min-width:26px; }
+  .ov-table th{ background:#f6f8fb; font-weight:600; color:#5b6b78; position:sticky; top:0; z-index:2; }
+  .ov-table th.weekend, .ov-table td.weekend{ background:#f6f8fb; }
+  .ov-table th.emp-col, .ov-table td.emp-col{ position:sticky; left:0; background:#fff; text-align:left; min-width:150px; z-index:3; font-weight:600; white-space:nowrap; }
+  .ov-table th.emp-col{ z-index:4; }
+  .ov-table td.ov-work{ background:var(--good-bg); color:var(--good); font-weight:800; }
+  .ov-table td.ov-leave{ background:var(--leave-bg); color:var(--leave); font-weight:800; }
+  .ov-table td.ov-sick{ background:#fdeede; color:#c07a1a; font-weight:800; }
+  .ov-table td.ov-absent{ background:#fbe0da; color:#8f1d10; font-weight:800; }
+  .ov-table td.ov-biz{ background:#e2eefb; color:#1665c0; font-weight:800; }
+  .ov-table td.ov-holiday{ background:#efeafb; color:#5b3fa8; font-weight:800; }
+  .ov-table td.ov-missing{ background:#fbe0da; color:var(--bad); font-weight:800; }
   .cal-total{ margin-top:14px; padding:12px 16px; background:var(--navy-soft); border-radius:8px; font-size:14px; display:flex; justify-content:space-between; align-items:center; }
   .cal-total b{ color:var(--navy); font-family:var(--mono); font-size:16px; }
 
@@ -419,14 +434,40 @@
     <!-- ===== ADMIN UI ===== -->
     <div id="adminUI" style="display:none;">
       <div class="tabbar">
-        <button class="tab active" data-tab="monthly" data-i18n="tab_monthly">月總表</button>
+        <button class="tab active" data-tab="overview" data-i18n="tab_overview">總覽儀表板</button>
+        <button class="tab" data-tab="monthly" data-i18n="tab_monthly">月總表</button>
         <button class="tab" data-tab="daily" data-i18n="tab_daily">每日狀況</button>
         <button class="tab" data-tab="employees" data-i18n="tab_emp">員工設定</button>
         <button class="tab" data-tab="leavereview"><span data-i18n="tab_leave_review">請假審核</span><span class="tab-badge" id="pendingBadge" style="display:none"></span></button>
       </div>
 
+      <!-- Overview dashboard -->
+      <div class="card tabpanel" id="panel-overview">
+        <p class="section-title" data-i18n="admin_overview_title">總覽儀表板 — 全體員工出勤狀況</p>
+        <div class="cal-head">
+          <div></div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="cal-title" id="ovTitle">—</span>
+            <div class="cal-nav">
+              <button id="ovPrev" aria-label="prev">‹</button>
+              <button id="ovNext" aria-label="next">›</button>
+            </div>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table class="ov-table" id="ovTable"></table></div>
+        <div class="legend" style="margin-top:14px;">
+          <span><i class="dot green"></i><span data-i18n="lg_green">出勤完整（有上、下班紀錄）</span></span>
+          <span><i class="dot red"></i><span data-i18n="lg_red">缺打卡（紅字）</span></span>
+          <span><i class="dot leave"></i><span data-i18n="lg_leave">休假（主控端標記）</span></span>
+          <span><i class="dot" style="background:#1665c0"></i><span data-i18n="lg_biz">公出（可填時間）</span></span>
+          <span><i class="dot" style="background:#c07a1a"></i><span data-i18n="st_sick_doc">病假·有證明</span></span>
+          <span><i class="dot" style="background:#8f1d10"></i><span data-i18n="st_absent">曠職</span></span>
+          <span><i class="dot" style="background:#5b3fa8"></i><span data-i18n="st_holiday">國定假日（有薪）</span></span>
+        </div>
+      </div>
+
       <!-- Monthly overview (calendar style) -->
-      <div class="card tabpanel" id="panel-monthly">
+      <div class="card tabpanel" id="panel-monthly" style="display:none;">
         <p class="section-title" data-i18n="admin_month_title">月總表</p>
         <div class="cal-head">
           <select class="field cal-emp-select" id="calEmp" style="margin:0;"></select>
@@ -661,8 +702,9 @@ const I18N = {
     clock_in:"上班打卡", clock_out:"下班打卡",
     emp_rule:"上班取當天最早、下班取當天最晚。重複打卡不覆蓋。",
     my_log:"我的考勤紀錄",
-    tab_monthly:"月總表", tab_daily:"每日狀況", tab_emp:"員工設定",
+    tab_overview:"總覽儀表板", tab_monthly:"月總表", tab_daily:"每日狀況", tab_emp:"員工設定",
     admin_month_title:"月總表 — 每人每日工時", select_month:"選擇月份",
+    admin_overview_title:"總覽儀表板 — 全體員工出勤狀況", ov_employee:"員工",
     lg_green:"出勤完整（有上、下班紀錄）", lg_red:"缺打卡（紅字）", lg_leave:"休假（主控端標記）",
     admin_daily_title:"每日打卡狀況", select_date:"選擇日期",
     daily_hint:"下方的橫列紀錄可用「選擇員工」切換，或直接點表格任一列。「編輯」可改上／下班時間與狀態。",
@@ -761,8 +803,9 @@ const I18N = {
     clock_in:"Clock In", clock_out:"Clock Out",
     emp_rule:"Earliest clock-in and latest clock-out per day are kept; repeats don't overwrite.",
     my_log:"My attendance",
-    tab_monthly:"Monthly", tab_daily:"Daily", tab_emp:"Employees",
+    tab_overview:"Overview", tab_monthly:"Monthly", tab_daily:"Daily", tab_emp:"Employees",
     admin_month_title:"Monthly overview — daily hours per person", select_month:"Month",
+    admin_overview_title:"Overview dashboard — all employees", ov_employee:"Employee",
     lg_green:"Complete attendance (clock-in & clock-out on file)", lg_red:"Missing punch (red)", lg_leave:"Leave (marked by admin)",
     admin_daily_title:"Daily attendance", select_date:"Date",
     daily_hint:"Switch the row-style log below with the employee selector, or just click any row here. Use Edit to change times or status.",
@@ -1387,6 +1430,7 @@ function renderAll(){
   if(CURRENT.role==='employee'){
     safe(renderEmployee,'employee');
   }else{
+    safe(renderOverviewDashboard,'overview');
     safe(renderMonthCalendar,'monthly');
     safe(renderDaily,'daily');
     safe(renderEmpAdmin,'employees');
@@ -1939,14 +1983,16 @@ document.querySelectorAll('[data-tab]').forEach(tab=>{
   tab.onclick=()=>{
     document.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('active'));
     tab.classList.add('active');
-    ['monthly','daily','employees','leavereview'].forEach(p=>{
+    ['overview','monthly','daily','employees','leavereview'].forEach(p=>{
       document.getElementById('panel-'+p).style.display = (p===tab.dataset.tab)?'block':'none';
     });
     if(tab.dataset.tab==='leavereview') renderAllRequests();
+    if(tab.dataset.tab==='overview') renderOverviewDashboard();
   };
 });
 
 function renderAdmin(){
+  safe(renderOverviewDashboard,'overview');
   safe(renderMonthCalendar,'monthly');
   safe(renderDaily,'daily');
   safe(renderEmpAdmin,'employees');
@@ -2064,6 +2110,59 @@ function renderMonthCalendar(){
 document.getElementById('calEmp').addEventListener('change',e=>{ CAL_EMP=e.target.value; renderMonthCalendar(); });
 document.getElementById('calPrev').onclick=()=>{ CAL_M--; if(CAL_M<0){CAL_M=11;CAL_Y--;} renderMonthCalendar(); };
 document.getElementById('calNext').onclick=()=>{ CAL_M++; if(CAL_M>11){CAL_M=0;CAL_Y++;} renderMonthCalendar(); };
+
+/* --- 總覽儀表板（全體員工 × 整月，一格一天）--- */
+let OV_Y, OV_M;
+const OV_CODE = { work:'出', leave:'休', biz:'差', sick_doc:'病', absent:'曠', holiday:'國', missing:'缺' };
+function ovCodeLabel(key){
+  return { work:t('lg_green'), leave:t('lg_leave'), biz:t('lg_biz'), sick_doc:t('st_sick_doc'),
+           absent:t('st_absent'), holiday:t('st_holiday'), missing:t('lg_red') }[key] || '';
+}
+function renderOverviewDashboard(){
+  const n=new Date();
+  if(OV_Y==null){ OV_Y=n.getFullYear(); OV_M=n.getMonth(); }
+  const y=OV_Y, m=OV_M;
+  const dim=daysInMonth(y,m);
+  document.getElementById('ovTitle').textContent =
+    (LANG==='zh-Hant') ? `${y}年${m+1}月` : new Date(y,m,1).toLocaleDateString('en-US',{year:'numeric',month:'long'});
+
+  const roster=rosterIds();
+  let thead=`<tr><th class="emp-col" data-i18n="ov_employee">員工</th>`;
+  for(let day=1; day<=dim; day++){
+    const dow=new Date(y,m,day).getDay();
+    thead+=`<th class="${dow===0||dow===6?'weekend':''}">${day}</th>`;
+  }
+  thead+='</tr>';
+
+  let rows='';
+  roster.forEach(id=>{
+    const emp=EMPLOYEES[id]; if(!emp) return;
+    rows+=`<tr><td class="emp-col">${emp.name}<span style="color:#8a94a0;font-weight:400;"> #${emp.empNo||''}</span></td>`;
+    for(let day=1; day<=dim; day++){
+      const date=`${y}-${pad(m+1)}-${pad(day)}`;
+      const dd=new Date(y,m,day);
+      const dow=dd.getDay();
+      const weekend=(dow===0||dow===6);
+      const st=dayStatus(id,date);
+      const rec=ATT[`${id}|${date}`];
+      let code='', cls='', statusKey='';
+      if(st==='leave'){ code=OV_CODE.leave; cls='ov-leave'; statusKey='leave'; }
+      else if(st==='sick_doc'){ code=OV_CODE.sick_doc; cls='ov-sick'; statusKey='sick_doc'; }
+      else if(st==='absent'){ code=OV_CODE.absent; cls='ov-absent'; statusKey='absent'; }
+      else if(st==='business'){ code=OV_CODE.biz; cls='ov-biz'; statusKey='biz'; }
+      else if(rec && rec.inMs && rec.outMs && dd<=n){ code=OV_CODE.work; cls='ov-work'; statusKey='work'; }
+      else if(holidayOf(date)){ code=OV_CODE.holiday; cls='ov-holiday'; statusKey='holiday'; }
+      else if(rec && rec.inMs && !rec.outMs && dd<=n){ code=OV_CODE.missing; cls='ov-missing'; statusKey='missing'; }
+      const title = code ? `${date} ${ovCodeLabel(statusKey)}` : date;
+      rows+=`<td class="${weekend?'weekend':''} ${cls}" title="${title}">${code}</td>`;
+    }
+    rows+='</tr>';
+  });
+
+  document.getElementById('ovTable').innerHTML = `<thead>${thead}</thead><tbody>${rows}</tbody>`;
+}
+document.getElementById('ovPrev').onclick=()=>{ OV_M--; if(OV_M<0){OV_M=11;OV_Y--;} renderOverviewDashboard(); };
+document.getElementById('ovNext').onclick=()=>{ OV_M++; if(OV_M>11){OV_M=0;OV_Y++;} renderOverviewDashboard(); };
 
 /* --- 狀態 pill 產生器 --- */
 function statusPillFor(id,date){
