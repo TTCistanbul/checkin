@@ -2333,7 +2333,7 @@ function monthTitle(ym){
 }
 function empReportHtml(id,ym){
   const e=EMPLOYEES[id]; if(!e) return '';
-  const cnt={work:0,paid:0,sick:0,leave:0,absent:0,missing:0,holiday:0};
+  const cnt={work:0,biz:0,paid:0,sick:0,leave:0,absent:0,missing:0};
   const rows=monthDates(ym).map(date=>{
     const st=dayStatus(id,date);
     const rec=ATT[`${id}|${date}`];
@@ -2348,10 +2348,9 @@ function empReportHtml(id,ym){
     if(st==='absent') cnt.absent++;
     else if(st==='sick_doc') cnt.sick++;
     else if(st==='leave') cnt.leave++;
-    else if(st==='business') cnt.work++;
+    else if(st==='business') cnt.biz++;
     else if(rec && rec.inMs && rec.outMs) cnt.work++;
     else if(rec && rec.inMs) cnt.missing++;
-    else if(holidayOf(date)) cnt.holiday++;
     const d=new Date(date+'T00:00:00'), weekend=(d.getDay()===0||d.getDay()===6);
     return `<tr class="${weekend?'we':''}">
       <td class="mono">${date}</td><td>${weekdayLabel(date)}</td>
@@ -2377,9 +2376,9 @@ function empReportHtml(id,ym){
     </div>
     <div class="boxes">
       ${box(t('total_days'),cnt.work)}
+      ${box(t('st_business'),cnt.biz)}
       ${box(t('st_sick_doc'),cnt.sick)}
       ${box(t('st_leave'),cnt.leave)}
-      ${box(t('sum_holiday'),cnt.holiday)}
       ${box(t('st_absent'),cnt.absent)}
       ${box(t('st_missing'),cnt.missing)}
     </div>
