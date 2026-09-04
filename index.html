@@ -549,7 +549,9 @@
           </select>
         </div>
         <button class="btn-mini" id="resyncAttBtn" style="margin-bottom:12px;" data-i18n="resync_att">🔄 重新同步已核准假單到月總表</button>
+        <button class="btn-mini" id="backfillLeaveReqBtn" style="margin-bottom:12px;">🔧 補建「每日狀況」手動標記休假的假單（扣特休）</button>
         <div class="msg" id="resyncMsg"></div>
+        <div class="msg" id="backfillMsg"></div>
         <div class="tbl-scroll"><table id="allReqTable"></table></div>
       </div>
     </div>
@@ -1965,6 +1967,30 @@ document.getElementById('resyncAttBtn').onclick=async ()=>{
     msg.classList.add('ok'); msg.textContent=t('resync_done').replace('%d',approved.length);
   }catch(err){
     console.error('[resync]',err); msg.classList.add('err'); msg.textContent=t('save_fail');
+  }finally{ btn.disabled=false; }
+};
+
+/* 補救用（一次性）：掃描目前所有 attendance 裡「主控端在每日狀況直接標成休假」但
+   還沒有對應假單（requests）的紀錄，幫它們補建一張已核准的特休假單，讓休假餘額正確扣款。
+   只補「還沒有任何已核准假單」的那幾天，不會對已經算過的紀錄重複扣。可放心重複點擊。 */
+document.getElementById('backfillLeaveReqBtn').onclick=async ()=>{
+  const btn=document.getElementById('backfillLeaveReqBtn');
+  const msg=document.getElementById('backfillMsg');
+  btn.disabled=true; msg.className='msg'; msg.textContent=t('resyncing');
+  try{
+    const keys=Object.keys(LEAVE_MARKS);
+    let n=0;
+    for(const key of keys){
+      const [id,date]=key.split('|');
+      if(ATT_FROM_REQ[key]) continue; // 這天本來就是「已核准假單」寫進 attendance 的，已經算過了
+      const already=LEAVE_REQUESTS.some(r=>r.empId===id && r.date===date && r.status==='approved');
+      if(already) continue; // 已經有對應的已核准假單，不重複建立
+      await syncRequestForManualStatus(id,date,'leave');
+      n++;
+    }
+    msg.classList.add('ok'); msg.textContent=`已補建 ${n} 筆假單，休假餘額應該已自動更新。`;
+  }catch(err){
+    console.error('[backfillLeaveReq]',err); msg.classList.add('err'); msg.textContent=t('save_fail');
   }finally{ btn.disabled=false; }
 };
 
