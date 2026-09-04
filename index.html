@@ -2504,6 +2504,28 @@ function toggleModalTimes(){
 document.getElementById('modalStatus').addEventListener('change',toggleModalTimes);
 document.getElementById('modalCancel').onclick=()=>{ document.getElementById('timeModal').style.display='none'; MODAL_CTX=null; };
 document.getElementById('timeModal').addEventListener('click',e=>{ if(e.target.id==='timeModal'){ e.currentTarget.style.display='none'; MODAL_CTX=null; } });
+/* 主控端在「每日打卡狀況」直接把某天標成「休假」時，等於是幫員工核准了一天特休，
+   但這裡原本只寫 attendance 集合（純顯示用），完全沒有經過 requests 集合，
+   所以 leaveLedger() 算餘額時看不到這筆，休假餘額就不會被扣。
+   這裡用「固定文件 ID」在 requests 集合裡同步補一張『已核准』的假單：
+   - 標成休假 → upsert 一張 type:'annual' 的已核准假單（用當天班表時數）
+   - 改回其他狀態 → 把那張主控端自動建立的假單刪掉，餘額自動加回來
+   固定 ID (`admin_${id}_${date}`) 只給「主控端手動標記」專用，
+   跟員工自己送出的假單（自動流水 ID）不會互相覆蓋。 */
+async function syncRequestForManualStatus(id,date,st){
+  const reqRef = DB.collection('requests').doc(`admin_${id}_${date}`);
+  if(st==='leave'){
+    const s=shiftMin(SHIFT_START), e=shiftMin(SHIFT_END);
+    const hrs=calcLeaveHours(s,e);
+    await reqRef.set({
+      uid:id, type:'annual', date, startMin:s, endMin:e, hours:hrs,
+      status:'approved', note:'(主控端每日狀況直接標記)',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }else{
+    await reqRef.delete().catch(()=>{});
+  }
+}
 document.getElementById('modalSave').onclick=async ()=>{
   if(!MODAL_CTX) return;
   const {id,date}=MODAL_CTX;
@@ -2519,6 +2541,7 @@ document.getElementById('modalSave').onclick=async ()=>{
   document.getElementById('timeModal').style.display='none'; MODAL_CTX=null; DRILL_ID=id;
   try{
     await DB.collection('attendance').doc(`${id}_${date}`).set(payload,{merge:true});
+    await syncRequestForManualStatus(id,date,st);
   }catch(err){ console.error('[modalSave]',err); alert(t('save_fail')); }
 };
 
