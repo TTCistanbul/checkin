@@ -550,8 +550,10 @@
         </div>
         <button class="btn-mini" id="resyncAttBtn" style="margin-bottom:12px;" data-i18n="resync_att">🔄 重新同步已核准假單到月總表</button>
         <button class="btn-mini" id="backfillLeaveReqBtn" style="margin-bottom:12px;">🔧 補建「每日狀況」手動標記休假的假單（扣特休）</button>
+        <button class="btn-mini" id="reclassifyAnnualBtn" style="margin-bottom:12px;">🔧 把已核准的「事假」全部改標成「特休」</button>
         <div class="msg" id="resyncMsg"></div>
         <div class="msg" id="backfillMsg"></div>
+        <div class="msg" id="reclassifyMsg"></div>
         <div class="tbl-scroll"><table id="allReqTable"></table></div>
       </div>
     </div>
@@ -1986,6 +1988,7 @@ document.getElementById('backfillLeaveReqBtn').onclick=async ()=>{
     for(const key of keys){
       const [id,date]=key.split('|');
       if(ATT_FROM_REQ[key]) continue; // 這天本來就是「已核准假單」寫進 attendance 的，已經算過了
+      if(isWeekendDate(date) || holidayOf(date)) continue; // 假日本來就不用上班，不算請假
       const already=LEAVE_REQUESTS.some(r=>r.empId===id && r.date===date && r.status==='approved');
       if(already) continue; // 已經有對應的已核准假單，不重複建立
       await syncRequestForManualStatus(id,date,'leave');
@@ -1994,6 +1997,27 @@ document.getElementById('backfillLeaveReqBtn').onclick=async ()=>{
     msg.classList.add('ok'); msg.textContent=`已補建 ${n} 筆假單，休假餘額應該已自動更新。`;
   }catch(err){
     console.error('[backfillLeaveReq]',err); msg.classList.add('err'); msg.textContent=t('save_fail');
+  }finally{ btn.disabled=false; }
+};
+
+/* 公司政策：不管員工假單當初送出/建立時標的類別是「事假」還是「特休」，
+   實際上都是先扣特休（ANNUAL_FIRST_FOR 已經這樣處理），畫面上想統一顯示成「特休」。
+   這裡把目前所有「已核准」且類別是 personal（事假）的假單，直接改標成 annual（特休），
+   不影響扣款結果（本來就已經算進特休），只是讓「請假審核」清單跟統計上的類別名稱一致。 */
+document.getElementById('reclassifyAnnualBtn').onclick=async ()=>{
+  const btn=document.getElementById('reclassifyAnnualBtn');
+  const msg=document.getElementById('reclassifyMsg');
+  btn.disabled=true; msg.className='msg'; msg.textContent=t('resyncing');
+  try{
+    const targets=LEAVE_REQUESTS.filter(r=>r.status==='approved' && r.type==='personal');
+    let n=0;
+    for(const r of targets){
+      await DB.collection('requests').doc(r.reqId).update({type:'annual'});
+      n++;
+    }
+    msg.classList.add('ok'); msg.textContent=`已把 ${n} 筆「事假」改標成「特休」。`;
+  }catch(err){
+    console.error('[reclassifyAnnual]',err); msg.classList.add('err'); msg.textContent=t('save_fail');
   }finally{ btn.disabled=false; }
 };
 
@@ -2543,7 +2567,8 @@ document.getElementById('timeModal').addEventListener('click',e=>{ if(e.target.i
    跟員工自己送出的假單（自動流水 ID）不會互相覆蓋。 */
 async function syncRequestForManualStatus(id,date,st){
   const reqRef = DB.collection('requests').doc(`admin_${id}_${date}`);
-  if(st==='leave'){
+  const isNonWorkday = isWeekendDate(date) || !!holidayOf(date);
+  if(st==='leave' && !isNonWorkday){
     const s=shiftMin(SHIFT_START), e=shiftMin(SHIFT_END);
     const hrs=calcLeaveHours(s,e);
     await reqRef.set({
@@ -2552,6 +2577,7 @@ async function syncRequestForManualStatus(id,date,st){
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   }else{
+    /* 假日／國定假日本來就不用上班，標成休假也不該扣特休，一律不建立或直接移除。 */
     await reqRef.delete().catch(()=>{});
   }
 }
