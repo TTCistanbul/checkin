@@ -1165,7 +1165,8 @@ function leaveLedger(empId){
   const balanceAsOf=annualBalanceAsOf(emp);
   const hasManagedBalance=annualRemainingSeedHours(emp)!=null;
   /* 今年已用（時數） */
-  let yearAnnualUsed=0;   // 今年從特休額度扣掉的時數
+  let yearAnnualUsed=0;   // 今年從特休額度扣掉的時數（實際扣款用，會受基準日影響，避免跟手動輸入的餘額重複扣）
+  let yearAnnualUsedDisplay=0; // 「今年已請特休」儀表板顯示用：不管基準日，只要今年已核准、算特休類的就算進來
   let yearSickHours=0;    // 今年病假時數（請假單，不扣特休）
   let yearPersonalHours=0;
   LEAVE_REQUESTS
@@ -1175,13 +1176,15 @@ function leaveLedger(empId){
       /* 新制度下，主控端調整日前的歷史假單已包含在「目前剩餘天數」裡，
          因此只從調整日之後的核准假單繼續扣除。 */
       const afterBalanceDate = !hasManagedBalance || !r.date || r.date>=balanceAsOf;
-      const useAnnual = afterBalanceDate && ANNUAL_FIRST_FOR[r.type]!==false;
+      const isAnnualType = ANNUAL_FIRST_FOR[r.type]!==false;
+      const useAnnual = afterBalanceDate && isAnnualType;
       const fromAnnual = useAnnual ? Math.min(left, r.hours) : 0;
       left-=fromAnnual;
       const rest=r.hours-fromAnnual;
       if(rest>0) acc[accBucket(r.type)]+=rest;
       if(isThisYear(r.date)){
         yearAnnualUsed += fromAnnual;
+        if(isAnnualType) yearAnnualUsedDisplay += r.hours; // 顯示統計：不受基準日限制，今年請了就算
         if(r.type==='sick_doc'||r.type==='sick') yearSickHours += r.hours;
         else if(r.type==='personal') yearPersonalHours += rest; // 超出特休的部分
       }
@@ -1193,7 +1196,7 @@ function leaveLedger(empId){
   return {
     annualQuota, annualLeft:left, annualUsed:annualQuota-left,
     sick_doc:acc.sick_doc + sickMarkDays*HOURS_PER_DAY, personal:acc.personal,
-    yearAnnualUsed, yearSickHours, yearPersonalHours, bizDays
+    yearAnnualUsed:yearAnnualUsedDisplay, yearSickHours, yearPersonalHours, bizDays
   };
 }
 function remainingLeave(empId){ return leaveLedger(empId).annualLeft; }
@@ -2666,6 +2669,12 @@ window.saveEmp=async (id)=>{
   const email=document.getElementById('email_'+id).value.trim();
   if(!/^[0-9]{4}$/.test(empNo)){ msg.textContent=t('id_format'); return; }
   if(!email){ msg.textContent=t('bad_email'); return; }
+  /* 基準日只在「主控端真的手動改了特休剩餘天數」時才重設成今天；
+     如果這欄的值跟目前系統即時算出來的剩餘天數一樣（代表你只是改照片/Email/到職日等其他欄位，
+     沒有動這個數字），就保留原本的基準日，避免把「還沒套用的請假扣款／週年加碼」平白吃掉。 */
+  const newAnnualHours = snapHalfHour((parseFloat(document.getElementById('qar_'+id).value)||0) * HOURS_PER_DAY);
+  const liveAnnualLeftHours = leaveLedger(id).annualLeft;
+  const balanceExplicitlyChanged = Math.abs(newAnnualHours - liveAnnualLeftHours) > 0.01;
   const patch={
     name:document.getElementById('name_'+id).value.trim()||e.name,
     empNo, email:email.toLowerCase(),
@@ -2674,8 +2683,8 @@ window.saveEmp=async (id)=>{
     noAttendance:document.getElementById('noatt_'+id).checked,
     hireDate:document.getElementById('hire_'+id).value||'',
     quota:{
-      annualRemainingHours: snapHalfHour((parseFloat(document.getElementById('qar_'+id).value)||0) * HOURS_PER_DAY),
-      annualBalanceAsOf: ymd(new Date()),
+      annualRemainingHours: newAnnualHours,
+      annualBalanceAsOf: balanceExplicitlyChanged ? ymd(new Date()) : annualBalanceAsOf(e),
       sick:0, personal:0
     }
   };
