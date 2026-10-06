@@ -965,9 +965,25 @@ function holidayOf(date){ return HOLIDAYS[date]||null; }
 function holidayName(h){ return (LANG==='zh-Hant'? h.zh : h.en) + ' · ' + h.tr; }
 function holidayShort(h){ return LANG==='zh-Hant'? h.zh : h.en; }
 
+/* 只有涵蓋整個班別的假單才把該日視為「整天休假」。
+   半天／按小時計的已核准假單仍需讓員工打上、下班卡；請假時數則由
+   requests 集合保留，並照常計入休假餘額。 */
+function isWholeDayLeaveRequest(r){
+  return !!r
+    && Number(r.startMin) <= shiftMin(SHIFT_START)
+    && Number(r.endMin) >= shiftMin(SHIFT_END);
+}
+function leaveRequestForAttendance(id,date){
+  const reqId=ATT_FROM_REQ[`${id}|${date}`];
+  return reqId ? LEAVE_REQUESTS.find(r=>r.reqId===reqId) : null;
+}
+
 function dayStatus(id,date){
   const key=`${id}|${date}`;
-  if(LEAVE_MARKS[key]) return 'leave';
+  /* 舊版曾把半天假也寫成 status:'leave'。若這筆標記來自半天假單，
+     以假單時段為準，恢復為可打卡的工作日。 */
+  if(LEAVE_MARKS[key] && !leaveRequestForAttendance(id,date)) return 'leave';
+  if(LEAVE_MARKS[key] && isWholeDayLeaveRequest(leaveRequestForAttendance(id,date))) return 'leave';
   if(SICK_MARKS[key]) return 'sick_doc';
   if(ABSENT_MARKS[key]) return 'absent';
   if(BIZ_MARKS[key]) return 'business';
@@ -1941,10 +1957,17 @@ async function syncAttendanceForReq(r,status){
   const attKey=`${r.empId}_${r.date}`;
   const markKey=`${r.empId}|${r.date}`;
   if(status==='approved'){
-    const attStatus = r.type==='sick_doc' ? 'sick_doc' : 'leave';
-    await DB.collection('attendance').doc(attKey).set({
-      uid:r.empId, date:r.date, status:attStatus, inMs:null, outMs:null, fromReq:r.reqId
-    },{merge:true});
+    if(isWholeDayLeaveRequest(r)){
+      const attStatus = r.type==='sick_doc' ? 'sick_doc' : 'leave';
+      await DB.collection('attendance').doc(attKey).set({
+        uid:r.empId, date:r.date, status:attStatus, inMs:null, outMs:null, fromReq:r.reqId
+      },{merge:true});
+    }else{
+      /* 半天假：不覆蓋既有或之後的上下班打卡時間，也不加整日休假狀態。 */
+      await DB.collection('attendance').doc(attKey).set({
+        uid:r.empId, date:r.date, status:null, fromReq:r.reqId
+      },{merge:true});
+    }
   }else if(ATT_FROM_REQ[markKey]===r.reqId){
     await DB.collection('attendance').doc(attKey).set({
       status:null, fromReq:firebase.firestore.FieldValue.delete()
