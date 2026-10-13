@@ -1,0 +1,45 @@
+name: Receipt AI OCR
+
+# 每 15 分鐘（週一到週五 08:00–21:00 TRT）檢查一次新上傳的收據，
+# 用 Gemini 讀出日期、廠商、金額，填回打卡系統的「報帳收據」清單。
+# 需要在 repo 的 Settings → Secrets and variables → Actions 設好：
+#   FIREBASE_SERVICE_ACCOUNT、GEMINI_API_KEY
+on:
+  schedule:
+    - cron: '*/15 5-18 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      redo:
+        description: '指定收據 id 重新辨識（留空＝處理所有新收據）'
+        required: false
+        default: ''
+
+concurrency:
+  group: receipt-ocr
+  cancel-in-progress: false
+
+jobs:
+  ocr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests firebase-admin
+
+      - name: Run OCR
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          REDO: ${{ github.event.inputs.redo }}
+        run: |
+          if [ -n "$REDO" ]; then
+            python scripts/receipt_ocr.py --redo "$REDO"
+          else
+            python scripts/receipt_ocr.py
+          fi

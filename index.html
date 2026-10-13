@@ -308,6 +308,10 @@
   .rc-sum{ font-size:13px; color:#5b6b78; margin:6px 0 12px; }
   .rc-sum b{ color:var(--ink); }
   tr.rc-incomplete td{ background:#fffaf0; }
+  .rc-ai{ display:inline-block; margin-left:4px; padding:0 5px; border-radius:8px; font-size:10px; font-weight:800;
+          background:#e8e2fb; color:#5b3fa8; vertical-align:middle; }
+  .pill.rc-ocr{ background:#e8e2fb; color:#5b3fa8; margin-left:4px; }
+  .pill.rc-ocr-bad{ background:#f2e7e5; color:var(--bad); margin-left:4px; }
   .rc-edit input,.rc-edit select{ width:100%; padding:6px; border:1px solid var(--line); border-radius:4px; font-size:13px; min-width:70px; font-family:inherit; }
 </style>
 </head>
@@ -972,14 +976,14 @@ Object.assign(I18N['zh-Hant'],{
   rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
   rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
   rc_st_submitted:"待確認", rc_st_verified:"已確認", rc_missing:"待補",
-  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
+  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
   rc_view:"檢視", rc_dl:"下載", rc_edit:"編輯", rc_save:"儲存", rc_cancel:"取消",
   rc_verify:"確認", rc_unverify:"取消確認", rc_delete:"刪除",
   rc_del_confirm:"確定刪除這張收據？檔案也會一併刪除，無法復原。",
   rc_f_month:"月份", rc_f_emp:"經手人", rc_f_all:"全部", rc_f_incomplete:"資料待補",
   rc_zip:"⬇ 下載全部收據（ZIP，已自動命名）", rc_csv:"⬇ 匯出清冊 CSV", rc_zipping:"打包中…",
   rc_empty:"目前沒有收據。", rc_sum_n:"共", rc_sum_unit:"張", rc_sum_incomplete:"張待補",
-  rc_naming_hint:"下載時自動命名為：日期_廠商_金額幣別_員工編號_代碼.副檔名，ZIP 內附清冊 CSV。",
+  rc_naming_hint:"同仁上傳後約 15 分鐘內 AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對後按「確認」）。下載時自動命名為：日期_廠商_金額幣別_員工編號_代碼.副檔名，ZIP 內附清冊 CSV。",
   rc_load_fail:"檔案讀取失敗。"
 });
 Object.assign(I18N['en'],{
@@ -994,14 +998,14 @@ Object.assign(I18N['en'],{
   rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
   rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
   rc_st_submitted:"Submitted", rc_st_verified:"Verified", rc_missing:"Missing",
-  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
+  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
   rc_view:"View", rc_dl:"Download", rc_edit:"Edit", rc_save:"Save", rc_cancel:"Cancel",
   rc_verify:"Verify", rc_unverify:"Unverify", rc_delete:"Delete",
   rc_del_confirm:"Delete this receipt and its file? This can't be undone.",
   rc_f_month:"Month", rc_f_emp:"Person", rc_f_all:"All", rc_f_incomplete:"Incomplete",
   rc_zip:"⬇ Download all (ZIP, auto-named)", rc_csv:"⬇ Export CSV", rc_zipping:"Zipping…",
   rc_empty:"No receipts yet.", rc_sum_n:"Total", rc_sum_unit:"receipts", rc_sum_incomplete:"incomplete",
-  rc_naming_hint:"Files are named Date_Vendor_AmountCurrency_EmpNo_ID.ext; the ZIP includes a CSV ledger.",
+  rc_naming_hint:"Within ~15 min of upload, AI fills in date, vendor and amount (check fields tagged AI, then Verify). Files are named Date_Vendor_AmountCurrency_EmpNo_ID.ext; the ZIP includes a CSV ledger.",
   rc_load_fail:"Couldn't load the file."
 });
 
@@ -2952,6 +2956,7 @@ let RECEIPTS=[];
 let RC_EDITING=null;                // 正在編輯的收據 id
 let RC_FORM_ROLE=null;              // 目前畫好的上傳表單是給哪個角色
 const RC_PENDING={};                // 每個表單已選、尚未上傳的檔案
+const RC_DATE_TOUCHED={};           // 主控端有沒有手動改過收據日期（沒改＝讓 AI 填）
 
 const $id=id=>document.getElementById(id);
 function rcEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -3016,6 +3021,8 @@ function rcInitForm(){
   RC_PENDING[p]=[];
   if($id(p+'Date')) $id(p+'Date').value = ymd(new Date());
   const add = input => { [...(input.files||[])].forEach(f=>RC_PENDING[p].push(f)); input.value=''; rcRenderPrev(p); };
+  RC_DATE_TOUCHED[p]=false;
+  if($id(p+'Date')) $id(p+'Date').oninput=()=>{ RC_DATE_TOUCHED[p]=true; };
   $id(p+'Cam').onchange   = e=>add(e.target);
   $id(p+'Files').onchange = e=>add(e.target);
   $id(p+'Submit').onclick = ()=>rcSubmit(p);
@@ -3083,10 +3090,12 @@ async function rcSubmit(p){
     amount: (multi||amt==='') ? null : Number(amt),
     currency: v('Cur') || 'TRY',
     category: v('Cat'),
-    note: v('Note').trim()
+    note: v('Note').trim(),
+    dateSource: RC_DATE_TOUCHED[p] ? 'manual' : 'upload'   // upload＝系統預設今天，AI 可以換成收據上的日期
   };
   btn.disabled=true;
   let done=0;
+  RC_DATE_TOUCHED[p]=false;
   try{
     for(const f of files){
       msg.className='msg'; msg.textContent=`${t('rc_uploading')} ${done+1}/${files.length}`;
@@ -3162,15 +3171,18 @@ function rcRowHtml(r, admin){
         <button class="btn-mini" onclick="rcCancel()">${t('rc_cancel')}</button></div></td></tr>`;
   }
   const inc=rcIncomplete(r);
-  const missing=`<span class="pill pending">${t('rc_missing')}</span>`;
-  const pill = r.status==='verified' ? `<span class="pill approved">${t('rc_st_verified')}</span>` : `<span class="pill pending">${t('rc_st_submitted')}</span>`;
+  const ai=f=> (r.aiFilled||[]).includes(f) ? `<span class="rc-ai" title="${t('rc_ai_tip')}">AI</span>` : '';
+  const ocrPending = r.status!=='verified' && (!r.ocrStatus || r.ocrStatus==='pending');
+  const missing = ocrPending ? `<span class="pill rc-ocr">🤖 ${t('rc_ocr_wait')}</span>` : `<span class="pill pending">${t('rc_missing')}</span>`;
+  let pill = r.status==='verified' ? `<span class="pill approved">${t('rc_st_verified')}</span>` : `<span class="pill pending">${t('rc_st_submitted')}</span>`;
+  if(r.status!=='verified' && (r.ocrStatus==='unreadable'||r.ocrStatus==='failed')) pill+=`<span class="pill rc-ocr-bad">${t('rc_ocr_bad')}</span>`;
   const icon = r.mime==='application/pdf' ? '📄 ' : '🧾 ';
   return `<tr class="${inc?'rc-incomplete':''}">
-    <td style="white-space:nowrap">${rcEsc(r.date)}</td>
+    <td style="white-space:nowrap">${rcEsc(r.date)}${ai('date')}</td>
     ${admin?`<td style="white-space:nowrap">${rcEsc(rcName(r.uid))}</td>`:''}
-    <td>${r.vendor?rcEsc(r.vendor):missing}</td>
-    <td style="white-space:nowrap;text-align:right">${rcAmountText(r)||missing}</td>
-    <td>${r.category?rcEsc(t('rc_cat_'+r.category)):''}</td>
+    <td>${r.vendor?rcEsc(r.vendor)+ai('vendor'):missing}</td>
+    <td style="white-space:nowrap;text-align:right">${rcAmountText(r)?rcAmountText(r)+ai('amount'):missing}</td>
+    <td>${r.category?rcEsc(t('rc_cat_'+r.category))+ai('category'):''}</td>
     <td>${rcEsc(r.note)}</td>
     <td>${pill}</td>
     <td><div class="rc-actions">
@@ -3178,6 +3190,7 @@ function rcRowHtml(r, admin){
       <button class="btn-mini" onclick="rcDownload('${r.id}')">${t('rc_dl')}</button>
       ${canEdit?`<button class="btn-mini" onclick="rcEdit('${r.id}')">${t('rc_edit')}</button>`:''}
       ${admin?`<button class="btn-mini" onclick="rcToggleVerify('${r.id}')">${r.status==='verified'?t('rc_unverify'):t('rc_verify')}</button>`:''}
+      ${admin&&r.status!=='verified'&&!ocrPending?`<button class="btn-mini" onclick="rcReOcr('${r.id}')">🤖 ${t('rc_reocr')}</button>`:''}
       ${canEdit?`<button class="btn-mini danger" onclick="rcDelete('${r.id}')">${t('rc_delete')}</button>`:''}
     </div></td></tr>`;
 }
@@ -3252,9 +3265,14 @@ window.rcSave=async id=>{
   const amt=$id('rcEdAmount').value;
   const patch={ date:$id('rcEdDate').value, vendor:$id('rcEdVendor').value.trim(),
     amount: amt===''?null:Number(amt), currency:$id('rcEdCur').value,
-    category:$id('rcEdCat').value, note:$id('rcEdNote').value.trim() };
+    category:$id('rcEdCat').value, note:$id('rcEdNote').value.trim(),
+    dateSource:'manual', aiFilled:[] };   // 人工看過、存檔＝以人工為準，AI 之後不會再改
   try{ await DB.collection('receipts').doc(id).update(patch); RC_EDITING=null; renderReceipts(); }
   catch(err){ console.error('[rcSave]',err); alert(t('save_fail')); }
+};
+window.rcReOcr=async id=>{
+  try{ await DB.collection('receipts').doc(id).update({ ocrStatus:'pending', ocrTries:0 }); }
+  catch(err){ console.error('[rcReOcr]',err); alert(t('save_fail')); }
 };
 window.rcToggleVerify=async id=>{
   const r=rcFind(id); if(!r) return;
@@ -3277,10 +3295,10 @@ window.rcDelete=async id=>{
 
 /* ---- 匯出：CSV 清冊 + ZIP（檔案已自動命名） ---- */
 function rcCsv(list){
-  const head=['日期 Date','經手人 By','員工編號 EmpNo','廠商 Vendor','金額 Amount','幣別 Currency','類別 Category','用途 Purpose','狀態 Status','檔名 File'];
+  const head=['日期 Date','經手人 By','員工編號 EmpNo','廠商 Vendor','金額 Amount','幣別 Currency','類別 Category','用途 Purpose','狀態 Status','稅號 Tax ID','單據號碼 Invoice No','檔名 File'];
   const rows=list.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[
     r.date, rcName(r.uid), empNoOf(r.uid), r.vendor||'', r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
-    r.category?t('rc_cat_'+r.category):'', r.note||'', t('rc_st_'+(r.status||'submitted')), rcFileName(r)]);
+    r.category?t('rc_cat_'+r.category):'', r.note||'', t('rc_st_'+(r.status||'submitted')), r.tax_id||'', r.invoice_no||'', rcFileName(r)]);
   return [head,...rows].map(row=>row.map(csvCell).join(',')).join('\n');
 }
 function rcLoadJsZip(){
