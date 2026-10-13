@@ -301,7 +301,7 @@
   .rc-filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
   .rc-filters .field{ min-width:130px; flex:1; }
   .rc-tools{ display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 8px; }
-  #rcTableEmp, #rcTableAdmin{ min-width:720px; }
+  #rcTableAdmin{ min-width:720px; }
   .rc-actions{ display:flex; gap:4px; flex-wrap:wrap; min-width:170px; }
   .rc-actions .btn-mini{ padding:4px 8px; }
   .rc-actions .btn-mini.danger{ color:var(--bad); }
@@ -972,7 +972,7 @@ Object.assign(I18N['zh-Hant'],{
   rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
   rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
   rc_st_submitted:"待確認", rc_st_verified:"已確認", rc_missing:"待補",
-  rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
+  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
   rc_view:"檢視", rc_dl:"下載", rc_edit:"編輯", rc_save:"儲存", rc_cancel:"取消",
   rc_verify:"確認", rc_unverify:"取消確認", rc_delete:"刪除",
   rc_del_confirm:"確定刪除這張收據？檔案也會一併刪除，無法復原。",
@@ -994,7 +994,7 @@ Object.assign(I18N['en'],{
   rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
   rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
   rc_st_submitted:"Submitted", rc_st_verified:"Verified", rc_missing:"Missing",
-  rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
+  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
   rc_view:"View", rc_dl:"Download", rc_edit:"Edit", rc_save:"Save", rc_cancel:"Cancel",
   rc_verify:"Verify", rc_unverify:"Unverify", rc_delete:"Delete",
   rc_del_confirm:"Delete this receipt and its file? This can't be undone.",
@@ -2974,8 +2974,17 @@ function rcFileName(r){
 }
 
 /* ---- 上傳表單 ---- */
-function rcFormHtml(p){
+function rcFormHtml(p, simple){
   const L=k=>`data-i18n="${k}">${t(k)}`;
+  if(simple) return `
+    <div class="rc-pick">
+      <label class="rc-btn"><input class="rc-file-input" type="file" accept="image/*" capture="environment" id="${p}Cam"><span ${L('rc_take_photo')}</span></label>
+      <label class="rc-btn alt"><input class="rc-file-input" type="file" accept="image/*,application/pdf,.pdf" multiple id="${p}Files"><span ${L('rc_choose_files')}</span></label>
+    </div>
+    <div class="rc-previews" id="${p}Prev"></div>
+    <p class="hint" ${L('rc_simple_hint')}</p>
+    <button class="btn-primary" id="${p}Submit" ${L('rc_submit')}</button>
+    <div class="msg" id="${p}Msg"></div>`;
   const cats=RC_CATS.map(c=>`<option value="${c}" ${L('rc_cat_'+c)}</option>`).join('');
   const curs=RC_CURS.map(c=>`<option value="${c}">${c}</option>`).join('');
   return `
@@ -3003,9 +3012,9 @@ function rcInitForm(){
   const p = rcIsAdmin() ? 'rcA' : 'rcE';
   const box = $id(rcIsAdmin() ? 'rcFormAdmin' : 'rcFormEmp');
   ['rcFormAdmin','rcFormEmp'].forEach(id=>{ const el=$id(id); if(el) el.innerHTML=''; });
-  box.innerHTML = rcFormHtml(p);
+  box.innerHTML = rcFormHtml(p, !rcIsAdmin());
   RC_PENDING[p]=[];
-  $id(p+'Date').value = ymd(new Date());
+  if($id(p+'Date')) $id(p+'Date').value = ymd(new Date());
   const add = input => { [...(input.files||[])].forEach(f=>RC_PENDING[p].push(f)); input.value=''; rcRenderPrev(p); };
   $id(p+'Cam').onchange   = e=>add(e.target);
   $id(p+'Files').onchange = e=>add(e.target);
@@ -3066,14 +3075,15 @@ async function rcSubmit(p){
   msg.className='msg err';
   if(!files.length){ msg.textContent=t('rc_need_file'); return; }
   const multi=files.length>1;
-  const amt=$id(p+'Amount').value;
+  const v=k=>{ const el=$id(p+k); return el ? el.value : ''; };
+  const amt=v('Amount');
   const meta={
-    date: $id(p+'Date').value || ymd(new Date()),
-    vendor: multi ? '' : $id(p+'Vendor').value.trim(),
+    date: v('Date') || ymd(new Date()),
+    vendor: multi ? '' : v('Vendor').trim(),
     amount: (multi||amt==='') ? null : Number(amt),
-    currency: $id(p+'Cur').value,
-    category: $id(p+'Cat').value,
-    note: $id(p+'Note').value.trim()
+    currency: v('Cur') || 'TRY',
+    category: v('Cat'),
+    note: v('Note').trim()
   };
   btn.disabled=true;
   let done=0;
@@ -3094,7 +3104,7 @@ async function rcSubmit(p){
     }
     msg.className='msg'; msg.textContent=`✓ ${t('rc_done')} ${done}`;
     RC_PENDING[p]=[]; rcRenderPrev(p);
-    ['Vendor','Amount','Note'].forEach(k=>{ $id(p+k).value=''; });
+    ['Vendor','Amount','Note'].forEach(k=>{ const el=$id(p+k); if(el) el.value=''; });
   } finally { btn.disabled=false; }
 }
 
@@ -3125,10 +3135,19 @@ function rcFiltered(){
     (!who || who==='all' || r.uid===who) &&
     (st==='all' || (st==='incomplete' ? rcIncomplete(r) : r.status===st)));
 }
+function rcRowHtmlSimple(r){
+  const pill = r.status==='verified' ? `<span class="pill approved">${t('rc_st_verified')}</span>` : `<span class="pill pending">${t('rc_st_submitted')}</span>`;
+  const icon = r.mime==='application/pdf' ? '📄 ' : '🧾 ';
+  return `<tr><td style="white-space:nowrap">${rcEsc(r.date)}</td><td>${pill}</td>
+    <td><div class="rc-actions">
+      <button class="btn-mini" onclick="rcView('${r.id}')">${icon}${t('rc_view')}</button>
+      ${r.status!=='verified'?`<button class="btn-mini danger" onclick="rcDelete('${r.id}')">${t('rc_delete')}</button>`:''}
+    </div></td></tr>`;
+}
 function rcRowHtml(r, admin){
   const canEdit = admin || (r.uid===CURRENT.id && r.status!=='verified');
   if(RC_EDITING===r.id && canEdit){
-    const cats=RC_CATS.map(c=>`<option value="${c}" ${r.category===c?'selected':''}>${rcEsc(t('rc_cat_'+c))}</option>`).join('');
+    const cats='<option value=""></option>'+RC_CATS.map(c=>`<option value="${c}" ${r.category===c?'selected':''}>${rcEsc(t('rc_cat_'+c))}</option>`).join('');
     const curs=RC_CURS.map(c=>`<option ${r.currency===c?'selected':''}>${c}</option>`).join('');
     return `<tr class="rc-edit">
       <td><input type="date" id="rcEdDate" value="${rcEsc(r.date)}"></td>
@@ -3151,7 +3170,7 @@ function rcRowHtml(r, admin){
     ${admin?`<td style="white-space:nowrap">${rcEsc(rcName(r.uid))}</td>`:''}
     <td>${r.vendor?rcEsc(r.vendor):missing}</td>
     <td style="white-space:nowrap;text-align:right">${rcAmountText(r)||missing}</td>
-    <td>${rcEsc(t('rc_cat_'+r.category))}</td>
+    <td>${r.category?rcEsc(t('rc_cat_'+r.category)):''}</td>
     <td>${rcEsc(r.note)}</td>
     <td>${pill}</td>
     <td><div class="rc-actions">
@@ -3185,6 +3204,11 @@ function renderReceipts(){
     $id('rcSummary').innerHTML=`${t('rc_sum_n')} <b>${list.length}</b> ${t('rc_sum_unit')}${tot?' · '+tot:''}${inc?` · <span style="color:var(--warn)">${inc} ${t('rc_sum_incomplete')}</span>`:''}`;
   }
   if(!list.length){ table.innerHTML=`<tbody><tr><td style="color:#8a94a0">${t('rc_empty')}</td></tr></tbody>`; return; }
+  if(!admin){
+    table.innerHTML=`<thead><tr><th>${t('rc_up_date')}</th><th>${t('rc_th_status')}</th><th>${t('rc_th_action')}</th></tr></thead>
+      <tbody>${list.map(rcRowHtmlSimple).join('')}</tbody>`;
+    return;
+  }
   table.innerHTML=`<thead><tr>
       <th>${t('rc_date')}</th>${admin?`<th>${t('rc_th_person')}</th>`:''}<th>${t('rc_vendor')}</th><th>${t('rc_amount')}</th>
       <th>${t('rc_cat')}</th><th>${t('rc_th_note')}</th><th>${t('rc_th_status')}</th><th>${t('rc_th_action')}</th>
@@ -3256,7 +3280,7 @@ function rcCsv(list){
   const head=['日期 Date','經手人 By','員工編號 EmpNo','廠商 Vendor','金額 Amount','幣別 Currency','類別 Category','用途 Purpose','狀態 Status','檔名 File'];
   const rows=list.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[
     r.date, rcName(r.uid), empNoOf(r.uid), r.vendor||'', r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
-    t('rc_cat_'+r.category), r.note||'', t('rc_st_'+(r.status||'submitted')), rcFileName(r)]);
+    r.category?t('rc_cat_'+r.category):'', r.note||'', t('rc_st_'+(r.status||'submitted')), rcFileName(r)]);
   return [head,...rows].map(row=>row.map(csvCell).join(',')).join('\n');
 }
 function rcLoadJsZip(){
