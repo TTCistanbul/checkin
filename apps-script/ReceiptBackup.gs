@@ -13,7 +13,10 @@
  *      把這整份程式碼貼上取代原本內容，存檔。
  *   2. 左邊齒輪「專案設定」→ 最下面「指令碼屬性」→ 新增屬性：
  *        名稱 SERVICE_ACCOUNT_JSON，值＝Firebase 服務帳號金鑰 JSON 的「整份內容」
- *   3. 回到編輯器，上方函式選單選 setup → 執行 → 依指示授權。
+ *   3. 專案設定勾選「在編輯器中顯示 appsscript.json 資訊清單檔案」，把 appsscript.json
+ *      換成 repo 裡 apps-script/appsscript.json 的內容。它把權限限縮成「只能存取
+ *      這支程式自己建立的 Drive 檔案」，否則 Google 會以「要求存取機密資訊」為由封鎖。
+ *   4. 回到編輯器，上方函式選單選 setup → 執行 → 依指示授權。
  *      setup 會建立備份資料夾、設定每天凌晨自動執行，並立刻先備份一次。
  *   之後想馬上備份，執行 backupNow 即可。
  */
