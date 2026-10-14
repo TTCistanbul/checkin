@@ -310,6 +310,11 @@
   tr.rc-incomplete td{ background:#fffaf0; }
   .rc-ai{ display:inline-block; margin-left:4px; padding:0 5px; border-radius:8px; font-size:10px; font-weight:800;
           background:#e8e2fb; color:#5b3fa8; vertical-align:middle; }
+  .rc-aibar{ font-size:12px; color:#5b6b78; background:#f6f3fd; border:1px solid #e3dcf7; border-radius:6px;
+             padding:7px 10px; margin:0 0 12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .rc-aibar b{ color:#5b3fa8; }
+  .rc-acct-sel{ width:100%; min-width:150px; padding:5px 6px; border:1px solid var(--line); border-radius:4px; font-size:12px; font-family:inherit; background:#fff; }
+  .rc-acct-sel.empty{ border-color:#e6c65a; background:#fffaf0; }
   .pill.rc-ocr{ background:#e8e2fb; color:#5b3fa8; margin-left:4px; }
   .pill.rc-ocr-bad{ background:#f2e7e5; color:var(--bad); margin-left:4px; }
   .rc-edit input,.rc-edit select{ width:100%; padding:6px; border:1px solid var(--line); border-radius:4px; font-size:13px; min-width:70px; font-family:inherit; }
@@ -608,6 +613,7 @@
         <div id="rcFormAdmin"></div>
         <div class="divider"></div>
         <p class="section-title" data-i18n="rc_list_title">收據清單</p>
+        <div class="rc-aibar" id="rcAiBar"></div>
         <div class="rc-filters">
           <div class="field"><label data-i18n="rc_f_month">月份</label><input type="month" id="rcFMonth"></div>
           <div class="field"><label data-i18n="rc_f_emp">經手人</label><select id="rcFEmp"></select></div>
@@ -619,6 +625,7 @@
               <option value="incomplete" data-i18n="rc_f_incomplete">資料待補</option>
             </select>
           </div>
+          <div class="field"><label data-i18n="rc_acct">會計科目</label><select id="rcFAcct"></select></div>
         </div>
         <div class="rc-sum" id="rcSummary"></div>
         <div class="rc-tools">
@@ -976,14 +983,14 @@ Object.assign(I18N['zh-Hant'],{
   rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
   rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
   rc_st_submitted:"待確認", rc_st_verified:"已確認", rc_missing:"待補",
-  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
+  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
   rc_view:"檢視", rc_dl:"下載", rc_edit:"編輯", rc_save:"儲存", rc_cancel:"取消",
   rc_verify:"確認", rc_unverify:"取消確認", rc_delete:"刪除",
   rc_del_confirm:"確定刪除這張收據？檔案也會一併刪除，無法復原。",
   rc_f_month:"月份", rc_f_emp:"經手人", rc_f_all:"全部", rc_f_incomplete:"資料待補",
   rc_zip:"⬇ 下載全部收據（ZIP，已自動命名）", rc_csv:"⬇ 匯出清冊 CSV", rc_zipping:"打包中…",
   rc_empty:"目前沒有收據。", rc_sum_n:"共", rc_sum_unit:"張", rc_sum_incomplete:"張待補",
-  rc_naming_hint:"同仁上傳後約 15 分鐘內 AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對後按「確認」）。下載時自動命名為：日期_廠商_金額幣別_員工編號_代碼.副檔名，ZIP 內附清冊 CSV。",
+  rc_naming_hint:"AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對），會計科目請在清單上直接選，核對後按「確認」。下載時自動命名為：日期_廠商_金額幣別_員工編號_代碼.副檔名，ZIP 內附清冊 CSV。",
   rc_load_fail:"檔案讀取失敗。"
 });
 Object.assign(I18N['en'],{
@@ -998,14 +1005,14 @@ Object.assign(I18N['en'],{
   rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
   rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
   rc_st_submitted:"Submitted", rc_st_verified:"Verified", rc_missing:"Missing",
-  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
+  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
   rc_view:"View", rc_dl:"Download", rc_edit:"Edit", rc_save:"Save", rc_cancel:"Cancel",
   rc_verify:"Verify", rc_unverify:"Unverify", rc_delete:"Delete",
   rc_del_confirm:"Delete this receipt and its file? This can't be undone.",
   rc_f_month:"Month", rc_f_emp:"Person", rc_f_all:"All", rc_f_incomplete:"Incomplete",
   rc_zip:"⬇ Download all (ZIP, auto-named)", rc_csv:"⬇ Export CSV", rc_zipping:"Zipping…",
   rc_empty:"No receipts yet.", rc_sum_n:"Total", rc_sum_unit:"receipts", rc_sum_incomplete:"incomplete",
-  rc_naming_hint:"Within ~15 min of upload, AI fills in date, vendor and amount (check fields tagged AI, then Verify). Files are named Date_Vendor_AmountCurrency_EmpNo_ID.ext; the ZIP includes a CSV ledger.",
+  rc_naming_hint:"AI fills in date, vendor and amount (check fields tagged AI); pick the account in the list, then Verify. Files are named Date_Vendor_AmountCurrency_EmpNo_ID.ext; the ZIP includes a CSV ledger.",
   rc_load_fail:"Couldn't load the file."
 });
 
@@ -2947,7 +2954,33 @@ window.deleteEmp=async (id)=>{
    - receiptFiles/{id}_{i}  檔案本體，base64 分段（Firestore 單一文件上限 1MB）
    照片會先在手機上壓縮（長邊 1800px JPEG），一張約 200–500KB。
    ============================================================ */
-const RC_CATS=['transport','meals','office','postage','entertain','misc'];
+// 會計科目（常用會計科目表）。收據的 category 欄位存科目代碼；舊資料的
+// transport/meals/... 仍可顯示，但會標「舊分類」提醒改成科目代碼。
+const RC_ACCOUNTS=[
+  ['業務費 62',[['620101','文具紙張'],['620202','郵電費'],['620401','水電費'],['620402','設施使用費'],
+    ['620404','書報費'],['620501','房屋租金'],['620503','設備租金'],['620601','稅捐'],['620701','汽車油料及充電費'],
+    ['620901','非消耗品'],['629601','保險費'],['629618','業務聯繫費'],['629623','勞務費'],['629670','國外臨時人員費'],
+    ['629699','其他業務費']]],
+  ['維護費 63',[['630201','車輛養護費'],['630601','設備及設施養護費']]],
+  ['旅運費 64',[['640201','國外旅費'],['640401','交通補助費']]],
+  ['人事費 60',[['600102','僱員薪俸'],['600502','僱員加班值班費'],['600602','當地職員工作獎金'],['600701','退休(退職)金'],
+    ['600801','撫卹及保險給付'],['600802','僱員撫卹及保險給付'],['600901','房租津貼'],['600902','午餐津貼'],['600919','其他津貼']]],
+];
+const RC_ACCT_NAME={}; RC_ACCOUNTS.forEach(([,list])=>list.forEach(([c,n])=>{ RC_ACCT_NAME[c]=n; }));
+const RC_LEGACY_CATS=['transport','meals','office','postage','entertain','misc'];
+function rcAcctLabel(c){
+  if(!c) return '';
+  if(RC_ACCT_NAME[c]) return `${c} ${RC_ACCT_NAME[c]}`;
+  if(RC_LEGACY_CATS.includes(c)) return `${t('rc_cat_'+c)}（${t('rc_legacy')}）`;
+  return c;
+}
+function rcAcctOptions(sel){
+  const known = !sel || RC_ACCT_NAME[sel];
+  return `<option value="">${t('rc_acct_none')}</option>` +
+    (known ? '' : `<option value="${rcEsc(sel)}" selected>${rcEsc(rcAcctLabel(sel))}</option>`) +
+    RC_ACCOUNTS.map(([g,list])=>`<optgroup label="${rcEsc(g)}">`+
+      list.map(([c,n])=>`<option value="${c}" ${sel===c?'selected':''}>${c} ${rcEsc(n)}</option>`).join('')+'</optgroup>').join('');
+}
 const RC_CURS=['TRY','USD','EUR','TWD'];
 const RC_CHUNK=700000;              // 每段字元數
 const RC_MAX_PDF=5*1024*1024;       // PDF 上限 5MB
@@ -2979,35 +3012,15 @@ function rcFileName(r){
 }
 
 /* ---- 上傳表單 ---- */
-function rcFormHtml(p, simple){
+function rcFormHtml(p){
   const L=k=>`data-i18n="${k}">${t(k)}`;
-  if(simple) return `
-    <div class="rc-pick">
-      <label class="rc-btn"><input class="rc-file-input" type="file" accept="image/*" capture="environment" id="${p}Cam"><span ${L('rc_take_photo')}</span></label>
-      <label class="rc-btn alt"><input class="rc-file-input" type="file" accept="image/*,application/pdf,.pdf" multiple id="${p}Files"><span ${L('rc_choose_files')}</span></label>
-    </div>
-    <div class="rc-previews" id="${p}Prev"></div>
-    <p class="hint" ${L('rc_simple_hint')}</p>
-    <button class="btn-primary" id="${p}Submit" ${L('rc_submit')}</button>
-    <div class="msg" id="${p}Msg"></div>`;
-  const cats=RC_CATS.map(c=>`<option value="${c}" ${L('rc_cat_'+c)}</option>`).join('');
-  const curs=RC_CURS.map(c=>`<option value="${c}">${c}</option>`).join('');
   return `
     <div class="rc-pick">
       <label class="rc-btn"><input class="rc-file-input" type="file" accept="image/*" capture="environment" id="${p}Cam"><span ${L('rc_take_photo')}</span></label>
       <label class="rc-btn alt"><input class="rc-file-input" type="file" accept="image/*,application/pdf,.pdf" multiple id="${p}Files"><span ${L('rc_choose_files')}</span></label>
     </div>
     <div class="rc-previews" id="${p}Prev"></div>
-    <div class="rc-grid">
-      <div class="field"><label ${L('rc_date')}</label><input type="date" id="${p}Date"></div>
-      <div class="field"><label ${L('rc_vendor')}</label><input type="text" id="${p}Vendor" placeholder="Migros, BiTaksi, PTT…"></div>
-      <div class="field"><label ${L('rc_amount')}</label>
-        <div class="rc-amt"><input type="number" step="0.01" min="0" inputmode="decimal" id="${p}Amount"><select id="${p}Cur">${curs}</select></div>
-      </div>
-      <div class="field"><label ${L('rc_cat')}</label><select id="${p}Cat">${cats}</select></div>
-    </div>
-    <div class="field"><label ${L('rc_note')}</label><input type="text" id="${p}Note"></div>
-    <p class="hint" ${L('rc_multi_hint')}</p>
+    <p class="hint" ${L('rc_simple_hint')}</p>
     <button class="btn-primary" id="${p}Submit" ${L('rc_submit')}</button>
     <div class="msg" id="${p}Msg"></div>`;
 }
@@ -3017,7 +3030,7 @@ function rcInitForm(){
   const p = rcIsAdmin() ? 'rcA' : 'rcE';
   const box = $id(rcIsAdmin() ? 'rcFormAdmin' : 'rcFormEmp');
   ['rcFormAdmin','rcFormEmp'].forEach(id=>{ const el=$id(id); if(el) el.innerHTML=''; });
-  box.innerHTML = rcFormHtml(p, !rcIsAdmin());
+  box.innerHTML = rcFormHtml(p);
   RC_PENDING[p]=[];
   if($id(p+'Date')) $id(p+'Date').value = ymd(new Date());
   const add = input => { [...(input.files||[])].forEach(f=>RC_PENDING[p].push(f)); input.value=''; rcRenderPrev(p); };
@@ -3126,23 +3139,200 @@ function rcStart(){
     list.sort((a,b)=> (b.date||'').localeCompare(a.date||'') || ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0));
     RECEIPTS=list;
     if(!RC_EDITING) safe(renderReceipts,'receipts');
+    if(rcIsAdmin()) rcAiKick();
   }, err=>{ console.error('[receipts]',err); }));
+  if(rcIsAdmin()) rcAiLoadKey();
+}
+
+/* ============================================================
+   ★ AI 自動辨識（在主控端的瀏覽器裡執行，打開「報帳收據」就會處理新收據）
+   Gemini 金鑰存在 Firestore config/ai，規則只允許主控端讀寫，
+   不會出現在網頁原始碼裡。AI 只讀日期、廠商、金額、幣別、稅號、單據號碼，
+   不分類（會計科目由主控端在清單上選）。只填空白欄位，人工填過的不覆蓋。
+   ============================================================ */
+const RC_AI_MODELS=['gemini-3.5-flash','gemini-3.1-flash-lite','gemini-2.5-flash-lite'];
+const RC_AI_BASE='https://generativelanguage.googleapis.com/v1beta/models';
+const RC_AI_MAX_TRIES=3;
+let RC_AI_KEY=null, RC_AI_KEY_LOADED=false, RC_AI_BUSY=false, RC_AI_MSG='', RC_AI_ERR='';
+const RC_AI_DONE=new Set();      // 本次開頁已處理過的收據，避免快照延遲時重複送出
+const RC_AI_PROMPT=`You read expense receipts for a Taiwanese government trade office in Istanbul, Türkiye.
+Most documents are Turkish (fiş / ÖKC receipt, e-Arşiv fatura, e-Fatura, taxi or BiTaksi receipt, bank slip);
+some are English or Chinese. Extract the fields below. Report only what is printed; never guess — use null.
+
+vendor — THE MOST IMPORTANT FIELD. The SELLER / issuer of the document:
+  • on a till receipt (fiş): the business name printed at the very top, above the address and "V.D." line;
+  • on an e-Arşiv / e-Fatura: the company in the seller block (the issuer, often top-left, with its VKN),
+    NOT the "SAYIN" / "ALICI" / customer block;
+  • NEVER return the buyer. The buyer is our own office: Taiwan Trade Center, TAITRA, Tayvan Ticaret Merkezi,
+    Taipei Economic and Cultural Mission, Taipei İktisadi ve Kültür Misyonu, or similar — skip those names;
+  • return a short trade name a person would recognise ("Migros", "BiTaksi", "PTT", "Kahve Dünyası").
+    If only a legal title is printed (e.g. "ABC KIRTASİYE SANAYİ VE TİCARET LTD. ŞTİ."), shorten it ("ABC Kırtasiye");
+  • keep Turkish letters (ş, ğ, ı, İ, ö, ü, ç).
+date — issue date as YYYY-MM-DD (Turkish dates are DD.MM.YYYY or DD/MM/YYYY).
+amount — the final total actually paid, tax included (TOPLAM / GENEL TOPLAM / ÖDENECEK TUTAR / TUTAR),
+  as a number with a dot decimal ("1.234,50" means 1234.50).
+currency — TRY for TL / ₺ / TRY; otherwise USD, EUR or TWD; null if unclear.
+tax_id — the seller's VKN or TCKN if printed. invoice_no — fiş no / fatura no if printed.
+is_receipt — false if this is not a receipt or invoice at all.
+confidence — 0 to 1, how sure you are about vendor, amount and date together.
+
+Return JSON only:
+{"is_receipt":bool,"vendor":str|null,"date":str|null,"amount":number|null,"currency":str|null,
+ "tax_id":str|null,"invoice_no":str|null,"confidence":number,"note":str|null}`;
+
+function rcAiNeeds(r){
+  // 需要 AI 的收據：還沒辨識過（或要求重新辨識），且廠商／金額有空白，
+  // 或日期仍是「上傳當天」的系統預設值（已確認的收據就不動日期）。
+  if(r.ocrStatus && r.ocrStatus!=='pending') return false;
+  if((r.ocrTries||0)>=RC_AI_MAX_TRIES) return false;
+  const dateIsDefault = r.status!=='verified' && (r.dateSource||'upload')==='upload';
+  return rcIncomplete(r) || dateIsDefault;
+}
+async function rcAiLoadKey(){
+  try{ const s=await DB.collection('config').doc('ai').get(); RC_AI_KEY=(s.exists&&s.data().geminiKey)||null; RC_AI_ERR=''; }
+  catch(err){ console.warn('[ai key]',err); RC_AI_KEY=null; RC_AI_ERR=t('rc_ai_rules'); }
+  RC_AI_KEY_LOADED=true;
+  rcAiRenderBar(); renderReceipts(); rcAiKick();
+}
+function rcAiRenderBar(){
+  const bar=$id('rcAiBar'); if(!bar) return;
+  if(!RC_AI_KEY_LOADED){ bar.innerHTML=`🤖 …`; return; }
+  if(RC_AI_ERR && !RC_AI_KEY){ bar.innerHTML=`🤖 <span style="color:var(--bad)">${rcEsc(RC_AI_ERR)}</span>`; return; }
+  if(!RC_AI_KEY){
+    bar.innerHTML=`🤖 ${t('rc_ai_off')} <button class="btn-mini" onclick="rcAiSetKey()">${t('rc_ai_setkey')}</button>`;
+    return;
+  }
+  const waiting=RECEIPTS.filter(r=>rcAiNeeds(r)).length;
+  bar.innerHTML=`🤖 <b>${t('rc_ai_on')}</b> · ${RC_AI_BUSY?rcEsc(RC_AI_MSG):(waiting?`${t('rc_ai_waiting')} ${waiting}`:t('rc_ai_idle'))}`+
+    (RC_AI_ERR?` · <span style="color:var(--bad)">${rcEsc(RC_AI_ERR)}</span>`:'')+
+    ` <button class="btn-mini" onclick="rcAiSetKey()">${t('rc_ai_changekey')}</button>`;
+}
+window.rcAiSetKey=async ()=>{
+  const k=prompt(t('rc_ai_prompt_key'));
+  if(k==null) return;
+  try{
+    if(k.trim()) await DB.collection('config').doc('ai').set({ geminiKey:k.trim(), updatedBy:CURRENT.id,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
+    else await DB.collection('config').doc('ai').delete();
+    RC_AI_DONE.clear(); await rcAiLoadKey();
+  }catch(err){ console.error('[ai key save]',err); alert(t('rc_ai_rules')); }
+};
+function rcAiKick(){
+  if(!RC_AI_KEY || RC_AI_BUSY) return;
+  const todo=RECEIPTS.filter(r=>rcAiNeeds(r) && !RC_AI_DONE.has(r.id));
+  if(todo.length) rcAiRun(todo,false);
+}
+async function rcAiDataUrl(r){
+  const snaps=await Promise.all(Array.from({length:r.chunks||1},(_,i)=>DB.collection('receiptFiles').doc(`${r.id}_${i}`).get()));
+  if(snaps.some(s=>!s.exists)) throw new Error('missing file part');
+  return snaps.map(s=>s.data().data).join('');
+}
+async function rcAiCall(mime,b64){
+  const body={ contents:[{ parts:[{ inline_data:{ mime_type:mime, data:b64 } },{ text:RC_AI_PROMPT }] }],
+    generationConfig:{ responseMimeType:'application/json', temperature:0 } };
+  let last='';
+  for(const model of RC_AI_MODELS){
+    for(let attempt=1; attempt<=2; attempt++){
+      let res;
+      try{
+        res=await fetch(`${RC_AI_BASE}/${model}:generateContent?key=${encodeURIComponent(RC_AI_KEY)}`,
+          { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      }catch(e){ last=`${model}: network`; continue; }
+      if(res.status===404 || res.status===429){ last=`${model}: HTTP ${res.status}`; break; }   // 換下一個模型
+      if(res.status===400 || res.status===401 || res.status===403){
+        const txt=await res.text();
+        if(/API key|API_KEY|PERMISSION_DENIED|not valid/i.test(txt)){ const e=new Error('bad key'); e.badKey=true; throw e; }
+        last=`${model}: HTTP ${res.status}`; break;
+      }
+      if(!res.ok){ last=`${model}: HTTP ${res.status}`; await new Promise(r=>setTimeout(r,1500*attempt)); continue; }
+      try{
+        const j=await res.json();
+        const text=j.candidates[0].content.parts[0].text.trim().replace(/^```(?:json)?\s*|\s*```$/g,'');
+        return { res:JSON.parse(text), model };
+      }catch(e){ last=`${model}: bad response`; }
+    }
+  }
+  throw new Error(last||'no response');
+}
+function rcAiClean(res){
+  const out={};
+  const d=res.date;
+  if(typeof d==='string' && /^\d{4}-\d{2}-\d{2}$/.test(d)){
+    const day=new Date(d+'T00:00:00'), max=new Date(); max.setDate(max.getDate()+1);
+    if(!isNaN(day) && day>=new Date('2020-01-01T00:00:00') && day<=max) out.date=d;
+  }
+  if(typeof res.vendor==='string' && res.vendor.trim()) out.vendor=res.vendor.trim().slice(0,60);
+  if(typeof res.amount==='number' && res.amount>0 && res.amount<1e7) out.amount=Math.round(res.amount*100)/100;
+  if(RC_CURS.includes(res.currency)) out.currency=res.currency;
+  ['tax_id','invoice_no'].forEach(k=>{ if(typeof res[k]==='string' && res[k].trim()) out[k]=res[k].trim().slice(0,40); });
+  return out;
+}
+function rcAiPlan(r,got){
+  const patch={}, filled=[];
+  if(got.date && r.status!=='verified' && (r.dateSource||'upload')==='upload'){
+    if(got.date!==r.date) patch.date=got.date;
+    patch.dateSource='ai'; filled.push('date');
+  }
+  if(got.vendor && !r.vendor){ patch.vendor=got.vendor; filled.push('vendor'); }
+  if(got.amount!=null && (r.amount==null || r.amount==='')){
+    patch.amount=got.amount; filled.push('amount');
+    if(got.currency){ patch.currency=got.currency; filled.push('currency'); }
+  }
+  ['tax_id','invoice_no'].forEach(k=>{ if(got[k] && !r[k]) patch[k]=got[k]; });
+  return { patch, filled };
+}
+async function rcAiRun(list, manual){
+  if(!RC_AI_KEY){ return; }
+  if(RC_AI_BUSY){ if(manual) alert(t('rc_ai_busy')); return; }
+  RC_AI_BUSY=true; RC_AI_ERR='';
+  try{
+    for(let i=0;i<list.length;i++){
+      const r0=list[i]; RC_AI_DONE.add(r0.id);
+      const r=rcFind(r0.id)||r0;
+      RC_AI_MSG=`${t('rc_ocr_wait')} ${i+1}/${list.length}`; rcAiRenderBar();
+      const ref=DB.collection('receipts').doc(r.id);
+      try{
+        const dataUrl=await rcAiDataUrl(r);
+        const m=dataUrl.match(/^data:([^;]+);base64,([\s\S]*)$/);
+        if(!m) throw new Error('bad file');
+        const { res, model }=await rcAiCall(m[1], m[2]);
+        const got=rcAiClean(res);
+        const conf=typeof res.confidence==='number'?res.confidence:null;
+        let patch={}, filled=[], status;
+        if(res.is_receipt===false){ status='unreadable'; }
+        else { ({patch,filled}=rcAiPlan(r,got)); status=(got.vendor||got.amount!=null)?'done':'unreadable'; }
+        const raw={}; ['vendor','date','amount','currency','tax_id','invoice_no','note'].forEach(k=>{ raw[k]=res[k]??null; });
+        await ref.update({ ...patch, ocrStatus:status, ocrTries:0, ocrError:firebase.firestore.FieldValue.delete(),
+          ocr:{ model, confidence:conf, raw, at:firebase.firestore.FieldValue.serverTimestamp() },
+          aiFilled:[...new Set([...(r.aiFilled||[]), ...filled])] });
+      }catch(err){
+        if(err.badKey){ RC_AI_ERR=t('rc_ai_badkey'); RC_AI_DONE.delete(r.id); break; }
+        console.error('[ai]',r.id,err);
+        const tries=(r.ocrTries||0)+1;
+        try{ await ref.update({ ocrTries:tries, ocrStatus: tries>=RC_AI_MAX_TRIES?'failed':'pending', ocrError:String(err.message||err).slice(0,200) }); }catch(e){}
+        if(tries<RC_AI_MAX_TRIES) RC_AI_DONE.delete(r.id);   // 下次開頁再試
+      }
+    }
+  } finally {
+    RC_AI_BUSY=false; RC_AI_MSG=''; rcAiRenderBar();
+  }
 }
 
 /* ---- 清單 ---- */
 function rcInitFilters(){
   $id('rcFMonth').value=currentYm();
-  ['rcFMonth','rcFEmp','rcFStatus'].forEach(id=>{ $id(id).onchange=()=>renderReceipts(); });
+  ['rcFMonth','rcFEmp','rcFStatus','rcFAcct'].forEach(id=>{ $id(id).onchange=()=>renderReceipts(); });
   $id('rcZipBtn').onclick=rcZip;
   $id('rcCsvBtn').onclick=()=>rcDownloadBlob(new Blob(['﻿'+rcCsv(rcFiltered())],{type:'text/csv;charset=utf-8;'}), `receipts_${$id('rcFMonth').value||'all'}.csv`);
 }
 function rcFiltered(){
   if(!rcIsAdmin()) return RECEIPTS;
-  const ym=$id('rcFMonth').value, who=$id('rcFEmp').value, st=$id('rcFStatus').value;
+  const ym=$id('rcFMonth').value, who=$id('rcFEmp').value, st=$id('rcFStatus').value, ac=$id('rcFAcct').value||'all';
   return RECEIPTS.filter(r=>
     (!ym || (r.date||'').startsWith(ym)) &&
     (!who || who==='all' || r.uid===who) &&
-    (st==='all' || (st==='incomplete' ? rcIncomplete(r) : r.status===st)));
+    (st==='all' || (st==='incomplete' ? rcIncomplete(r) : r.status===st)) &&
+    (ac==='all' || (ac==='none' ? !RC_ACCT_NAME[r.category] : r.category===ac)));
 }
 function rcRowHtmlSimple(r){
   const pill = r.status==='verified' ? `<span class="pill approved">${t('rc_st_verified')}</span>` : `<span class="pill pending">${t('rc_st_submitted')}</span>`;
@@ -3156,14 +3346,13 @@ function rcRowHtmlSimple(r){
 function rcRowHtml(r, admin){
   const canEdit = admin || (r.uid===CURRENT.id && r.status!=='verified');
   if(RC_EDITING===r.id && canEdit){
-    const cats='<option value=""></option>'+RC_CATS.map(c=>`<option value="${c}" ${r.category===c?'selected':''}>${rcEsc(t('rc_cat_'+c))}</option>`).join('');
     const curs=RC_CURS.map(c=>`<option ${r.currency===c?'selected':''}>${c}</option>`).join('');
     return `<tr class="rc-edit">
       <td><input type="date" id="rcEdDate" value="${rcEsc(r.date)}"></td>
       ${admin?`<td>${rcEsc(rcName(r.uid))}</td>`:''}
       <td><input type="text" id="rcEdVendor" value="${rcEsc(r.vendor)}"></td>
       <td><div class="rc-amt"><input type="number" step="0.01" inputmode="decimal" id="rcEdAmount" value="${r.amount==null?'':rcEsc(r.amount)}"><select id="rcEdCur">${curs}</select></div></td>
-      <td><select id="rcEdCat">${cats}</select></td>
+      <td><select id="rcEdCat" class="rc-acct-sel">${rcAcctOptions(r.category)}</select></td>
       <td><input type="text" id="rcEdNote" value="${rcEsc(r.note)}"></td>
       <td></td>
       <td><div class="rc-actions">
@@ -3172,17 +3361,19 @@ function rcRowHtml(r, admin){
   }
   const inc=rcIncomplete(r);
   const ai=f=> (r.aiFilled||[]).includes(f) ? `<span class="rc-ai" title="${t('rc_ai_tip')}">AI</span>` : '';
-  const ocrPending = r.status!=='verified' && (!r.ocrStatus || r.ocrStatus==='pending');
+  const ocrPending = admin && rcAiNeeds(r) && !!RC_AI_KEY;
   const missing = ocrPending ? `<span class="pill rc-ocr">🤖 ${t('rc_ocr_wait')}</span>` : `<span class="pill pending">${t('rc_missing')}</span>`;
   let pill = r.status==='verified' ? `<span class="pill approved">${t('rc_st_verified')}</span>` : `<span class="pill pending">${t('rc_st_submitted')}</span>`;
-  if(r.status!=='verified' && (r.ocrStatus==='unreadable'||r.ocrStatus==='failed')) pill+=`<span class="pill rc-ocr-bad">${t('rc_ocr_bad')}</span>`;
+  if(rcIncomplete(r) && (r.ocrStatus==='unreadable'||r.ocrStatus==='failed')) pill+=`<span class="pill rc-ocr-bad">${t('rc_ocr_bad')}</span>`;
   const icon = r.mime==='application/pdf' ? '📄 ' : '🧾 ';
   return `<tr class="${inc?'rc-incomplete':''}">
     <td style="white-space:nowrap">${rcEsc(r.date)}${ai('date')}</td>
     ${admin?`<td style="white-space:nowrap">${rcEsc(rcName(r.uid))}</td>`:''}
     <td>${r.vendor?rcEsc(r.vendor)+ai('vendor'):missing}</td>
     <td style="white-space:nowrap;text-align:right">${rcAmountText(r)?rcAmountText(r)+ai('amount'):missing}</td>
-    <td>${r.category?rcEsc(t('rc_cat_'+r.category))+ai('category'):''}</td>
+    <td>${admin
+      ? `<select class="rc-acct-sel ${RC_ACCT_NAME[r.category]?'':'empty'}" onchange="rcSetAcct('${r.id}',this.value)">${rcAcctOptions(r.category)}</select>`
+      : rcEsc(rcAcctLabel(r.category))}</td>
     <td>${rcEsc(r.note)}</td>
     <td>${pill}</td>
     <td><div class="rc-actions">
@@ -3190,7 +3381,7 @@ function rcRowHtml(r, admin){
       <button class="btn-mini" onclick="rcDownload('${r.id}')">${t('rc_dl')}</button>
       ${canEdit?`<button class="btn-mini" onclick="rcEdit('${r.id}')">${t('rc_edit')}</button>`:''}
       ${admin?`<button class="btn-mini" onclick="rcToggleVerify('${r.id}')">${r.status==='verified'?t('rc_unverify'):t('rc_verify')}</button>`:''}
-      ${admin&&r.status!=='verified'&&!ocrPending?`<button class="btn-mini" onclick="rcReOcr('${r.id}')">🤖 ${t('rc_reocr')}</button>`:''}
+      ${admin&&RC_AI_KEY&&!ocrPending?`<button class="btn-mini" onclick="rcReOcr('${r.id}')">🤖 ${t('rc_reocr')}</button>`:''}
       ${canEdit?`<button class="btn-mini danger" onclick="rcDelete('${r.id}')">${t('rc_delete')}</button>`:''}
     </div></td></tr>`;
 }
@@ -3203,6 +3394,11 @@ function renderReceipts(){
     sel.innerHTML=`<option value="all">${t('rc_f_all')}</option>`+
       Object.values(EMPLOYEES).map(e=>`<option value="${rcEsc(e.id)}">${rcEsc(e.name||e.id)}</option>`).join('');
     sel.value = [...sel.options].some(o=>o.value===keep) ? keep : 'all';
+    const fa=$id('rcFAcct'); const keepA=fa.value||'all';
+    fa.innerHTML=`<option value="all">${t('rc_f_all')}</option><option value="none">${t('rc_acct_unset')}</option>`+
+      RC_ACCOUNTS.map(([g,list])=>`<optgroup label="${rcEsc(g)}">`+list.map(([c,n])=>`<option value="${c}">${c} ${rcEsc(n)}</option>`).join('')+'</optgroup>').join('');
+    fa.value=[...fa.options].some(o=>o.value===keepA)?keepA:'all';
+    rcAiRenderBar();
     // 待確認數量徽章
     const pending=RECEIPTS.filter(r=>r.status!=='verified').length;
     const b=$id('rcBadge'); if(b){ b.textContent=pending; b.style.display=pending?'inline-block':'none'; }
@@ -3224,7 +3420,7 @@ function renderReceipts(){
   }
   table.innerHTML=`<thead><tr>
       <th>${t('rc_date')}</th>${admin?`<th>${t('rc_th_person')}</th>`:''}<th>${t('rc_vendor')}</th><th>${t('rc_amount')}</th>
-      <th>${t('rc_cat')}</th><th>${t('rc_th_note')}</th><th>${t('rc_th_status')}</th><th>${t('rc_th_action')}</th>
+      <th>${t('rc_acct')}</th><th>${t('rc_th_note')}</th><th>${t('rc_th_status')}</th><th>${t('rc_th_action')}</th>
     </tr></thead><tbody>${list.map(r=>rcRowHtml(r,admin)).join('')}</tbody>`;
 }
 
@@ -3271,8 +3467,13 @@ window.rcSave=async id=>{
   catch(err){ console.error('[rcSave]',err); alert(t('save_fail')); }
 };
 window.rcReOcr=async id=>{
-  try{ await DB.collection('receipts').doc(id).update({ ocrStatus:'pending', ocrTries:0 }); }
-  catch(err){ console.error('[rcReOcr]',err); alert(t('save_fail')); }
+  const r=rcFind(id); if(!r) return;
+  RC_AI_DONE.delete(id);
+  rcAiRun([r], true);
+};
+window.rcSetAcct=async (id,val)=>{
+  try{ await DB.collection('receipts').doc(id).update({ category: val }); }
+  catch(err){ console.error('[rcSetAcct]',err); alert(t('save_fail')); }
 };
 window.rcToggleVerify=async id=>{
   const r=rcFind(id); if(!r) return;
@@ -3295,10 +3496,10 @@ window.rcDelete=async id=>{
 
 /* ---- 匯出：CSV 清冊 + ZIP（檔案已自動命名） ---- */
 function rcCsv(list){
-  const head=['日期 Date','經手人 By','員工編號 EmpNo','廠商 Vendor','金額 Amount','幣別 Currency','類別 Category','用途 Purpose','狀態 Status','稅號 Tax ID','單據號碼 Invoice No','檔名 File'];
+  const head=['日期 Date','經手人 By','員工編號 EmpNo','廠商 Vendor','金額 Amount','幣別 Currency','科目代碼 Account','科目名稱 Account Name','用途 Purpose','狀態 Status','稅號 Tax ID','單據號碼 Invoice No','檔名 File'];
   const rows=list.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[
     r.date, rcName(r.uid), empNoOf(r.uid), r.vendor||'', r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
-    r.category?t('rc_cat_'+r.category):'', r.note||'', t('rc_st_'+(r.status||'submitted')), r.tax_id||'', r.invoice_no||'', rcFileName(r)]);
+    RC_ACCT_NAME[r.category]?r.category:'', RC_ACCT_NAME[r.category]||(r.category?rcAcctLabel(r.category):''), r.note||'', t('rc_st_'+(r.status||'submitted')), r.tax_id||'', r.invoice_no||'', rcFileName(r)]);
   return [head,...rows].map(row=>row.map(csvCell).join(',')).join('\n');
 }
 function rcLoadJsZip(){
