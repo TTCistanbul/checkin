@@ -3163,7 +3163,8 @@ const RC_AI_MAX_TRIES=3;
 let RC_AI_KEY=null, RC_AI_KEY_LOADED=false, RC_AI_BUSY=false, RC_AI_MSG='', RC_AI_ERR='';
 // 本中心抬頭：稅號（最可靠）＋名稱關鍵字（任一個出現在買方名稱裡就算本中心）
 const RC_BUYER_DEFAULT_NAMES=['Taiwan Trade Center','TAITRA','Tayvan Ticaret','Taipei Economic','Taipei İktisadi'];
-let RC_BUYER={ vkn:'', names:RC_BUYER_DEFAULT_NAMES.slice() };
+const RC_BUYER_DEFAULT_VKN='3850007522';   // 本中心稅號（Maslak V.D. 385 000 7522）
+let RC_BUYER={ vkn:RC_BUYER_DEFAULT_VKN, names:RC_BUYER_DEFAULT_NAMES.slice() };
 function rcNorm(s){ return String(s||'').toLocaleLowerCase('tr').replace(/[^0-9a-zçğıöşüâîû\u4e00-\u9fff]/g,''); }
 function rcBuyerCheck(r){
   // 每次畫面重畫時即時比對（改了本中心稅號／名稱設定，舊收據會跟著更新）
@@ -3227,7 +3228,7 @@ async function rcAiLoadKey(){
   try{
     const s=await DB.collection('config').doc('ai').get(); const d=s.exists?s.data():{};
     RC_AI_KEY=d.geminiKey||null; RC_AI_ERR='';
-    RC_BUYER={ vkn:d.buyerVkn||'', names:(Array.isArray(d.buyerNames)&&d.buyerNames.length)?d.buyerNames:RC_BUYER_DEFAULT_NAMES.slice() };
+    RC_BUYER={ vkn:d.buyerVkn||RC_BUYER_DEFAULT_VKN, names:(Array.isArray(d.buyerNames)&&d.buyerNames.length)?d.buyerNames:RC_BUYER_DEFAULT_NAMES.slice() };
   }
   catch(err){ console.warn('[ai key]',err); RC_AI_KEY=null; RC_AI_ERR=t('rc_ai_rules'); }
   RC_AI_KEY_LOADED=true;
