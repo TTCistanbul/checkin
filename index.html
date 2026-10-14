@@ -638,7 +638,7 @@
         </div>
         <div class="msg" id="rcToolMsg"></div>
         <div class="tbl-scroll"><table id="rcTableAdmin"></table></div>
-        <p class="hint" data-i18n="rc_naming_hint">下載時自動命名為：日期_廠商_金額幣別_員工編號.副檔名</p>
+        <p class="hint" data-i18n="rc_naming_hint">下載時自動命名為：日期-科目代碼-科目名稱-金額.副檔名</p>
       </div>
     </div>
   </div>
@@ -994,7 +994,7 @@ Object.assign(I18N['zh-Hant'],{
   rc_f_month:"月份", rc_f_emp:"經手人", rc_f_all:"全部", rc_f_incomplete:"資料待補",
   rc_zip:"⬇ 下載全部收據（ZIP，已自動命名）", rc_csv:"⬇ 匯出清冊 CSV", rc_zipping:"打包中…",
   rc_empty:"目前沒有收據。", rc_sum_n:"共", rc_sum_unit:"張", rc_sum_incomplete:"張待補",
-  rc_naming_hint:"AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對），會計科目請在清單上直接選，核對後按「確認」。下載時自動命名為：日期_廠商_金額幣別_員工編號_代碼.副檔名，ZIP 內附清冊 CSV。",
+  rc_naming_hint:"AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對），會計科目請在清單上直接選，核對後按「確認」。下載時自動命名為：日期-科目代碼-科目名稱-金額（例：20261001-620101-文具紙張-1850.00TRY.jpg），未選科目會是「未分類」；ZIP 內附清冊 CSV。",
   rc_load_fail:"檔案讀取失敗。"
 });
 Object.assign(I18N['en'],{
@@ -1016,7 +1016,7 @@ Object.assign(I18N['en'],{
   rc_f_month:"Month", rc_f_emp:"Person", rc_f_all:"All", rc_f_incomplete:"Incomplete",
   rc_zip:"⬇ Download all (ZIP, auto-named)", rc_csv:"⬇ Export CSV", rc_zipping:"Zipping…",
   rc_empty:"No receipts yet.", rc_sum_n:"Total", rc_sum_unit:"receipts", rc_sum_incomplete:"incomplete",
-  rc_naming_hint:"AI fills in date, vendor and amount (check fields tagged AI); pick the account in the list, then Verify. Files are named Date_Vendor_AmountCurrency_EmpNo_ID.ext; the ZIP includes a CSV ledger.",
+  rc_naming_hint:"AI fills in date, vendor and amount (check fields tagged AI); pick the account in the list, then Verify. Files are named Date-AccountCode-AccountName-Amount (e.g. 20261001-620101-文具紙張-1850.00TRY.jpg); the ZIP includes a CSV ledger.",
   rc_load_fail:"Couldn't load the file."
 });
 
@@ -3007,12 +3007,15 @@ function rcAmountText(r){
 function rcSlug(s){
   return String(s||'').trim().replace(/[\\/:*?"<>|#%&{}$!'@+`=\s.,;]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,40);
 }
+// 檔名：日期-科目代碼-科目名稱-金額幣別，例如 20261001-620101-文具紙張-1850.00TRY.jpg
+// 還沒選科目＝「未分類」，沒有金額＝「無金額」。同名檔案在 ZIP 裡會自動加 _2、_3。
+// 備份 repo 的 backup_receipts.py 用同一套規則，兩邊要一起改。
 function rcFileName(r){
   const d=(r.date||'').replace(/-/g,'')||'nodate';
-  const v=rcSlug(r.vendor)||'vendor';
-  const a=(r.amount!=null&&r.amount!=='')? Number(r.amount).toFixed(2)+(r.currency||'') : 'noamount';
+  const acct=RC_ACCT_NAME[r.category] ? `${r.category}-${RC_ACCT_NAME[r.category]}` : '未分類';
+  const a=(r.amount!=null&&r.amount!=='')? Number(r.amount).toFixed(2)+(r.currency||'') : '無金額';
   const ext=r.mime==='application/pdf'?'pdf':'jpg';
-  return `${d}_${v}_${a}_${empNoOf(r.uid)}_${r.id.slice(0,4)}.${ext}`;
+  return `${d}-${acct}-${a}.${ext}`;
 }
 
 /* ---- 上傳表單 ---- */
@@ -3560,12 +3563,19 @@ window.rcDelete=async id=>{
 
 /* ---- 匯出：CSV 清冊 + ZIP（檔案已自動命名） ---- */
 function rcCsv(list){
-  const head=['日期 Date','經手人 By','員工編號 EmpNo','廠商 Vendor','金額 Amount','幣別 Currency','科目代碼 Account','科目名稱 Account Name','抬頭 Buyer','買方稅號 Buyer VKN','抬頭檢查 Buyer check','用途 Purpose','狀態 Status','稅號 Tax ID','單據號碼 Invoice No','檔名 File'];
+  const head=['日期 Date','經手人 By','金額 Amount','幣別 Currency','科目代碼 Account','科目名稱 Account Name','抬頭 Buyer','買方稅號 Buyer VKN','抬頭檢查 Buyer check','用途 Purpose','狀態 Status','檔名 File'];
+  const used={};
   const rows=list.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[
-    r.date, rcName(r.uid), empNoOf(r.uid), r.vendor||'', r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
+    r.date, rcName(r.uid), r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
     RC_ACCT_NAME[r.category]?r.category:'', RC_ACCT_NAME[r.category]||(r.category?rcAcctLabel(r.category):''),
-    r.buyerName||'', r.buyerTaxId||'', ({ours:t('rc_buyer_ours'),other:t('rc_buyer_other'),none:t('rc_buyer_none')})[rcBuyerCheck(r)]||'', r.note||'', t('rc_st_'+(r.status||'submitted')), r.tax_id||'', r.invoice_no||'', rcFileName(r)]);
+    r.buyerName||'', r.buyerTaxId||'', ({ours:t('rc_buyer_ours'),other:t('rc_buyer_other'),none:t('rc_buyer_none')})[rcBuyerCheck(r)]||'', r.note||'', t('rc_st_'+(r.status||'submitted')), rcUniqueName(r,used)]);
   return [head,...rows].map(row=>row.map(csvCell).join(',')).join('\n');
+}
+// 同名檔案依日期順序加 _2、_3（CSV 與 ZIP 用同一套順序，檔名才對得上）
+function rcUniqueName(r,used){
+  let name=rcFileName(r);
+  if(used[name]){ used[name]++; name=name.replace(/(\.\w+)$/,`_${used[name]}$1`); } else used[name]=1;
+  return name;
 }
 function rcLoadJsZip(){
   if(window.JSZip) return Promise.resolve(window.JSZip);
@@ -3576,7 +3586,7 @@ function rcLoadJsZip(){
   });
 }
 async function rcZip(){
-  const list=rcFiltered(); const msg=$id('rcToolMsg'), btn=$id('rcZipBtn');
+  const list=rcFiltered().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')); const msg=$id('rcToolMsg'), btn=$id('rcZipBtn');
   if(!list.length){ msg.className='msg err'; msg.textContent=t('rc_empty'); return; }
   btn.disabled=true; msg.className='msg';
   try{
@@ -3584,8 +3594,7 @@ async function rcZip(){
     const zip=new JSZip(); const used={};
     for(let i=0;i<list.length;i++){
       msg.textContent=`${t('rc_zipping')} ${i+1}/${list.length}`;
-      let name=rcFileName(list[i]);
-      if(used[name]) name=name.replace(/(\.\w+)$/,`_${++used[name]}$1`); else used[name]=1;
+      const name=rcUniqueName(list[i],used);
       zip.file(name, await rcLoadBlob(list[i]));
     }
     const ym=$id('rcFMonth').value||'all';
