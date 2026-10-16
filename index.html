@@ -629,6 +629,7 @@
               <option value="buyer" data-i18n="rc_f_buyer">抬頭需確認</option>
             </select>
           </div>
+          <div class="field"><label data-i18n="rc_proj">計畫編號</label><select id="rcFProj"></select></div>
           <div class="field"><label data-i18n="rc_acct">會計科目</label><select id="rcFAcct"></select></div>
         </div>
         <div class="rc-sum" id="rcSummary"></div>
@@ -987,14 +988,14 @@ Object.assign(I18N['zh-Hant'],{
   rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
   rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
   rc_st_submitted:"待確認", rc_st_verified:"已確認", rc_missing:"待補",
-  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
+  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
   rc_view:"檢視", rc_dl:"下載", rc_edit:"編輯", rc_save:"儲存", rc_cancel:"取消",
   rc_verify:"確認", rc_unverify:"取消確認", rc_delete:"刪除",
   rc_del_confirm:"確定刪除這張收據？檔案也會一併刪除，無法復原。",
   rc_f_month:"月份", rc_f_emp:"經手人", rc_f_all:"全部", rc_f_incomplete:"資料待補",
   rc_zip:"⬇ 下載全部收據（ZIP，已自動命名）", rc_csv:"⬇ 匯出清冊 CSV", rc_zipping:"打包中…",
   rc_empty:"目前沒有收據。", rc_sum_n:"共", rc_sum_unit:"張", rc_sum_incomplete:"張待補",
-  rc_naming_hint:"AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對），會計科目請在清單上直接選，核對後按「確認」。下載時自動命名為：日期-科目代碼-科目名稱-金額（例：20261001-620101-文具紙張-1850.00TRY.jpg），未選科目會是「未分類」；ZIP 內附清冊 CSV。",
+  rc_naming_hint:"AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對），計畫編號與會計科目請在清單上直接選，核對後按「確認」。下載時自動命名為：日期-科目代碼-科目名稱-金額（例：20261001-620101-文具紙張-1850.00TRY.jpg），未選科目會是「未分類」；ZIP 內附清冊 CSV。",
   rc_load_fail:"檔案讀取失敗。"
 });
 Object.assign(I18N['en'],{
@@ -1009,14 +1010,14 @@ Object.assign(I18N['en'],{
   rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
   rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
   rc_st_submitted:"Submitted", rc_st_verified:"Verified", rc_missing:"Missing",
-  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
+  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
   rc_view:"View", rc_dl:"Download", rc_edit:"Edit", rc_save:"Save", rc_cancel:"Cancel",
   rc_verify:"Verify", rc_unverify:"Unverify", rc_delete:"Delete",
   rc_del_confirm:"Delete this receipt and its file? This can't be undone.",
   rc_f_month:"Month", rc_f_emp:"Person", rc_f_all:"All", rc_f_incomplete:"Incomplete",
   rc_zip:"⬇ Download all (ZIP, auto-named)", rc_csv:"⬇ Export CSV", rc_zipping:"Zipping…",
   rc_empty:"No receipts yet.", rc_sum_n:"Total", rc_sum_unit:"receipts", rc_sum_incomplete:"incomplete",
-  rc_naming_hint:"AI fills in date, vendor and amount (check fields tagged AI); pick the account in the list, then Verify. Files are named Date-AccountCode-AccountName-Amount (e.g. 20261001-620101-文具紙張-1850.00TRY.jpg); the ZIP includes a CSV ledger.",
+  rc_naming_hint:"AI fills in date, vendor and amount (check fields tagged AI); pick the project and account in the list, then Verify. Files are named Date-AccountCode-AccountName-Amount (e.g. 20261001-620101-文具紙張-1850.00TRY.jpg); the ZIP includes a CSV ledger.",
   rc_load_fail:"Couldn't load the file."
 });
 
@@ -2978,6 +2979,27 @@ function rcAcctLabel(c){
   if(RC_LEGACY_CATS.includes(c)) return `${t('rc_cat_'+c)}（${t('rc_legacy')}）`;
   return c;
 }
+// 計畫編號：主控端自行建立的清單，存在 Firestore config/projects（只有主控端讀寫）
+let RC_PROJECTS=[];                // [{code, name}]
+function rcProjLabel(c){
+  if(!c) return '';
+  const p=RC_PROJECTS.find(x=>x.code===c);
+  return p&&p.name ? `${c} ${p.name}` : c;
+}
+function rcProjOptions(sel, allowNew){
+  const known=!sel || RC_PROJECTS.some(p=>p.code===sel);
+  return `<option value="">${t('rc_proj_none')}</option>`+
+    (known?'':`<option value="${rcEsc(sel)}" selected>${rcEsc(sel)}</option>`)+
+    RC_PROJECTS.map(p=>`<option value="${rcEsc(p.code)}" ${sel===p.code?'selected':''}>${rcEsc(rcProjLabel(p.code))}</option>`).join('')+
+    (allowNew?`<option value="__new">${t('rc_proj_add')}</option>`:'');
+}
+async function rcLoadProjects(){
+  try{
+    const s=await DB.collection('config').doc('projects').get();
+    RC_PROJECTS=((s.exists&&s.data().items)||[]).filter(p=>p&&p.code).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+  }catch(err){ console.warn('[projects]',err); }
+  renderReceipts();
+}
 function rcAcctOptions(sel){
   const known = !sel || RC_ACCT_NAME[sel];
   return `<option value="">${t('rc_acct_none')}</option>` +
@@ -3148,7 +3170,7 @@ function rcStart(){
     if(!RC_EDITING) safe(renderReceipts,'receipts');
     if(rcIsAdmin()) rcAiKick();
   }, err=>{ console.error('[receipts]',err); }));
-  if(rcIsAdmin()) rcAiLoadKey();
+  if(rcIsAdmin()){ rcAiLoadKey(); rcLoadProjects(); }
 }
 
 /* ============================================================
@@ -3380,18 +3402,19 @@ async function rcAiRun(list, manual){
 /* ---- 清單 ---- */
 function rcInitFilters(){
   $id('rcFMonth').value=currentYm();
-  ['rcFMonth','rcFEmp','rcFStatus','rcFAcct'].forEach(id=>{ $id(id).onchange=()=>renderReceipts(); });
+  ['rcFMonth','rcFEmp','rcFStatus','rcFAcct','rcFProj'].forEach(id=>{ $id(id).onchange=()=>renderReceipts(); });
   $id('rcZipBtn').onclick=rcZip;
   $id('rcCsvBtn').onclick=()=>rcDownloadBlob(new Blob(['﻿'+rcCsv(rcFiltered())],{type:'text/csv;charset=utf-8;'}), `receipts_${$id('rcFMonth').value||'all'}.csv`);
 }
 function rcFiltered(){
   if(!rcIsAdmin()) return RECEIPTS;
-  const ym=$id('rcFMonth').value, who=$id('rcFEmp').value, st=$id('rcFStatus').value, ac=$id('rcFAcct').value||'all';
+  const ym=$id('rcFMonth').value, who=$id('rcFEmp').value, st=$id('rcFStatus').value, ac=$id('rcFAcct').value||'all', pj=$id('rcFProj').value||'all';
   return RECEIPTS.filter(r=>
     (!ym || (r.date||'').startsWith(ym)) &&
     (!who || who==='all' || r.uid===who) &&
     (st==='all' || (st==='incomplete' ? rcIncomplete(r) : st==='buyer' ? ['other','none'].includes(rcBuyerCheck(r)) : r.status===st)) &&
-    (ac==='all' || (ac==='none' ? !RC_ACCT_NAME[r.category] : r.category===ac)));
+    (ac==='all' || (ac==='none' ? !RC_ACCT_NAME[r.category] : r.category===ac)) &&
+    (pj==='all' || (pj==='none' ? !r.project : r.project===pj)));
 }
 function rcRowHtmlSimple(r){
   const pill = r.status==='verified' ? `<span class="pill approved">${t('rc_st_verified')}</span>` : `<span class="pill pending">${t('rc_st_submitted')}</span>`;
@@ -3411,6 +3434,7 @@ function rcRowHtml(r, admin){
       ${admin?`<td>${rcEsc(rcName(r.uid))}</td>`:''}
       <td><input type="text" id="rcEdVendor" value="${rcEsc(r.vendor)}"></td>
       <td><div class="rc-amt"><input type="number" step="0.01" inputmode="decimal" id="rcEdAmount" value="${r.amount==null?'':rcEsc(r.amount)}"><select id="rcEdCur">${curs}</select></div></td>
+      ${admin?`<td><select id="rcEdProj" class="rc-acct-sel">${rcProjOptions(r.project,false)}</select></td>`:''}
       <td><select id="rcEdCat" class="rc-acct-sel">${rcAcctOptions(r.category)}</select></td>
       <td><input type="text" id="rcEdBuyer" placeholder="${rcEsc(t('rc_buyer'))}" value="${rcEsc(r.buyerName)}">
           <input type="text" id="rcEdBuyerTax" placeholder="VKN" inputmode="numeric" value="${rcEsc(r.buyerTaxId)}" style="margin-top:4px"></td>
@@ -3432,6 +3456,7 @@ function rcRowHtml(r, admin){
     ${admin?`<td style="white-space:nowrap">${rcEsc(rcName(r.uid))}</td>`:''}
     <td>${r.vendor?rcEsc(r.vendor)+ai('vendor'):missing}</td>
     <td style="white-space:nowrap;text-align:right">${rcAmountText(r)?rcAmountText(r)+ai('amount'):missing}</td>
+    ${admin?`<td><select class="rc-acct-sel ${r.project?'':'empty'}" onchange="rcSetProj('${r.id}',this)">${rcProjOptions(r.project,true)}</select></td>`:''}
     <td>${admin
       ? `<select class="rc-acct-sel ${RC_ACCT_NAME[r.category]?'':'empty'}" onchange="rcSetAcct('${r.id}',this.value)">${rcAcctOptions(r.category)}</select>`
       : rcEsc(rcAcctLabel(r.category))}</td>
@@ -3460,6 +3485,11 @@ function renderReceipts(){
     fa.innerHTML=`<option value="all">${t('rc_f_all')}</option><option value="none">${t('rc_acct_unset')}</option>`+
       RC_ACCOUNTS.map(([g,list])=>`<optgroup label="${rcEsc(g)}">`+list.map(([c,n])=>`<option value="${c}">${c} ${rcEsc(n)}</option>`).join('')+'</optgroup>').join('');
     fa.value=[...fa.options].some(o=>o.value===keepA)?keepA:'all';
+    const fp=$id('rcFProj'); const keepP=fp.value||'all';
+    const projCodes=[...new Set([...RC_PROJECTS.map(p=>p.code), ...RECEIPTS.map(r=>r.project).filter(Boolean)])].sort();
+    fp.innerHTML=`<option value="all">${t('rc_f_all')}</option><option value="none">${t('rc_proj_unset')}</option>`+
+      projCodes.map(c=>`<option value="${rcEsc(c)}">${rcEsc(rcProjLabel(c))}</option>`).join('');
+    fp.value=[...fp.options].some(o=>o.value===keepP)?keepP:'all';
     rcAiRenderBar();
     // 待確認數量徽章
     const pending=RECEIPTS.filter(r=>r.status!=='verified').length;
@@ -3482,7 +3512,7 @@ function renderReceipts(){
   }
   table.innerHTML=`<thead><tr>
       <th>${t('rc_date')}</th>${admin?`<th>${t('rc_th_person')}</th>`:''}<th>${t('rc_vendor')}</th><th>${t('rc_amount')}</th>
-      <th>${t('rc_acct')}</th><th>${t('rc_buyer')}</th><th>${t('rc_th_note')}</th><th>${t('rc_th_status')}</th><th>${t('rc_th_action')}</th>
+      <th>${t('rc_proj')}</th><th>${t('rc_acct')}</th><th>${t('rc_buyer')}</th><th>${t('rc_th_note')}</th><th>${t('rc_th_status')}</th><th>${t('rc_th_action')}</th>
     </tr></thead><tbody>${list.map(r=>rcRowHtml(r,admin)).join('')}</tbody>`;
 }
 
@@ -3525,6 +3555,7 @@ window.rcSave=async id=>{
     amount: amt===''?null:Number(amt), currency:$id('rcEdCur').value,
     category:$id('rcEdCat').value, note:$id('rcEdNote').value.trim(),
     dateSource:'manual', aiFilled:[] };
+  if($id('rcEdProj')) patch.project=$id('rcEdProj').value;
   const bEl=$id('rcEdBuyer');
   if(bEl){
     const bn=bEl.value.trim(), bt=$id('rcEdBuyerTax').value.replace(/\D/g,'');
@@ -3538,6 +3569,24 @@ window.rcReOcr=async id=>{
   const r=rcFind(id); if(!r) return;
   RC_AI_DONE.delete(id);
   rcAiRun([r], true);
+};
+window.rcSetProj=async (id,sel)=>{
+  let val=sel.value;
+  if(val==='__new'){
+    const code=(prompt(t('rc_proj_prompt_code'))||'').trim();
+    if(!code){ renderReceipts(); return; }
+    const name=(prompt(t('rc_proj_prompt_name'))||'').trim();
+    if(!RC_PROJECTS.some(p=>p.code===code)){
+      const items=[...RC_PROJECTS, { code, name }];
+      try{ await DB.collection('config').doc('projects').set({ items, updatedBy:CURRENT.id,
+             updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true}); }
+      catch(err){ console.error('[project add]',err); alert(t('rc_ai_rules')); renderReceipts(); return; }
+      RC_PROJECTS=items.sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+    }
+    val=code;
+  }
+  try{ await DB.collection('receipts').doc(id).update({ project: val }); }
+  catch(err){ console.error('[rcSetProj]',err); alert(t('save_fail')); }
 };
 window.rcSetAcct=async (id,val)=>{
   try{ await DB.collection('receipts').doc(id).update({ category: val }); }
@@ -3564,10 +3613,10 @@ window.rcDelete=async id=>{
 
 /* ---- 匯出：CSV 清冊 + ZIP（檔案已自動命名） ---- */
 function rcCsv(list){
-  const head=['日期 Date','經手人 By','金額 Amount','幣別 Currency','科目代碼 Account','科目名稱 Account Name','抬頭 Buyer','買方稅號 Buyer VKN','抬頭檢查 Buyer check','用途 Purpose','狀態 Status','檔名 File'];
+  const head=['日期 Date','計畫編號 Project','計畫名稱 Project Name','經手人 By','金額 Amount','幣別 Currency','科目代碼 Account','科目名稱 Account Name','抬頭 Buyer','買方稅號 Buyer VKN','抬頭檢查 Buyer check','用途 Purpose','狀態 Status','檔名 File'];
   const used={};
   const rows=list.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[
-    r.date, rcName(r.uid), r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
+    r.date, r.project||'', ((RC_PROJECTS.find(p=>p.code===r.project)||{}).name)||'', rcName(r.uid), r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
     RC_ACCT_NAME[r.category]?r.category:'', RC_ACCT_NAME[r.category]||(r.category?rcAcctLabel(r.category):''),
     r.buyerName||'', r.buyerTaxId||'', ({ours:t('rc_buyer_ours'),other:t('rc_buyer_other'),none:t('rc_buyer_none')})[rcBuyerCheck(r)]||'', r.note||'', t('rc_st_'+(r.status||'submitted')), rcUniqueName(r,used)]);
   return [head,...rows].map(row=>row.map(csvCell).join(',')).join('\n');
