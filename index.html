@@ -317,6 +317,16 @@
   .pill.rc-buyer-bad{ background:#fbe0da; color:var(--bad); }
   .pill.rc-buyer-none{ background:#eef1f5; color:#5b6b78; }
   .rc-buyer-name{ font-size:11px; color:var(--bad); margin-top:3px; max-width:180px; line-height:1.3; }
+  .rc-projmgr{ border:1px solid var(--line); border-radius:6px; margin:0 0 12px; background:#fff; }
+  .rc-projmgr summary{ cursor:pointer; padding:8px 12px; font-size:13px; font-weight:700; color:var(--navy); }
+  .rc-projmgr[open] summary{ border-bottom:1px solid var(--line); }
+  #rcProjMgrBody{ padding:10px 12px; }
+  .rc-pm-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .rc-pm-table th{ text-align:left; font-size:12px; color:#5b6b78; font-weight:600; padding:4px 6px; }
+  .rc-pm-table td{ padding:4px 6px; vertical-align:middle; }
+  .rc-pm-table input{ width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:4px; font-size:13px; font-family:inherit; }
+  .rc-pm-table tr.rc-pm-new td{ border-top:1px dashed var(--line); padding-top:8px; }
+  .rc-pm-count{ color:#5b6b78; white-space:nowrap; font-size:12px; }
   .rc-acct-sel.empty{ border-color:#e6c65a; background:#fffaf0; }
   .pill.rc-ocr{ background:#e8e2fb; color:#5b3fa8; margin-left:4px; }
   .pill.rc-ocr-bad{ background:#f2e7e5; color:var(--bad); margin-left:4px; }
@@ -617,6 +627,10 @@
         <div class="divider"></div>
         <p class="section-title" data-i18n="rc_list_title">收據清單</p>
         <div class="rc-aibar" id="rcAiBar"></div>
+        <details class="rc-projmgr" id="rcProjMgr">
+          <summary data-i18n="rc_pm_title">📁 管理計畫編號</summary>
+          <div id="rcProjMgrBody"></div>
+        </details>
         <div class="rc-filters">
           <div class="field"><label data-i18n="rc_f_month">月份</label><input type="month" id="rcFMonth"></div>
           <div class="field"><label data-i18n="rc_f_emp">經手人</label><select id="rcFEmp"></select></div>
@@ -988,7 +1002,7 @@ Object.assign(I18N['zh-Hant'],{
   rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
   rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
   rc_st_submitted:"待確認", rc_st_verified:"已確認", rc_missing:"待補",
-  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
+  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_pm_title:"📁 管理計畫編號", rc_pm_name:"計畫名稱", rc_pm_used:"使用中", rc_pm_empty:"還沒有計畫編號，從下面新增。", rc_pm_newcode:"新的計畫編號", rc_pm_add:"新增", rc_pm_needcode:"請輸入計畫編號。", rc_pm_dup:"這個計畫編號已經存在。", rc_pm_orphans:"以下編號有收據在用、但不在清單裡，可以用上面的新增補回：", rc_pm_rename_confirm:"有 {n} 張收據使用「{a}」，會一起改成「{b}」。確定嗎？", rc_pm_del_used:"有 {n} 張收據使用「{a}」，刪除後這些收據會變成「未指定計畫」。確定刪除嗎？", rc_pm_del:"確定刪除計畫編號「{a}」？", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
   rc_view:"檢視", rc_dl:"下載", rc_edit:"編輯", rc_save:"儲存", rc_cancel:"取消",
   rc_verify:"確認", rc_unverify:"取消確認", rc_delete:"刪除",
   rc_del_confirm:"確定刪除這張收據？檔案也會一併刪除，無法復原。",
@@ -1010,7 +1024,7 @@ Object.assign(I18N['en'],{
   rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
   rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
   rc_st_submitted:"Submitted", rc_st_verified:"Verified", rc_missing:"Missing",
-  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
+  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_pm_title:"📁 Manage project numbers", rc_pm_name:"Project name", rc_pm_used:"In use", rc_pm_empty:"No project numbers yet — add one below.", rc_pm_newcode:"New project number", rc_pm_add:"Add", rc_pm_needcode:"Enter a project number.", rc_pm_dup:"That project number already exists.", rc_pm_orphans:"These numbers are used on receipts but missing from the list — add them back above: ", rc_pm_rename_confirm:"{n} receipts use “{a}” and will be changed to “{b}”. Continue?", rc_pm_del_used:"{n} receipts use “{a}”; they will become “No project”. Delete anyway?", rc_pm_del:"Delete project number “{a}”?", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
   rc_view:"View", rc_dl:"Download", rc_edit:"Edit", rc_save:"Save", rc_cancel:"Cancel",
   rc_verify:"Verify", rc_unverify:"Unverify", rc_delete:"Delete",
   rc_del_confirm:"Delete this receipt and its file? This can't be undone.",
@@ -2993,6 +3007,84 @@ function rcProjOptions(sel, allowNew){
     RC_PROJECTS.map(p=>`<option value="${rcEsc(p.code)}" ${sel===p.code?'selected':''}>${rcEsc(rcProjLabel(p.code))}</option>`).join('')+
     (allowNew?`<option value="__new">${t('rc_proj_add')}</option>`:'');
 }
+async function rcSaveProjects(items){
+  items=items.slice().sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+  await DB.collection('config').doc('projects').set({ items, updatedBy:CURRENT.id,
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
+  RC_PROJECTS=items;
+}
+// 把某個計畫編號的收據全部改成另一個（改名＝新編號，刪除＝空白）
+async function rcRelabelReceipts(from, to){
+  const ids=RECEIPTS.filter(r=>r.project===from).map(r=>r.id);
+  for(let i=0;i<ids.length;i+=400){
+    const batch=DB.batch();
+    ids.slice(i,i+400).forEach(id=>batch.update(DB.collection('receipts').doc(id),{ project: to }));
+    await batch.commit();
+  }
+  return ids.length;
+}
+function rcRenderProjMgr(force){
+  const body=$id('rcProjMgrBody'); if(!body) return;
+  const count=c=>RECEIPTS.filter(r=>r.project===c).length;
+  if(!force && body.contains(document.activeElement)){            // 正在輸入時不重畫，免得字被洗掉；只更新張數
+    body.querySelectorAll('.rc-pm-count[data-i]').forEach(td=>{
+      const p=RC_PROJECTS[+td.dataset.i]; if(p) td.textContent=`${count(p.code)} ${t('rc_sum_unit')}`; });
+    return;
+  }
+  const rows=RC_PROJECTS.map((p,i)=>`<tr>
+      <td><input id="rcPmCode${i}" value="${rcEsc(p.code)}"></td>
+      <td><input id="rcPmName${i}" value="${rcEsc(p.name||'')}" placeholder="${rcEsc(t('rc_pm_name'))}"></td>
+      <td class="rc-pm-count" data-i="${i}">${count(p.code)} ${t('rc_sum_unit')}</td>
+      <td><div class="rc-actions">
+        <button class="btn-mini" onclick="rcPmSave(${i})">${t('rc_save')}</button>
+        <button class="btn-mini danger" onclick="rcPmDelete(${i})">${t('rc_delete')}</button></div></td></tr>`).join('');
+  // 收據上有、清單裡沒有的編號（例如舊資料），列出來方便補進清單
+  const orphans=[...new Set(RECEIPTS.map(r=>r.project).filter(c=>c && !RC_PROJECTS.some(p=>p.code===c)))];
+  body.innerHTML=`<table class="rc-pm-table">
+      <thead><tr><th>${t('rc_proj')}</th><th>${t('rc_pm_name')}</th><th>${t('rc_pm_used')}</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="4" style="color:#8a94a0">${t('rc_pm_empty')}</td></tr>`}
+      <tr class="rc-pm-new">
+        <td><input id="rcPmNewCode" placeholder="${rcEsc(t('rc_pm_newcode'))}"></td>
+        <td><input id="rcPmNewName" placeholder="${rcEsc(t('rc_pm_name'))}"></td>
+        <td></td>
+        <td><button class="btn-mini" onclick="rcPmAdd()">＋ ${t('rc_pm_add')}</button></td></tr>
+      </tbody></table>
+    ${orphans.length?`<p class="hint">${t('rc_pm_orphans')}${orphans.map(c=>`<b>${rcEsc(c)}</b>（${count(c)} ${t('rc_sum_unit')}）`).join('、')}</p>`:''}
+    <div class="msg" id="rcPmMsg"></div>`;
+}
+function rcPmMsg(text, ok){ const m=$id('rcPmMsg'); if(m){ m.className='msg'+(ok?'':' err'); m.textContent=text; } }
+window.rcPmAdd=async ()=>{
+  const code=$id('rcPmNewCode').value.trim(), name=$id('rcPmNewName').value.trim();
+  if(!code){ rcPmMsg(t('rc_pm_needcode')); return; }
+  if(RC_PROJECTS.some(p=>p.code===code)){ rcPmMsg(t('rc_pm_dup')); return; }
+  try{ await rcSaveProjects([...RC_PROJECTS,{code,name}]); rcRenderProjMgr(true); renderReceipts(); rcPmMsg('✓ '+code, true); }
+  catch(err){ console.error('[pm add]',err); rcPmMsg(t('rc_ai_rules')); }
+};
+window.rcPmSave=async i=>{
+  const old=RC_PROJECTS[i]; if(!old) return;
+  const code=$id('rcPmCode'+i).value.trim(), name=$id('rcPmName'+i).value.trim();
+  if(!code){ rcPmMsg(t('rc_pm_needcode')); return; }
+  if(code!==old.code && RC_PROJECTS.some(p=>p.code===code)){ rcPmMsg(t('rc_pm_dup')); return; }
+  const n=RECEIPTS.filter(r=>r.project===old.code).length;
+  if(code!==old.code && n && !confirm(t('rc_pm_rename_confirm').replace('{n}',n).replace('{a}',old.code).replace('{b}',code))) return;
+  try{
+    await rcSaveProjects(RC_PROJECTS.map((p,j)=>j===i?{code,name}:p));
+    const moved = code!==old.code ? await rcRelabelReceipts(old.code, code) : 0;
+    rcRenderProjMgr(true); renderReceipts();
+    rcPmMsg('✓ '+code+(moved?`（${moved} ${t('rc_sum_unit')}）`:''), true);
+  }catch(err){ console.error('[pm save]',err); rcPmMsg(t('save_fail')); }
+};
+window.rcPmDelete=async i=>{
+  const p=RC_PROJECTS[i]; if(!p) return;
+  const n=RECEIPTS.filter(r=>r.project===p.code).length;
+  const q = n ? t('rc_pm_del_used').replace('{n}',n).replace('{a}',p.code) : t('rc_pm_del').replace('{a}',p.code);
+  if(!confirm(q)) return;
+  try{
+    if(n) await rcRelabelReceipts(p.code,'');
+    await rcSaveProjects(RC_PROJECTS.filter((_,j)=>j!==i));
+    rcRenderProjMgr(true); renderReceipts(); rcPmMsg('✓', true);
+  }catch(err){ console.error('[pm delete]',err); rcPmMsg(t('save_fail')); }
+};
 async function rcLoadProjects(){
   try{
     const s=await DB.collection('config').doc('projects').get();
@@ -3490,6 +3582,7 @@ function renderReceipts(){
     fp.innerHTML=`<option value="all">${t('rc_f_all')}</option><option value="none">${t('rc_proj_unset')}</option>`+
       projCodes.map(c=>`<option value="${rcEsc(c)}">${rcEsc(rcProjLabel(c))}</option>`).join('');
     fp.value=[...fp.options].some(o=>o.value===keepP)?keepP:'all';
+    rcRenderProjMgr(false);
     rcAiRenderBar();
     // 待確認數量徽章
     const pending=RECEIPTS.filter(r=>r.status!=='verified').length;
@@ -3582,6 +3675,7 @@ window.rcSetProj=async (id,sel)=>{
              updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true}); }
       catch(err){ console.error('[project add]',err); alert(t('rc_ai_rules')); renderReceipts(); return; }
       RC_PROJECTS=items.sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+      rcRenderProjMgr(true);
     }
     val=code;
   }
