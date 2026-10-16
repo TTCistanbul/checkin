@@ -1389,11 +1389,26 @@ function fmtHMS(hoursFloat){
   const h=Math.floor(totalSec/3600), m=Math.floor((totalSec%3600)/60), s=totalSec%60;
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
-function isLate(inMs){
+/* 這天已核准、但不是整天的假單（例如早上請半天病假、下午才來上班） */
+function partialLeavesFor(id,date){
+  return LEAVE_REQUESTS.filter(r=>r.empId===id && r.date===date && r.status==='approved' && !isWholeDayLeaveRequest(r));
+}
+function isLate(inMs,id,date){
   // 遲到 = 上班時間晚於彈性窗尾(08:30) + 緩衝分鐘
+  // 若當天早上有已核准的半天假，應到時間改成假單結束時間（剛好結束在午休就算到午休結束）
   const d=new Date(inMs);
   const mins=d.getHours()*60+d.getMinutes();
-  return mins > shiftMin(FLEX_END)+GRACE_MINUTES;
+  let due=shiftMin(FLEX_END);
+  if(id && date){
+    partialLeavesFor(id,date).forEach(r=>{
+      if(Number(r.startMin)<=shiftMin(FLEX_END)){
+        let end=Number(r.endMin);
+        if(end>=shiftMin(LUNCH_START) && end<shiftMin(LUNCH_END)) end=shiftMin(LUNCH_END);
+        due=Math.max(due,end);
+      }
+    });
+  }
+  return mins > due+GRACE_MINUTES;
 }
 /* 把實際上班時間鎖進彈性窗：早於 08:00 當 08:00，08:00–08:30 照實際，晚於 08:30 以實際為準 */
 function anchoredInMin(inMs){
@@ -1634,6 +1649,8 @@ function collectDays(id){
   Object.keys(BIZ_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
   Object.keys(SICK_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
   Object.keys(ABSENT_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
+  // 已核准的假單（含半天假）就算當天沒打卡也要列出來，主控端才有「編輯」可以補打卡時間
+  LEAVE_REQUESTS.forEach(r=>{ if(r.empId===id && r.status==='approved' && r.date) keys.add(r.date); });
   return [...keys].sort().reverse();
 }
 function weekdayLabel(dateStr){ const d=new Date(dateStr+'T00:00:00'); return (LANG==='zh-Hant'?WEEKDAY:WEEKDAY_EN)[d.getDay()]; }
@@ -2403,8 +2420,12 @@ function statusPillFor(id,date){
   if(st==='absent')   return `<span class="pill absent">${t('st_absent')}</span>`;
   if(st==='work' && !ATT[`${id}|${date}`] && holidayOf(date))
     return `<span class="pill holiday">${holidayShort(holidayOf(date))}</span>`;
-  if(st==='business') return `<span class="pill biz">${t('st_business')}</span>`;
-  if(rec && rec.inMs) return isLate(rec.inMs)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`;
+  // 半天假：在狀態旁加註假別與時段，例如「病假（有證明） 08:00–12:00」
+  const partial=partialLeavesFor(id,date).map(r=>
+    ` <span class="pill ${r.type==='sick_doc'?'sick':'leave'}">${typeLabel(r.type)} ${minToHHMM(r.startMin)}–${minToHHMM(r.endMin)}</span>`).join('');
+  if(st==='business') return `<span class="pill biz">${t('st_business')}</span>${partial}`;
+  if(rec && rec.inMs) return (isLate(rec.inMs,id,date)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`)+partial;
+  if(partial) return partial.trim();
   return `<span class="pill">${t('st_off')}</span>`;
 }
 
@@ -2433,7 +2454,7 @@ function renderDaily(){
         inTxt=fmtTime(rec.inMs);
         inState = st==='business'
           ? `<span class="pill biz">${t('st_business')}</span>`
-          : (isLate(rec.inMs)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`);
+          : (isLate(rec.inMs,id,date)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`);
         if(rec.outMs){ outTxt=fmtTime(rec.outMs); outState= st==='business'?`<span class="pill biz">${t('st_business')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`; hrs=fmtHMS(hoursBetween(rec.inMs,rec.outMs)); }
         else { outState=`<span class="pill">${t('st_pending')}</span>`; }
       }
@@ -2489,7 +2510,7 @@ function statusTextFor(id,date){
   const rec=ATT[`${id}|${date}`];
   if(!rec && h) return holidayShort(h);
   if(rec && rec.inMs && !rec.outMs) return t('st_missing');
-  if(rec && rec.inMs) return isLate(rec.inMs)?t('st_late'):t('st_normal');
+  if(rec && rec.inMs) return isLate(rec.inMs,id,date)?t('st_late'):t('st_normal');
   return t('st_off');
 }
 /* 這一天公司要不要支薪 */
