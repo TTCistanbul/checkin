@@ -327,6 +327,9 @@
   .rc-pm-table input{ width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:4px; font-size:13px; font-family:inherit; }
   .rc-pm-table tr.rc-pm-new td{ border-top:1px dashed var(--line); padding-top:8px; }
   .rc-pm-count{ color:#5b6b78; white-space:nowrap; font-size:12px; }
+  .rc-claim{ font-size:11px; color:#1665c0; margin-top:2px; }
+  .rc-claim-lbl{ display:block; font-size:11px; color:#5b6b78; margin-top:4px; }
+  .rc-claim-lbl input{ margin-top:2px; }
   .rc-elsewhere:empty{ display:none; }
   .rc-elsewhere{ font-size:12px; background:#fff8e6; border:1px solid #f0d899; color:#7a5c00; border-radius:6px;
                  padding:8px 10px; margin:-4px 0 12px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
@@ -635,7 +638,7 @@
           <div id="rcProjMgrBody"></div>
         </details>
         <div class="rc-filters">
-          <div class="field"><label data-i18n="rc_f_month">月份</label><input type="month" id="rcFMonth"></div>
+          <div class="field"><label data-i18n="rc_f_month">報帳月份</label><input type="month" id="rcFMonth"></div>
           <div class="field"><label data-i18n="rc_f_emp">經手人</label><select id="rcFEmp"></select></div>
           <div class="field"><label data-i18n="rc_th_status">狀態</label>
             <select id="rcFStatus">
@@ -1006,11 +1009,11 @@ Object.assign(I18N['zh-Hant'],{
   rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
   rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
   rc_st_submitted:"待確認", rc_st_verified:"已確認", rc_missing:"待補",
-  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_pm_title:"📁 管理計畫編號", rc_pm_name:"計畫名稱", rc_pm_used:"使用中", rc_pm_empty:"還沒有計畫編號，從下面新增。", rc_pm_newcode:"新的計畫編號", rc_pm_add:"新增", rc_pm_needcode:"請輸入計畫編號。", rc_pm_dup:"這個計畫編號已經存在。", rc_pm_orphans:"以下編號有收據在用、但不在清單裡，可以用上面的新增補回：", rc_pm_rename_confirm:"有 {n} 張收據使用「{a}」，會一起改成「{b}」。確定嗎？", rc_pm_del_used:"有 {n} 張收據使用「{a}」，刪除後這些收據會變成「未指定計畫」。確定刪除嗎？", rc_pm_del:"確定刪除計畫編號「{a}」？", rc_else_a:"另有 {n} 張待確認的收據，單據日期不在 {m}（AI 會把日期改成單據上印的日期，帳單常是上個月開立）：", rc_else_all:"顯示全部月份", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
+  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_pm_title:"📁 管理計畫編號", rc_pm_name:"計畫名稱", rc_pm_used:"使用中", rc_pm_empty:"還沒有計畫編號，從下面新增。", rc_pm_newcode:"新的計畫編號", rc_pm_add:"新增", rc_pm_needcode:"請輸入計畫編號。", rc_pm_dup:"這個計畫編號已經存在。", rc_pm_orphans:"以下編號有收據在用、但不在清單裡，可以用上面的新增補回：", rc_pm_rename_confirm:"有 {n} 張收據使用「{a}」，會一起改成「{b}」。確定嗎？", rc_pm_del_used:"有 {n} 張收據使用「{a}」，刪除後這些收據會變成「未指定計畫」。確定刪除嗎？", rc_pm_del:"確定刪除計畫編號「{a}」？", rc_else_a:"另有 {n} 張待確認的收據，報帳月份不在 {m}：", rc_claim:"報帳月份", rc_claim_short:"報帳", rc_else_all:"顯示全部月份", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
   rc_view:"檢視", rc_dl:"下載", rc_edit:"編輯", rc_save:"儲存", rc_cancel:"取消",
   rc_verify:"確認", rc_unverify:"取消確認", rc_delete:"刪除",
   rc_del_confirm:"確定刪除這張收據？檔案也會一併刪除，無法復原。",
-  rc_f_month:"月份", rc_f_emp:"經手人", rc_f_all:"全部", rc_f_incomplete:"資料待補",
+  rc_f_month:"報帳月份", rc_f_emp:"經手人", rc_f_all:"全部", rc_f_incomplete:"資料待補",
   rc_zip:"⬇ 下載全部收據（ZIP，已自動命名）", rc_csv:"⬇ 匯出清冊 CSV", rc_zipping:"打包中…",
   rc_empty:"目前沒有收據。", rc_sum_n:"共", rc_sum_unit:"張", rc_sum_incomplete:"張待補",
   rc_naming_hint:"AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對），計畫編號與會計科目請在清單上直接選，核對後按「確認」。下載時自動命名為：日期-科目代碼-科目名稱-金額（例：20261001-620101-文具紙張-1850.00TRY.jpg），未選科目會是「未分類」；ZIP 內附清冊 CSV。",
@@ -1028,11 +1031,11 @@ Object.assign(I18N['en'],{
   rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
   rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
   rc_st_submitted:"Submitted", rc_st_verified:"Verified", rc_missing:"Missing",
-  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_pm_title:"📁 Manage project numbers", rc_pm_name:"Project name", rc_pm_used:"In use", rc_pm_empty:"No project numbers yet — add one below.", rc_pm_newcode:"New project number", rc_pm_add:"Add", rc_pm_needcode:"Enter a project number.", rc_pm_dup:"That project number already exists.", rc_pm_orphans:"These numbers are used on receipts but missing from the list — add them back above: ", rc_pm_rename_confirm:"{n} receipts use “{a}” and will be changed to “{b}”. Continue?", rc_pm_del_used:"{n} receipts use “{a}”; they will become “No project”. Delete anyway?", rc_pm_del:"Delete project number “{a}”?", rc_else_a:"{n} more receipts waiting for review are dated outside {m} (AI sets the date printed on the document; bills are often from last month):", rc_else_all:"Show all months", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
+  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_pm_title:"📁 Manage project numbers", rc_pm_name:"Project name", rc_pm_used:"In use", rc_pm_empty:"No project numbers yet — add one below.", rc_pm_newcode:"New project number", rc_pm_add:"Add", rc_pm_needcode:"Enter a project number.", rc_pm_dup:"That project number already exists.", rc_pm_orphans:"These numbers are used on receipts but missing from the list — add them back above: ", rc_pm_rename_confirm:"{n} receipts use “{a}” and will be changed to “{b}”. Continue?", rc_pm_del_used:"{n} receipts use “{a}”; they will become “No project”. Delete anyway?", rc_pm_del:"Delete project number “{a}”?", rc_else_a:"{n} more receipts waiting for review are claimed outside {m}:", rc_claim:"Claim month", rc_claim_short:"claim", rc_else_all:"Show all months", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
   rc_view:"View", rc_dl:"Download", rc_edit:"Edit", rc_save:"Save", rc_cancel:"Cancel",
   rc_verify:"Verify", rc_unverify:"Unverify", rc_delete:"Delete",
   rc_del_confirm:"Delete this receipt and its file? This can't be undone.",
-  rc_f_month:"Month", rc_f_emp:"Person", rc_f_all:"All", rc_f_incomplete:"Incomplete",
+  rc_f_month:"Claim month", rc_f_emp:"Person", rc_f_all:"All", rc_f_incomplete:"Incomplete",
   rc_zip:"⬇ Download all (ZIP, auto-named)", rc_csv:"⬇ Export CSV", rc_zipping:"Zipping…",
   rc_empty:"No receipts yet.", rc_sum_n:"Total", rc_sum_unit:"receipts", rc_sum_incomplete:"incomplete",
   rc_naming_hint:"AI fills in date, vendor and amount (check fields tagged AI); pick the project and account in the list, then Verify. Files are named Date-AccountCode-AccountName-Amount (e.g. 20261001-620101-文具紙張-1850.00TRY.jpg); the ZIP includes a CSV ledger.",
@@ -3138,6 +3141,14 @@ const $id=id=>document.getElementById(id);
 function rcEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function rcIsAdmin(){ return CURRENT && CURRENT.role==='admin'; }
 function rcName(uid){ const e=EMPLOYEES[uid]; return (e&&e.name)||uid; }
+// 報帳月份：這張收據算在哪個月的帳（10 月繳的 9 月帳單算 10 月）。
+// 預設＝上傳的月份；主控端可在「編輯」裡改。舊資料沒有這欄，就用上傳時間推算。
+function rcClaimMonth(r){
+  if(r.claimMonth) return r.claimMonth;
+  const sec=r.createdAt && (r.createdAt.seconds||r.createdAt._seconds);
+  if(sec) return ymd(new Date(sec*1000)).slice(0,7);
+  return (r.date||'').slice(0,7);
+}
 function rcIncomplete(r){ return !r.vendor || r.amount==null || r.amount===''; }
 function rcAmountText(r){
   if(r.amount==null||r.amount==='') return '';
@@ -3245,6 +3256,7 @@ async function rcSubmit(p){
   const amt=v('Amount');
   const meta={
     date: v('Date') || ymd(new Date()),
+    claimMonth: ymd(new Date()).slice(0,7),
     vendor: multi ? '' : v('Vendor').trim(),
     amount: (multi||amt==='') ? null : Number(amt),
     currency: v('Cur') || 'TRY',
@@ -3527,7 +3539,7 @@ function rcFiltered(){
   if(!rcIsAdmin()) return RECEIPTS;
   const ym=$id('rcFMonth').value, who=$id('rcFEmp').value, st=$id('rcFStatus').value, ac=$id('rcFAcct').value||'all', pj=$id('rcFProj').value||'all';
   return RECEIPTS.filter(r=>
-    (!ym || (r.date||'').startsWith(ym)) &&
+    (!ym || rcClaimMonth(r)===ym) &&
     (!who || who==='all' || r.uid===who) &&
     (st==='all' || (st==='incomplete' ? rcIncomplete(r) : st==='buyer' ? ['other','none'].includes(rcBuyerCheck(r)) : r.status===st)) &&
     (ac==='all' || (ac==='none' ? !RC_ACCT_NAME[r.category] : r.category===ac)) &&
@@ -3547,7 +3559,8 @@ function rcRowHtml(r, admin){
   if(RC_EDITING===r.id && canEdit){
     const curs=RC_CURS.map(c=>`<option ${r.currency===c?'selected':''}>${c}</option>`).join('');
     return `<tr class="rc-edit">
-      <td><input type="date" id="rcEdDate" value="${rcEsc(r.date)}"></td>
+      <td><input type="date" id="rcEdDate" value="${rcEsc(r.date)}">
+          ${admin?`<label class="rc-claim-lbl">${t('rc_claim')}<input type="month" id="rcEdClaim" value="${rcEsc(rcClaimMonth(r))}"></label>`:''}</td>
       ${admin?`<td>${rcEsc(rcName(r.uid))}</td>`:''}
       <td><input type="text" id="rcEdVendor" value="${rcEsc(r.vendor)}"></td>
       <td><div class="rc-amt"><input type="number" step="0.01" inputmode="decimal" id="rcEdAmount" value="${r.amount==null?'':rcEsc(r.amount)}"><select id="rcEdCur">${curs}</select></div></td>
@@ -3569,7 +3582,8 @@ function rcRowHtml(r, admin){
   if(rcIncomplete(r) && (r.ocrStatus==='unreadable'||r.ocrStatus==='failed')) pill+=`<span class="pill rc-ocr-bad">${t('rc_ocr_bad')}</span>`;
   const icon = r.mime==='application/pdf' ? '📄 ' : '🧾 ';
   return `<tr class="${inc?'rc-incomplete':''}">
-    <td style="white-space:nowrap">${rcEsc(r.date)}${ai('date')}</td>
+    <td style="white-space:nowrap">${rcEsc(r.date)}${ai('date')}${admin && rcClaimMonth(r) && !(r.date||'').startsWith(rcClaimMonth(r))
+      ? `<div class="rc-claim">${t('rc_claim_short')} ${rcEsc(rcClaimMonth(r))}</div>`:''}</td>
     ${admin?`<td style="white-space:nowrap">${rcEsc(rcName(r.uid))}</td>`:''}
     <td>${r.vendor?rcEsc(r.vendor)+ai('vendor'):missing}</td>
     <td style="white-space:nowrap;text-align:right">${rcAmountText(r)?rcAmountText(r)+ai('amount'):missing}</td>
@@ -3626,8 +3640,8 @@ function renderReceipts(){
     const ym=$id('rcFMonth').value, el=$id('rcElsewhere');
     if(ym){
       const byMonth={};
-      RECEIPTS.filter(r=>r.status!=='verified' && !(r.date||'').startsWith(ym))
-        .forEach(r=>{ const m=(r.date||'').slice(0,7)||'—'; byMonth[m]=(byMonth[m]||0)+1; });
+      RECEIPTS.filter(r=>r.status!=='verified' && rcClaimMonth(r)!==ym)
+        .forEach(r=>{ const m=rcClaimMonth(r)||'—'; byMonth[m]=(byMonth[m]||0)+1; });
       const months=Object.keys(byMonth).sort();
       const n=months.reduce((s,m)=>s+byMonth[m],0);
       el.innerHTML = n ? `⚠ ${t('rc_else_a').replace('{n}',n).replace('{m}',ym)} `+
@@ -3683,6 +3697,7 @@ window.rcCancel=()=>{ RC_EDITING=null; renderReceipts(); };
 window.rcSave=async id=>{
   const amt=$id('rcEdAmount').value;
   const patch={ date:$id('rcEdDate').value, vendor:$id('rcEdVendor').value.trim(),
+    ...($id('rcEdClaim')&&$id('rcEdClaim').value ? { claimMonth:$id('rcEdClaim').value } : {}),
     amount: amt===''?null:Number(amt), currency:$id('rcEdCur').value,
     category:$id('rcEdCat').value, note:$id('rcEdNote').value.trim(),
     dateSource:'manual', aiFilled:[] };
@@ -3746,10 +3761,10 @@ window.rcDelete=async id=>{
 
 /* ---- 匯出：CSV 清冊 + ZIP（檔案已自動命名） ---- */
 function rcCsv(list){
-  const head=['日期 Date','計畫編號 Project','計畫名稱 Project Name','經手人 By','金額 Amount','幣別 Currency','科目代碼 Account','科目名稱 Account Name','抬頭 Buyer','買方稅號 Buyer VKN','抬頭檢查 Buyer check','用途 Purpose','狀態 Status','檔名 File'];
+  const head=['報帳月份 Claim month','單據日期 Doc date','計畫編號 Project','計畫名稱 Project Name','經手人 By','金額 Amount','幣別 Currency','科目代碼 Account','科目名稱 Account Name','抬頭 Buyer','買方稅號 Buyer VKN','抬頭檢查 Buyer check','用途 Purpose','狀態 Status','檔名 File'];
   const used={};
   const rows=list.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[
-    r.date, r.project||'', ((RC_PROJECTS.find(p=>p.code===r.project)||{}).name)||'', rcName(r.uid), r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
+    rcClaimMonth(r), r.date, r.project||'', ((RC_PROJECTS.find(p=>p.code===r.project)||{}).name)||'', rcName(r.uid), r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
     RC_ACCT_NAME[r.category]?r.category:'', RC_ACCT_NAME[r.category]||(r.category?rcAcctLabel(r.category):''),
     r.buyerName||'', r.buyerTaxId||'', ({ours:t('rc_buyer_ours'),other:t('rc_buyer_other'),none:t('rc_buyer_none')})[rcBuyerCheck(r)]||'', r.note||'', t('rc_st_'+(r.status||'submitted')), rcUniqueName(r,used)]);
   return [head,...rows].map(row=>row.map(csvCell).join(',')).join('\n');
