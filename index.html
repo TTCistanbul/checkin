@@ -282,61 +282,6 @@
   .tp-opt{ padding:7px 0; text-align:center; font-size:13px; font-family:var(--mono); cursor:pointer; color:var(--ink); }
   .tp-opt:hover{ background:var(--navy-soft); }
   .tp-opt.sel{ background:var(--navy); color:#fff; font-weight:700; }
-
-  /* ---- 報帳收據 ---- */
-  .rc-pick{ display:flex; gap:10px; margin-bottom:12px; }
-  .rc-btn{ position:relative; flex:1; text-align:center; padding:14px 8px; border-radius:6px; background:var(--navy); color:#fff; font-weight:700; font-size:14px; cursor:pointer; overflow:hidden; }
-  .rc-btn.alt{ background:var(--navy-soft); color:var(--navy); border:1px solid var(--line); }
-  .rc-file-input{ position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer; }
-  .rc-previews{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
-  .rc-thumb{ position:relative; width:72px; height:72px; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:#f6f8fb;
-             display:flex; align-items:center; justify-content:center; font-size:10px; text-align:center; padding:2px; word-break:break-all; color:#5b6b78; }
-  .rc-thumb img{ width:100%; height:100%; object-fit:cover; }
-  .rc-thumb button{ position:absolute; top:2px; right:2px; width:20px; height:20px; padding:0; border-radius:50%; background:rgba(0,0,0,.55); color:#fff; font-size:12px; line-height:20px; }
-  .rc-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
-  @media (max-width:560px){ .rc-grid{ grid-template-columns:1fr; } }
-  .rc-amt{ display:flex; gap:6px; }
-  .rc-amt input{ flex:1; min-width:0; }
-  .rc-amt select{ width:86px; flex:none; }
-  .rc-filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
-  .rc-filters .field{ min-width:130px; flex:1; }
-  .rc-tools{ display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 8px; }
-  #rcTableAdmin{ min-width:720px; }
-  .rc-actions{ display:flex; gap:4px; flex-wrap:wrap; min-width:170px; }
-  .rc-actions .btn-mini{ padding:4px 8px; }
-  .rc-actions .btn-mini.danger{ color:var(--bad); }
-  .rc-sum{ font-size:13px; color:#5b6b78; margin:6px 0 12px; }
-  .rc-sum b{ color:var(--ink); }
-  tr.rc-incomplete td{ background:#fffaf0; }
-  .rc-ai{ display:inline-block; margin-left:4px; padding:0 5px; border-radius:8px; font-size:10px; font-weight:800;
-          background:#e8e2fb; color:#5b3fa8; vertical-align:middle; }
-  .rc-aibar{ font-size:12px; color:#5b6b78; background:#f6f3fd; border:1px solid #e3dcf7; border-radius:6px;
-             padding:7px 10px; margin:0 0 12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .rc-aibar b{ color:#5b3fa8; }
-  .rc-acct-sel{ width:100%; min-width:150px; padding:5px 6px; border:1px solid var(--line); border-radius:4px; font-size:12px; font-family:inherit; background:#fff; }
-  .pill.rc-buyer-bad{ background:#fbe0da; color:var(--bad); }
-  .pill.rc-buyer-none{ background:#eef1f5; color:#5b6b78; }
-  .rc-buyer-name{ font-size:11px; color:var(--bad); margin-top:3px; max-width:180px; line-height:1.3; }
-  .rc-projmgr{ border:1px solid var(--line); border-radius:6px; margin:0 0 12px; background:#fff; }
-  .rc-projmgr summary{ cursor:pointer; padding:8px 12px; font-size:13px; font-weight:700; color:var(--navy); }
-  .rc-projmgr[open] summary{ border-bottom:1px solid var(--line); }
-  #rcProjMgrBody{ padding:10px 12px; }
-  .rc-pm-table{ width:100%; border-collapse:collapse; font-size:13px; }
-  .rc-pm-table th{ text-align:left; font-size:12px; color:#5b6b78; font-weight:600; padding:4px 6px; }
-  .rc-pm-table td{ padding:4px 6px; vertical-align:middle; }
-  .rc-pm-table input{ width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:4px; font-size:13px; font-family:inherit; }
-  .rc-pm-table tr.rc-pm-new td{ border-top:1px dashed var(--line); padding-top:8px; }
-  .rc-pm-count{ color:#5b6b78; white-space:nowrap; font-size:12px; }
-  .rc-claim{ font-size:11px; color:#1665c0; margin-top:2px; }
-  .rc-claim-lbl{ display:block; font-size:11px; color:#5b6b78; margin-top:4px; }
-  .rc-claim-lbl input{ margin-top:2px; }
-  .rc-elsewhere:empty{ display:none; }
-  .rc-elsewhere{ font-size:12px; background:#fff8e6; border:1px solid #f0d899; color:#7a5c00; border-radius:6px;
-                 padding:8px 10px; margin:-4px 0 12px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-  .rc-acct-sel.empty{ border-color:#e6c65a; background:#fffaf0; }
-  .pill.rc-ocr{ background:#e8e2fb; color:#5b3fa8; margin-left:4px; }
-  .pill.rc-ocr-bad{ background:#f2e7e5; color:var(--bad); margin-left:4px; }
-  .rc-edit input,.rc-edit select{ width:100%; padding:6px; border:1px solid var(--line); border-radius:4px; font-size:13px; min-width:70px; font-family:inherit; }
 </style>
 </head>
 <body>
@@ -386,7 +331,6 @@
       <div class="tabbar">
         <button class="tab active" data-etab="clock" data-i18n="etab_clock">打卡</button>
         <button class="tab" data-etab="leave" data-i18n="etab_leave">請假</button>
-        <button class="tab" data-etab="receipt" data-i18n="etab_receipt">報帳</button>
       </div>
 
       <div class="epanel" id="epanel-clock">
@@ -485,18 +429,6 @@
           <div class="tbl-scroll"><table id="myReqTable"></table></div>
         </div>
       </div>
-
-      <!-- 報帳（員工） -->
-      <div class="epanel" id="epanel-receipt" style="display:none;">
-        <div class="card">
-          <p class="section-title" data-i18n="rc_upload_title">上傳收據</p>
-          <div id="rcFormEmp"></div>
-        </div>
-        <div class="card">
-          <p class="section-title" data-i18n="rc_my_title">我的收據</p>
-          <div class="tbl-scroll"><table id="rcTableEmp"></table></div>
-        </div>
-      </div>
     </div>
 
     <!-- ===== ADMIN UI ===== -->
@@ -507,7 +439,6 @@
         <button class="tab" data-tab="daily" data-i18n="tab_daily">每日狀況</button>
         <button class="tab" data-tab="employees" data-i18n="tab_emp">員工設定</button>
         <button class="tab" data-tab="leavereview"><span data-i18n="tab_leave_review">請假審核</span><span class="tab-badge" id="pendingBadge" style="display:none"></span></button>
-        <button class="tab" data-tab="receipts"><span data-i18n="tab_receipts">報帳收據</span><span class="tab-badge" id="rcBadge" style="display:none"></span></button>
       </div>
 
       <!-- Overview dashboard -->
@@ -624,43 +555,6 @@
         <div class="msg" id="backfillMsg"></div>
         <div class="msg" id="reclassifyMsg"></div>
         <div class="tbl-scroll"><table id="allReqTable"></table></div>
-      </div>
-
-      <!-- 報帳收據（主控端） -->
-      <div class="card tabpanel" id="panel-receipts" style="display:none;">
-        <p class="section-title" data-i18n="rc_upload_title">上傳收據</p>
-        <div id="rcFormAdmin"></div>
-        <div class="divider"></div>
-        <p class="section-title" data-i18n="rc_list_title">收據清單</p>
-        <div class="rc-aibar" id="rcAiBar"></div>
-        <details class="rc-projmgr" id="rcProjMgr">
-          <summary data-i18n="rc_pm_title">📁 管理計畫編號</summary>
-          <div id="rcProjMgrBody"></div>
-        </details>
-        <div class="rc-filters">
-          <div class="field"><label data-i18n="rc_f_month">報帳月份</label><input type="month" id="rcFMonth"></div>
-          <div class="field"><label data-i18n="rc_f_emp">經手人</label><select id="rcFEmp"></select></div>
-          <div class="field"><label data-i18n="rc_th_status">狀態</label>
-            <select id="rcFStatus">
-              <option value="all" data-i18n="rc_f_all">全部</option>
-              <option value="submitted" data-i18n="rc_st_submitted">待確認</option>
-              <option value="verified" data-i18n="rc_st_verified">已確認</option>
-              <option value="incomplete" data-i18n="rc_f_incomplete">資料待補</option>
-              <option value="buyer" data-i18n="rc_f_buyer">抬頭需確認</option>
-            </select>
-          </div>
-          <div class="field"><label data-i18n="rc_proj">計畫編號</label><select id="rcFProj"></select></div>
-          <div class="field"><label data-i18n="rc_acct">會計科目</label><select id="rcFAcct"></select></div>
-        </div>
-        <div class="rc-sum" id="rcSummary"></div>
-        <div class="rc-elsewhere" id="rcElsewhere"></div>
-        <div class="rc-tools">
-          <button class="btn-mini" id="rcZipBtn" data-i18n="rc_zip">⬇ 下載全部收據（ZIP，已自動命名）</button>
-          <button class="btn-mini" id="rcCsvBtn" data-i18n="rc_csv">⬇ 匯出清冊 CSV</button>
-        </div>
-        <div class="msg" id="rcToolMsg"></div>
-        <div class="tbl-scroll"><table id="rcTableAdmin"></table></div>
-        <p class="hint" data-i18n="rc_naming_hint">下載時自動命名為：日期-科目代碼-科目名稱-金額.副檔名</p>
       </div>
     </div>
   </div>
@@ -996,52 +890,6 @@ const I18N = {
     am:"AM", pm:"PM", dp_hour:"Hour", dp_minute:"Min", dp_period:"AM/PM"
   }
 };
-/* ---- 報帳收據 文字 ---- */
-Object.assign(I18N['zh-Hant'],{
-  etab_receipt:"報帳", tab_receipts:"報帳收據",
-  rc_upload_title:"上傳收據", rc_my_title:"我的收據", rc_list_title:"收據清單",
-  rc_take_photo:"📷 拍照", rc_choose_files:"📁 選照片／PDF",
-  rc_date:"收據日期", rc_vendor:"廠商／店家", rc_amount:"金額", rc_cat:"類別", rc_note:"用途說明（選填）",
-  rc_multi_hint:"一次選多張時，日期、類別、用途會套用到每一張；廠商和金額之後在清單中逐筆補（標示「待補」）。",
-  rc_submit:"上傳", rc_need_file:"請先拍照或選擇檔案。", rc_uploading:"上傳中…", rc_done:"已上傳",
-  rc_fail:"上傳失敗，請檢查網路後再試一次。", rc_too_big:"PDF 超過 5MB，請壓縮後再上傳：",
-  rc_bad_image:"無法讀取這張照片（可能是 HEIC 格式），請直接用「拍照」或轉成 JPG：",
-  rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
-  rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
-  rc_st_submitted:"待確認", rc_st_verified:"已確認", rc_missing:"待補",
-  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_pm_title:"📁 管理計畫編號", rc_pm_name:"計畫名稱", rc_pm_used:"使用中", rc_pm_empty:"還沒有計畫編號，從下面新增。", rc_pm_newcode:"新的計畫編號", rc_pm_add:"新增", rc_pm_needcode:"請輸入計畫編號。", rc_pm_dup:"這個計畫編號已經存在。", rc_pm_orphans:"以下編號有收據在用、但不在清單裡，可以用上面的新增補回：", rc_pm_rename_confirm:"有 {n} 張收據使用「{a}」，會一起改成「{b}」。確定嗎？", rc_pm_del_used:"有 {n} 張收據使用「{a}」，刪除後這些收據會變成「未指定計畫」。確定刪除嗎？", rc_pm_del:"確定刪除計畫編號「{a}」？", rc_else_a:"另有 {n} 張待確認的收據，報帳月份不在 {m}：", rc_claim:"報帳月份", rc_claim_short:"報帳", rc_else_all:"顯示全部月份", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
-  rc_view:"檢視", rc_dl:"下載", rc_edit:"編輯", rc_save:"儲存", rc_cancel:"取消",
-  rc_verify:"確認", rc_unverify:"取消確認", rc_delete:"刪除",
-  rc_del_confirm:"確定刪除這張收據？檔案也會一併刪除，無法復原。",
-  rc_f_month:"報帳月份", rc_f_emp:"經手人", rc_f_all:"全部", rc_f_incomplete:"資料待補",
-  rc_zip:"⬇ 下載全部收據（ZIP，已自動命名）", rc_csv:"⬇ 匯出清冊 CSV", rc_zipping:"打包中…",
-  rc_empty:"目前沒有收據。", rc_sum_n:"共", rc_sum_unit:"張", rc_sum_incomplete:"張待補",
-  rc_naming_hint:"AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對），計畫編號與會計科目請在清單上直接選，核對後按「確認」。下載時自動命名為：日期-科目代碼-科目名稱-金額（例：20261001-620101-文具紙張-1850.00TRY.jpg），未選科目會是「未分類」；ZIP 內附清冊 CSV。",
-  rc_load_fail:"檔案讀取失敗。"
-});
-Object.assign(I18N['en'],{
-  etab_receipt:"Receipts", tab_receipts:"Receipts",
-  rc_upload_title:"Upload receipts", rc_my_title:"My receipts", rc_list_title:"Receipt list",
-  rc_take_photo:"📷 Take photo", rc_choose_files:"📁 Photos / PDF",
-  rc_date:"Receipt date", rc_vendor:"Vendor", rc_amount:"Amount", rc_cat:"Category", rc_note:"Purpose (optional)",
-  rc_multi_hint:"With several files, date, category and purpose apply to all; fill in vendor and amount per row later (marked “Missing”).",
-  rc_submit:"Upload", rc_need_file:"Take a photo or choose a file first.", rc_uploading:"Uploading…", rc_done:"Uploaded",
-  rc_fail:"Upload failed. Check your connection and try again.", rc_too_big:"PDF is larger than 5MB: ",
-  rc_bad_image:"Can't read this image (maybe HEIC). Use “Take photo” or convert to JPG: ",
-  rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
-  rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
-  rc_st_submitted:"Submitted", rc_st_verified:"Verified", rc_missing:"Missing",
-  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_pm_title:"📁 Manage project numbers", rc_pm_name:"Project name", rc_pm_used:"In use", rc_pm_empty:"No project numbers yet — add one below.", rc_pm_newcode:"New project number", rc_pm_add:"Add", rc_pm_needcode:"Enter a project number.", rc_pm_dup:"That project number already exists.", rc_pm_orphans:"These numbers are used on receipts but missing from the list — add them back above: ", rc_pm_rename_confirm:"{n} receipts use “{a}” and will be changed to “{b}”. Continue?", rc_pm_del_used:"{n} receipts use “{a}”; they will become “No project”. Delete anyway?", rc_pm_del:"Delete project number “{a}”?", rc_else_a:"{n} more receipts waiting for review are claimed outside {m}:", rc_claim:"Claim month", rc_claim_short:"claim", rc_else_all:"Show all months", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
-  rc_view:"View", rc_dl:"Download", rc_edit:"Edit", rc_save:"Save", rc_cancel:"Cancel",
-  rc_verify:"Verify", rc_unverify:"Unverify", rc_delete:"Delete",
-  rc_del_confirm:"Delete this receipt and its file? This can't be undone.",
-  rc_f_month:"Claim month", rc_f_emp:"Person", rc_f_all:"All", rc_f_incomplete:"Incomplete",
-  rc_zip:"⬇ Download all (ZIP, auto-named)", rc_csv:"⬇ Export CSV", rc_zipping:"Zipping…",
-  rc_empty:"No receipts yet.", rc_sum_n:"Total", rc_sum_unit:"receipts", rc_sum_incomplete:"incomplete",
-  rc_naming_hint:"AI fills in date, vendor and amount (check fields tagged AI); pick the project and account in the list, then Verify. Files are named Date-AccountCode-AccountName-Amount (e.g. 20261001-620101-文具紙張-1850.00TRY.jpg); the ZIP includes a CSV ledger.",
-  rc_load_fail:"Couldn't load the file."
-});
-
 let LANG='zh-Hant';
 const t=k=>(I18N[LANG]&&I18N[LANG][k])||k;
 function applyI18n(){
@@ -1111,31 +959,35 @@ const HOLIDAYS = {
   '2026-07-15': { zh:'民主與全國團結日',     en:'Democracy & National Unity Day', tr:'Demokrasi ve Milli Birlik Günü' },
   '2026-08-30': { zh:'勝利節',               en:'Victory Day',                 tr:'Zafer Bayramı' },
   '2026-10-28': { zh:'共和國日前夕（半天）', en:'Republic Day eve (half day)', tr:'Cumhuriyet Bayramı Arifesi', half:true },
-  '2026-10-29': { zh:'共和國日',             en:'Republic Day',                tr:'Cumhuriyet Bayramı' }
+  '2026-10-29': { zh:'共和國日',             en:'Republic Day',                tr:'Cumhuriyet Bayramı' },
+
+  /* ===== 2027 =====
+     宗教節日（開齋節、宰牲節）依土耳其宗教事務部 Diyanet 2027 宗教節日曆；
+     若之後官方公報公告日期有異動，請回來調整這兩組。 */
+  '2027-01-01': { zh:'元旦',                 en:'New Year',                    tr:'Yılbaşı' },
+  '2027-03-08': { zh:'開齋節前夕（半天）',   en:'Eid al-Fitr eve (half day)',  tr:'Ramazan Bayramı Arifesi', half:true },
+  '2027-03-09': { zh:'開齋節 第1天',         en:'Eid al-Fitr day 1',           tr:'Ramazan Bayramı 1. Gün' },
+  '2027-03-10': { zh:'開齋節 第2天',         en:'Eid al-Fitr day 2',           tr:'Ramazan Bayramı 2. Gün' },
+  '2027-03-11': { zh:'開齋節 第3天',         en:'Eid al-Fitr day 3',           tr:'Ramazan Bayramı 3. Gün' },
+  '2027-04-23': { zh:'國家主權與兒童節',     en:'National Sovereignty & Children\'s Day', tr:'Ulusal Egemenlik ve Çocuk Bayramı' },
+  '2027-05-01': { zh:'勞動節',               en:'Labour Day',                  tr:'Emek ve Dayanışma Günü' },
+  '2027-05-15': { zh:'宰牲節前夕（半天）',   en:'Eid al-Adha eve (half day)',  tr:'Kurban Bayramı Arifesi', half:true },
+  '2027-05-16': { zh:'宰牲節 第1天',         en:'Eid al-Adha day 1',           tr:'Kurban Bayramı 1. Gün' },
+  '2027-05-17': { zh:'宰牲節 第2天',         en:'Eid al-Adha day 2',           tr:'Kurban Bayramı 2. Gün' },
+  '2027-05-18': { zh:'宰牲節 第3天',         en:'Eid al-Adha day 3',           tr:'Kurban Bayramı 3. Gün' },
+  '2027-05-19': { zh:'宰牲節 第4天／青年與體育節', en:'Eid al-Adha day 4 / Youth & Sports Day', tr:'Kurban Bayramı 4. Gün / Atatürk’ü Anma, Gençlik ve Spor Bayramı' },
+  '2027-07-15': { zh:'民主與全國團結日',     en:'Democracy & National Unity Day', tr:'Demokrasi ve Milli Birlik Günü' },
+  '2027-08-30': { zh:'勝利節',               en:'Victory Day',                 tr:'Zafer Bayramı' },
+  '2027-10-28': { zh:'共和國日前夕（半天）', en:'Republic Day eve (half day)', tr:'Cumhuriyet Bayramı Arifesi', half:true },
+  '2027-10-29': { zh:'共和國日',             en:'Republic Day',                tr:'Cumhuriyet Bayramı' }
 };
 function holidayOf(date){ return HOLIDAYS[date]||null; }
 function holidayName(h){ return (LANG==='zh-Hant'? h.zh : h.en) + ' · ' + h.tr; }
 function holidayShort(h){ return LANG==='zh-Hant'? h.zh : h.en; }
 
-/* 只有涵蓋整個班別的假單才把該日視為「整天休假」。
-   半天／按小時計的已核准假單仍需讓員工打上、下班卡；請假時數則由
-   requests 集合保留，並照常計入休假餘額。 */
-function isWholeDayLeaveRequest(r){
-  return !!r
-    && Number(r.startMin) <= shiftMin(SHIFT_START)
-    && Number(r.endMin) >= shiftMin(SHIFT_END);
-}
-function leaveRequestForAttendance(id,date){
-  const reqId=ATT_FROM_REQ[`${id}|${date}`];
-  return reqId ? LEAVE_REQUESTS.find(r=>r.reqId===reqId) : null;
-}
-
 function dayStatus(id,date){
   const key=`${id}|${date}`;
-  /* 舊版曾把半天假也寫成 status:'leave'。若這筆標記來自半天假單，
-     以假單時段為準，恢復為可打卡的工作日。 */
-  if(LEAVE_MARKS[key] && !leaveRequestForAttendance(id,date)) return 'leave';
-  if(LEAVE_MARKS[key] && isWholeDayLeaveRequest(leaveRequestForAttendance(id,date))) return 'leave';
+  if(LEAVE_MARKS[key]) return 'leave';
   if(SICK_MARKS[key]) return 'sick_doc';
   if(ABSENT_MARKS[key]) return 'absent';
   if(BIZ_MARKS[key]) return 'business';
@@ -1396,26 +1248,11 @@ function fmtHMS(hoursFloat){
   const h=Math.floor(totalSec/3600), m=Math.floor((totalSec%3600)/60), s=totalSec%60;
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
-/* 這天已核准、但不是整天的假單（例如早上請半天病假、下午才來上班） */
-function partialLeavesFor(id,date){
-  return LEAVE_REQUESTS.filter(r=>r.empId===id && r.date===date && r.status==='approved' && !isWholeDayLeaveRequest(r));
-}
-function isLate(inMs,id,date){
+function isLate(inMs){
   // 遲到 = 上班時間晚於彈性窗尾(08:30) + 緩衝分鐘
-  // 若當天早上有已核准的半天假，應到時間改成假單結束時間（剛好結束在午休就算到午休結束）
   const d=new Date(inMs);
   const mins=d.getHours()*60+d.getMinutes();
-  let due=shiftMin(FLEX_END);
-  if(id && date){
-    partialLeavesFor(id,date).forEach(r=>{
-      if(Number(r.startMin)<=shiftMin(FLEX_END)){
-        let end=Number(r.endMin);
-        if(end>=shiftMin(LUNCH_START) && end<shiftMin(LUNCH_END)) end=shiftMin(LUNCH_END);
-        due=Math.max(due,end);
-      }
-    });
-  }
-  return mins > due+GRACE_MINUTES;
+  return mins > shiftMin(FLEX_END)+GRACE_MINUTES;
 }
 /* 把實際上班時間鎖進彈性窗：早於 08:00 當 08:00，08:00–08:30 照實際，晚於 08:30 以實際為準 */
 function anchoredInMin(inMs){
@@ -1606,8 +1443,6 @@ function startListeners(){
     qs.forEach(d=>{ const r=d.data(); LEAVE_REQUESTS.push({ reqId:d.id, empId:r.uid, ...r }); });
     setDbState(t('db_ok'),'ok'); renderAll();
   }, err=>{ console.error('[requests]',err); setDbState(t('db_error'),'bad'); }));
-
-  rcStart();
 }
 document.getElementById('loginBtn').onclick=doLogin;
 document.getElementById('loginPw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
@@ -1634,7 +1469,6 @@ function renderAll(){
     safe(renderEmpAdmin,'employees');
     safe(renderAllRequests,'requests');
   }
-  if(!RC_EDITING) safe(renderReceipts,'receipts');   // 編輯中不重畫，免得輸入被洗掉
 }
 
 /* ============================================================
@@ -1656,8 +1490,6 @@ function collectDays(id){
   Object.keys(BIZ_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
   Object.keys(SICK_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
   Object.keys(ABSENT_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
-  // 已核准的假單（含半天假）就算當天沒打卡也要列出來，主控端才有「編輯」可以補打卡時間
-  LEAVE_REQUESTS.forEach(r=>{ if(r.empId===id && r.status==='approved' && r.date) keys.add(r.date); });
   return [...keys].sort().reverse();
 }
 function weekdayLabel(dateStr){ const d=new Date(dateStr+'T00:00:00'); return (LANG==='zh-Hant'?WEEKDAY:WEEKDAY_EN)[d.getDay()]; }
@@ -2129,17 +1961,10 @@ async function syncAttendanceForReq(r,status){
   const attKey=`${r.empId}_${r.date}`;
   const markKey=`${r.empId}|${r.date}`;
   if(status==='approved'){
-    if(isWholeDayLeaveRequest(r)){
-      const attStatus = r.type==='sick_doc' ? 'sick_doc' : 'leave';
-      await DB.collection('attendance').doc(attKey).set({
-        uid:r.empId, date:r.date, status:attStatus, inMs:null, outMs:null, fromReq:r.reqId
-      },{merge:true});
-    }else{
-      /* 半天假：不覆蓋既有或之後的上下班打卡時間，也不加整日休假狀態。 */
-      await DB.collection('attendance').doc(attKey).set({
-        uid:r.empId, date:r.date, status:null, fromReq:r.reqId
-      },{merge:true});
-    }
+    const attStatus = r.type==='sick_doc' ? 'sick_doc' : 'leave';
+    await DB.collection('attendance').doc(attKey).set({
+      uid:r.empId, date:r.date, status:attStatus, inMs:null, outMs:null, fromReq:r.reqId
+    },{merge:true});
   }else if(ATT_FROM_REQ[markKey]===r.reqId){
     await DB.collection('attendance').doc(attKey).set({
       status:null, fromReq:firebase.firestore.FieldValue.delete()
@@ -2226,7 +2051,7 @@ document.querySelectorAll('[data-etab]').forEach(tab=>{
   tab.onclick=()=>{
     document.querySelectorAll('[data-etab]').forEach(x=>x.classList.remove('active'));
     tab.classList.add('active');
-    ['clock','leave','receipt'].forEach(p=>{ document.getElementById('epanel-'+p).style.display=(p===tab.dataset.etab)?'block':'none'; });
+    ['clock','leave'].forEach(p=>{ document.getElementById('epanel-'+p).style.display=(p===tab.dataset.etab)?'block':'none'; });
   };
 });
 
@@ -2237,7 +2062,7 @@ document.querySelectorAll('[data-tab]').forEach(tab=>{
   tab.onclick=()=>{
     document.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('active'));
     tab.classList.add('active');
-    ['overview','monthly','daily','employees','leavereview','receipts'].forEach(p=>{
+    ['overview','monthly','daily','employees','leavereview'].forEach(p=>{
       document.getElementById('panel-'+p).style.display = (p===tab.dataset.tab)?'block':'none';
     });
     if(tab.dataset.tab==='leavereview') renderAllRequests();
@@ -2427,12 +2252,8 @@ function statusPillFor(id,date){
   if(st==='absent')   return `<span class="pill absent">${t('st_absent')}</span>`;
   if(st==='work' && !ATT[`${id}|${date}`] && holidayOf(date))
     return `<span class="pill holiday">${holidayShort(holidayOf(date))}</span>`;
-  // 半天假：在狀態旁加註假別與時段，例如「病假（有證明） 08:00–12:00」
-  const partial=partialLeavesFor(id,date).map(r=>
-    ` <span class="pill ${r.type==='sick_doc'?'sick':'leave'}">${typeLabel(r.type)} ${minToHHMM(r.startMin)}–${minToHHMM(r.endMin)}</span>`).join('');
-  if(st==='business') return `<span class="pill biz">${t('st_business')}</span>${partial}`;
-  if(rec && rec.inMs) return (isLate(rec.inMs,id,date)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`)+partial;
-  if(partial) return partial.trim();
+  if(st==='business') return `<span class="pill biz">${t('st_business')}</span>`;
+  if(rec && rec.inMs) return isLate(rec.inMs)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`;
   return `<span class="pill">${t('st_off')}</span>`;
 }
 
@@ -2461,7 +2282,7 @@ function renderDaily(){
         inTxt=fmtTime(rec.inMs);
         inState = st==='business'
           ? `<span class="pill biz">${t('st_business')}</span>`
-          : (isLate(rec.inMs,id,date)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`);
+          : (isLate(rec.inMs)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`);
         if(rec.outMs){ outTxt=fmtTime(rec.outMs); outState= st==='business'?`<span class="pill biz">${t('st_business')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`; hrs=fmtHMS(hoursBetween(rec.inMs,rec.outMs)); }
         else { outState=`<span class="pill">${t('st_pending')}</span>`; }
       }
@@ -2517,7 +2338,7 @@ function statusTextFor(id,date){
   const rec=ATT[`${id}|${date}`];
   if(!rec && h) return holidayShort(h);
   if(rec && rec.inMs && !rec.outMs) return t('st_missing');
-  if(rec && rec.inMs) return isLate(rec.inMs,id,date)?t('st_late'):t('st_normal');
+  if(rec && rec.inMs) return isLate(rec.inMs)?t('st_late'):t('st_normal');
   return t('st_off');
 }
 /* 這一天公司要不要支薪 */
@@ -2993,815 +2814,6 @@ window.deleteEmp=async (id)=>{
     alert(t('deleted_note'));
   }catch(err){ console.error('[deleteEmp]',err); alert(t('save_fail')); }
 };
-
-/* ============================================================
-   ★ 報帳收據上傳
-   檔案直接存在 Firestore（不需 Firebase Storage，也不用升級 Blaze）：
-   - receipts/{id}          收據資料：日期、廠商、金額、類別、經手人、狀態
-   - receiptFiles/{id}_{i}  檔案本體，base64 分段（Firestore 單一文件上限 1MB）
-   照片會先在手機上壓縮（長邊 1800px JPEG），一張約 200–500KB。
-   ============================================================ */
-// 會計科目（常用會計科目表）。收據的 category 欄位存科目代碼；舊資料的
-// transport/meals/... 仍可顯示，但會標「舊分類」提醒改成科目代碼。
-const RC_ACCOUNTS=[
-  ['業務費 62',[['620101','文具紙張'],['620202','郵電費'],['620401','水電費'],['620402','設施使用費'],
-    ['620404','書報費'],['620501','房屋租金'],['620503','設備租金'],['620601','稅捐'],['620701','汽車油料及充電費'],
-    ['620901','非消耗品'],['629601','保險費'],['629618','業務聯繫費'],['629623','勞務費'],['629670','國外臨時人員費'],
-    ['629699','其他業務費']]],
-  ['維護費 63',[['630201','車輛養護費'],['630601','設備及設施養護費']]],
-  ['旅運費 64',[['640201','國外旅費'],['640401','交通補助費']]],
-  ['人事費 60',[['600102','僱員薪俸'],['600502','僱員加班值班費'],['600602','當地職員工作獎金'],['600701','退休(退職)金'],
-    ['600801','撫卹及保險給付'],['600802','僱員撫卹及保險給付'],['600901','房租津貼'],['600902','午餐津貼'],['600919','其他津貼']]],
-];
-const RC_ACCT_NAME={}; RC_ACCOUNTS.forEach(([,list])=>list.forEach(([c,n])=>{ RC_ACCT_NAME[c]=n; }));
-const RC_LEGACY_CATS=['transport','meals','office','postage','entertain','misc'];
-function rcAcctLabel(c){
-  if(!c) return '';
-  if(RC_ACCT_NAME[c]) return `${c} ${RC_ACCT_NAME[c]}`;
-  if(RC_LEGACY_CATS.includes(c)) return `${t('rc_cat_'+c)}（${t('rc_legacy')}）`;
-  return c;
-}
-// 計畫編號：主控端自行建立的清單，存在 Firestore config/projects（只有主控端讀寫）
-let RC_PROJECTS=[];                // [{code, name}]
-function rcProjLabel(c){
-  if(!c) return '';
-  const p=RC_PROJECTS.find(x=>x.code===c);
-  return p&&p.name ? `${c} ${p.name}` : c;
-}
-function rcProjOptions(sel, allowNew){
-  const known=!sel || RC_PROJECTS.some(p=>p.code===sel);
-  return `<option value="">${t('rc_proj_none')}</option>`+
-    (known?'':`<option value="${rcEsc(sel)}" selected>${rcEsc(sel)}</option>`)+
-    RC_PROJECTS.map(p=>`<option value="${rcEsc(p.code)}" ${sel===p.code?'selected':''}>${rcEsc(rcProjLabel(p.code))}</option>`).join('')+
-    (allowNew?`<option value="__new">${t('rc_proj_add')}</option>`:'');
-}
-async function rcSaveProjects(items){
-  items=items.slice().sort((a,b)=>String(a.code).localeCompare(String(b.code)));
-  await DB.collection('config').doc('projects').set({ items, updatedBy:CURRENT.id,
-    updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
-  RC_PROJECTS=items;
-}
-// 把某個計畫編號的收據全部改成另一個（改名＝新編號，刪除＝空白）
-async function rcRelabelReceipts(from, to){
-  const ids=RECEIPTS.filter(r=>r.project===from).map(r=>r.id);
-  for(let i=0;i<ids.length;i+=400){
-    const batch=DB.batch();
-    ids.slice(i,i+400).forEach(id=>batch.update(DB.collection('receipts').doc(id),{ project: to }));
-    await batch.commit();
-  }
-  return ids.length;
-}
-function rcRenderProjMgr(force){
-  const body=$id('rcProjMgrBody'); if(!body) return;
-  const count=c=>RECEIPTS.filter(r=>r.project===c).length;
-  if(!force && body.contains(document.activeElement)){            // 正在輸入時不重畫，免得字被洗掉；只更新張數
-    body.querySelectorAll('.rc-pm-count[data-i]').forEach(td=>{
-      const p=RC_PROJECTS[+td.dataset.i]; if(p) td.textContent=`${count(p.code)} ${t('rc_sum_unit')}`; });
-    return;
-  }
-  const rows=RC_PROJECTS.map((p,i)=>`<tr>
-      <td><input id="rcPmCode${i}" value="${rcEsc(p.code)}"></td>
-      <td><input id="rcPmName${i}" value="${rcEsc(p.name||'')}" placeholder="${rcEsc(t('rc_pm_name'))}"></td>
-      <td class="rc-pm-count" data-i="${i}">${count(p.code)} ${t('rc_sum_unit')}</td>
-      <td><div class="rc-actions">
-        <button class="btn-mini" onclick="rcPmSave(${i})">${t('rc_save')}</button>
-        <button class="btn-mini danger" onclick="rcPmDelete(${i})">${t('rc_delete')}</button></div></td></tr>`).join('');
-  // 收據上有、清單裡沒有的編號（例如舊資料），列出來方便補進清單
-  const orphans=[...new Set(RECEIPTS.map(r=>r.project).filter(c=>c && !RC_PROJECTS.some(p=>p.code===c)))];
-  body.innerHTML=`<table class="rc-pm-table">
-      <thead><tr><th>${t('rc_proj')}</th><th>${t('rc_pm_name')}</th><th>${t('rc_pm_used')}</th><th></th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="4" style="color:#8a94a0">${t('rc_pm_empty')}</td></tr>`}
-      <tr class="rc-pm-new">
-        <td><input id="rcPmNewCode" placeholder="${rcEsc(t('rc_pm_newcode'))}"></td>
-        <td><input id="rcPmNewName" placeholder="${rcEsc(t('rc_pm_name'))}"></td>
-        <td></td>
-        <td><button class="btn-mini" onclick="rcPmAdd()">＋ ${t('rc_pm_add')}</button></td></tr>
-      </tbody></table>
-    ${orphans.length?`<p class="hint">${t('rc_pm_orphans')}${orphans.map(c=>`<b>${rcEsc(c)}</b>（${count(c)} ${t('rc_sum_unit')}）`).join('、')}</p>`:''}
-    <div class="msg" id="rcPmMsg"></div>`;
-}
-function rcPmMsg(text, ok){ const m=$id('rcPmMsg'); if(m){ m.className='msg'+(ok?'':' err'); m.textContent=text; } }
-window.rcPmAdd=async ()=>{
-  const code=$id('rcPmNewCode').value.trim(), name=$id('rcPmNewName').value.trim();
-  if(!code){ rcPmMsg(t('rc_pm_needcode')); return; }
-  if(RC_PROJECTS.some(p=>p.code===code)){ rcPmMsg(t('rc_pm_dup')); return; }
-  try{ await rcSaveProjects([...RC_PROJECTS,{code,name}]); rcRenderProjMgr(true); renderReceipts(); rcPmMsg('✓ '+code, true); }
-  catch(err){ console.error('[pm add]',err); rcPmMsg(t('rc_ai_rules')); }
-};
-window.rcPmSave=async i=>{
-  const old=RC_PROJECTS[i]; if(!old) return;
-  const code=$id('rcPmCode'+i).value.trim(), name=$id('rcPmName'+i).value.trim();
-  if(!code){ rcPmMsg(t('rc_pm_needcode')); return; }
-  if(code!==old.code && RC_PROJECTS.some(p=>p.code===code)){ rcPmMsg(t('rc_pm_dup')); return; }
-  const n=RECEIPTS.filter(r=>r.project===old.code).length;
-  if(code!==old.code && n && !confirm(t('rc_pm_rename_confirm').replace('{n}',n).replace('{a}',old.code).replace('{b}',code))) return;
-  try{
-    await rcSaveProjects(RC_PROJECTS.map((p,j)=>j===i?{code,name}:p));
-    const moved = code!==old.code ? await rcRelabelReceipts(old.code, code) : 0;
-    rcRenderProjMgr(true); renderReceipts();
-    rcPmMsg('✓ '+code+(moved?`（${moved} ${t('rc_sum_unit')}）`:''), true);
-  }catch(err){ console.error('[pm save]',err); rcPmMsg(t('save_fail')); }
-};
-window.rcPmDelete=async i=>{
-  const p=RC_PROJECTS[i]; if(!p) return;
-  const n=RECEIPTS.filter(r=>r.project===p.code).length;
-  const q = n ? t('rc_pm_del_used').replace('{n}',n).replace('{a}',p.code) : t('rc_pm_del').replace('{a}',p.code);
-  if(!confirm(q)) return;
-  try{
-    if(n) await rcRelabelReceipts(p.code,'');
-    await rcSaveProjects(RC_PROJECTS.filter((_,j)=>j!==i));
-    rcRenderProjMgr(true); renderReceipts(); rcPmMsg('✓', true);
-  }catch(err){ console.error('[pm delete]',err); rcPmMsg(t('save_fail')); }
-};
-async function rcLoadProjects(){
-  try{
-    const s=await DB.collection('config').doc('projects').get();
-    RC_PROJECTS=((s.exists&&s.data().items)||[]).filter(p=>p&&p.code).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
-  }catch(err){ console.warn('[projects]',err); }
-  renderReceipts();
-}
-function rcAcctOptions(sel){
-  const known = !sel || RC_ACCT_NAME[sel];
-  return `<option value="">${t('rc_acct_none')}</option>` +
-    (known ? '' : `<option value="${rcEsc(sel)}" selected>${rcEsc(rcAcctLabel(sel))}</option>`) +
-    RC_ACCOUNTS.map(([g,list])=>`<optgroup label="${rcEsc(g)}">`+
-      list.map(([c,n])=>`<option value="${c}" ${sel===c?'selected':''}>${c} ${rcEsc(n)}</option>`).join('')+'</optgroup>').join('');
-}
-const RC_CURS=['TRY','USD','EUR','TWD'];
-const RC_CHUNK=700000;              // 每段字元數
-const RC_MAX_PDF=5*1024*1024;       // PDF 上限 5MB
-const RC_IMG_MAX=1800;              // 照片長邊上限（px）
-let RECEIPTS=[];
-let RC_EDITING=null;                // 正在編輯的收據 id
-let RC_FORM_ROLE=null;              // 目前畫好的上傳表單是給哪個角色
-const RC_PENDING={};                // 每個表單已選、尚未上傳的檔案
-const RC_DATE_TOUCHED={};           // 主控端有沒有手動改過收據日期（沒改＝讓 AI 填）
-
-const $id=id=>document.getElementById(id);
-function rcEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function rcIsAdmin(){ return CURRENT && CURRENT.role==='admin'; }
-function rcName(uid){ const e=EMPLOYEES[uid]; return (e&&e.name)||uid; }
-// 報帳月份：這張收據算在哪個月的帳（10 月繳的 9 月帳單算 10 月）。
-// 預設＝上傳的月份；主控端可在「編輯」裡改。舊資料沒有這欄，就用上傳時間推算。
-function rcClaimMonth(r){
-  if(r.claimMonth) return r.claimMonth;
-  const sec=r.createdAt && (r.createdAt.seconds||r.createdAt._seconds);
-  if(sec) return ymd(new Date(sec*1000)).slice(0,7);
-  return (r.date||'').slice(0,7);
-}
-function rcIncomplete(r){ return !r.vendor || r.amount==null || r.amount===''; }
-function rcAmountText(r){
-  if(r.amount==null||r.amount==='') return '';
-  return Number(r.amount).toLocaleString(LANG==='zh-Hant'?'zh-TW':'en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+(r.currency||'');
-}
-function rcSlug(s){
-  return String(s||'').trim().replace(/[\\/:*?"<>|#%&{}$!'@+`=\s.,;]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,40);
-}
-// 檔名：日期-科目代碼-科目名稱-金額幣別，例如 20261001-620101-文具紙張-1850.00TRY.jpg
-// 還沒選科目＝「未分類」，沒有金額＝「無金額」。同名檔案在 ZIP 裡會自動加 _2、_3。
-// 備份 repo 的 backup_receipts.py 用同一套規則，兩邊要一起改。
-function rcFileName(r){
-  const d=(r.date||'').replace(/-/g,'')||'nodate';
-  const acct=RC_ACCT_NAME[r.category] ? `${r.category}-${RC_ACCT_NAME[r.category]}` : '未分類';
-  const a=(r.amount!=null&&r.amount!=='')? Number(r.amount).toFixed(2)+(r.currency||'') : '無金額';
-  const ext=r.mime==='application/pdf'?'pdf':'jpg';
-  return `${d}-${acct}-${a}.${ext}`;
-}
-
-/* ---- 上傳表單 ---- */
-function rcFormHtml(p){
-  const L=k=>`data-i18n="${k}">${t(k)}`;
-  return `
-    <div class="rc-pick">
-      <label class="rc-btn"><input class="rc-file-input" type="file" accept="image/*" capture="environment" id="${p}Cam"><span ${L('rc_take_photo')}</span></label>
-      <label class="rc-btn alt"><input class="rc-file-input" type="file" accept="image/*,application/pdf,.pdf" multiple id="${p}Files"><span ${L('rc_choose_files')}</span></label>
-    </div>
-    <div class="rc-previews" id="${p}Prev"></div>
-    <p class="hint" ${L('rc_simple_hint')}</p>
-    <button class="btn-primary" id="${p}Submit" ${L('rc_submit')}</button>
-    <div class="msg" id="${p}Msg"></div>`;
-}
-function rcInitForm(){
-  if(!CURRENT || RC_FORM_ROLE===CURRENT.id) return;
-  RC_FORM_ROLE=CURRENT.id;
-  const p = rcIsAdmin() ? 'rcA' : 'rcE';
-  const box = $id(rcIsAdmin() ? 'rcFormAdmin' : 'rcFormEmp');
-  ['rcFormAdmin','rcFormEmp'].forEach(id=>{ const el=$id(id); if(el) el.innerHTML=''; });
-  box.innerHTML = rcFormHtml(p);
-  RC_PENDING[p]=[];
-  if($id(p+'Date')) $id(p+'Date').value = ymd(new Date());
-  const add = input => { [...(input.files||[])].forEach(f=>RC_PENDING[p].push(f)); input.value=''; rcRenderPrev(p); };
-  RC_DATE_TOUCHED[p]=false;
-  if($id(p+'Date')) $id(p+'Date').oninput=()=>{ RC_DATE_TOUCHED[p]=true; };
-  $id(p+'Cam').onchange   = e=>add(e.target);
-  $id(p+'Files').onchange = e=>add(e.target);
-  $id(p+'Submit').onclick = ()=>rcSubmit(p);
-  rcRenderPrev(p);
-  if(rcIsAdmin()) rcInitFilters();
-}
-function rcIsPdf(f){ return f.type==='application/pdf' || /\.pdf$/i.test(f.name||''); }
-function rcRenderPrev(p){
-  const box=$id(p+'Prev'); if(!box) return;
-  box.querySelectorAll('img').forEach(img=>URL.revokeObjectURL(img.src));
-  box.innerHTML = RC_PENDING[p].map((f,i)=>`
-    <div class="rc-thumb">${rcIsPdf(f) ? '📄<br>'+rcEsc(f.name) : `<img src="${URL.createObjectURL(f)}" alt="">`}
-      <button type="button" onclick="rcRemovePending('${p}',${i})">×</button></div>`).join('');
-  // 多張時，廠商、金額要之後逐筆補
-  const multi = RC_PENDING[p].length>1;
-  [$id(p+'Vendor'),$id(p+'Amount')].forEach(el=>{ if(el){ el.disabled=multi; if(multi) el.value=''; } });
-}
-window.rcRemovePending=(p,i)=>{ RC_PENDING[p].splice(i,1); rcRenderPrev(p); };
-
-function rcReadDataUrl(file){
-  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsDataURL(file); });
-}
-async function rcPrepare(file){
-  if(rcIsPdf(file)){
-    if(file.size>RC_MAX_PDF){ const e=new Error('too_big'); e.code='too_big'; throw e; }
-    const data=await rcReadDataUrl(file);
-    return { mime:'application/pdf', data:data.replace(/^data:[^;]*;/,'data:application/pdf;') };
-  }
-  const url=URL.createObjectURL(file);
-  try{
-    const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(Object.assign(new Error('bad_image'),{code:'bad_image'})); i.src=url; });
-    const scale=Math.min(1, RC_IMG_MAX/Math.max(img.naturalWidth,img.naturalHeight));
-    const c=document.createElement('canvas');
-    c.width=Math.round(img.naturalWidth*scale); c.height=Math.round(img.naturalHeight*scale);
-    const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
-    ctx.drawImage(img,0,0,c.width,c.height);
-    let q=0.8, data=c.toDataURL('image/jpeg',q);
-    while(data.length>1400000 && q>0.45){ q-=0.1; data=c.toDataURL('image/jpeg',q); }
-    return { mime:'image/jpeg', data };
-  } finally { URL.revokeObjectURL(url); }
-}
-async function rcUploadOne(file, meta){
-  const { mime, data } = await rcPrepare(file);
-  const ref=DB.collection('receipts').doc();
-  const chunks=[];
-  for(let i=0;i<data.length;i+=RC_CHUNK) chunks.push(data.slice(i,i+RC_CHUNK));
-  for(let i=0;i<chunks.length;i++){
-    await DB.collection('receiptFiles').doc(`${ref.id}_${i}`).set({ uid:CURRENT.id, receiptId:ref.id, i, data:chunks[i] });
-  }
-  // 資料最後寫，清單上就不會出現檔案還沒傳完的收據
-  await ref.set({ ...meta, uid:CURRENT.id, mime, size:data.length, chunks:chunks.length,
-    origName:file.name||'', status:'submitted', createdAt:firebase.firestore.FieldValue.serverTimestamp() });
-}
-async function rcSubmit(p){
-  const msg=$id(p+'Msg'), btn=$id(p+'Submit');
-  const files=RC_PENDING[p]||[];
-  msg.className='msg err';
-  if(!files.length){ msg.textContent=t('rc_need_file'); return; }
-  const multi=files.length>1;
-  const v=k=>{ const el=$id(p+k); return el ? el.value : ''; };
-  const amt=v('Amount');
-  const meta={
-    date: v('Date') || ymd(new Date()),
-    claimMonth: ymd(new Date()).slice(0,7),
-    vendor: multi ? '' : v('Vendor').trim(),
-    amount: (multi||amt==='') ? null : Number(amt),
-    currency: v('Cur') || 'TRY',
-    category: v('Cat'),
-    note: v('Note').trim(),
-    dateSource: RC_DATE_TOUCHED[p] ? 'manual' : 'upload'   // upload＝系統預設今天，AI 可以換成收據上的日期
-  };
-  btn.disabled=true;
-  let done=0;
-  RC_DATE_TOUCHED[p]=false;
-  try{
-    for(const f of files){
-      msg.className='msg'; msg.textContent=`${t('rc_uploading')} ${done+1}/${files.length}`;
-      try{ await rcUploadOne(f, meta); }
-      catch(err){
-        console.error('[receipt upload]',err);
-        msg.className='msg err';
-        msg.textContent = err.code==='too_big' ? t('rc_too_big')+f.name
-                        : err.code==='bad_image' ? t('rc_bad_image')+f.name
-                        : t('rc_fail');
-        RC_PENDING[p]=files.slice(done); rcRenderPrev(p);
-        return;
-      }
-      done++;
-    }
-    msg.className='msg'; msg.textContent=`✓ ${t('rc_done')} ${done}`;
-    RC_PENDING[p]=[]; rcRenderPrev(p);
-    ['Vendor','Amount','Note'].forEach(k=>{ const el=$id(p+k); if(el) el.value=''; });
-  } finally { btn.disabled=false; }
-}
-
-/* ---- 即時同步 ---- */
-function rcStart(){
-  rcInitForm();
-  const q = rcIsAdmin() ? DB.collection('receipts') : DB.collection('receipts').where('uid','==',CURRENT.id);
-  UNSUBS.push(q.onSnapshot(qs=>{
-    const list=[]; qs.forEach(d=>list.push({ id:d.id, ...d.data() }));
-    list.sort((a,b)=> (b.date||'').localeCompare(a.date||'') || ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0));
-    RECEIPTS=list;
-    if(!RC_EDITING) safe(renderReceipts,'receipts');
-    if(rcIsAdmin()) rcAiKick();
-  }, err=>{ console.error('[receipts]',err); }));
-  if(rcIsAdmin()){ rcAiLoadKey(); rcLoadProjects(); }
-}
-
-/* ============================================================
-   ★ AI 自動辨識（在主控端的瀏覽器裡執行，打開「報帳收據」就會處理新收據）
-   Gemini 金鑰存在 Firestore config/ai，規則只允許主控端讀寫，
-   不會出現在網頁原始碼裡。AI 只讀日期、廠商、金額、幣別、稅號、單據號碼，
-   不分類（會計科目由主控端在清單上選）。只填空白欄位，人工填過的不覆蓋。
-   ============================================================ */
-const RC_AI_MODELS=['gemini-3.5-flash','gemini-3.1-flash-lite','gemini-2.5-flash-lite'];
-const RC_AI_BASE='https://generativelanguage.googleapis.com/v1beta/models';
-const RC_AI_MAX_TRIES=3;
-let RC_AI_KEY=null, RC_AI_KEY_LOADED=false, RC_AI_BUSY=false, RC_AI_MSG='', RC_AI_ERR='';
-// 本中心抬頭：稅號（最可靠）＋名稱關鍵字（任一個出現在買方名稱裡就算本中心）
-const RC_BUYER_DEFAULT_NAMES=['Taiwan Trade Center','TAITRA','Tayvan Ticaret','Taipei Economic','Taipei İktisadi'];
-const RC_BUYER_DEFAULT_VKN='3850007522';   // 本中心稅號（Maslak V.D. 385 000 7522）
-let RC_BUYER={ vkn:RC_BUYER_DEFAULT_VKN, names:RC_BUYER_DEFAULT_NAMES.slice() };
-function rcNorm(s){ return String(s||'').toLocaleLowerCase('tr').replace(/[^0-9a-zçğıöşüâîû\u4e00-\u9fff]/g,''); }
-function rcBuyerCheck(r){
-  // 每次畫面重畫時即時比對（改了本中心稅號／名稱設定，舊收據會跟著更新）
-  if(!r.buyerRead) return null;                                   // 還沒讀過抬頭
-  const name=r.buyerName||'', tax=String(r.buyerTaxId||'').replace(/\D/g,'');
-  if(!name && !tax) return 'none';
-  const vkn=String(RC_BUYER.vkn||'').replace(/\D/g,'');
-  if(vkn && tax && tax===vkn) return 'ours';
-  const n=rcNorm(name);
-  if(n && (RC_BUYER.names||[]).some(k=>rcNorm(k) && n.includes(rcNorm(k)))) return 'ours';
-  return 'other';
-}
-function rcBuyerHtml(r, waiting){
-  const c=rcBuyerCheck(r);
-  if(c==null) return waiting?`<span class="pill rc-ocr">🤖</span>`:'';
-  const who=[r.buyerName, r.buyerTaxId?('VKN '+r.buyerTaxId):''].filter(Boolean).join(' · ');
-  if(c==='ours')  return `<span class="pill approved" title="${rcEsc(who)}">✓ ${t('rc_buyer_ours')}</span>`;
-  if(c==='none')  return `<span class="pill rc-buyer-none" title="${rcEsc(t('rc_buyer_none_tip'))}">— ${t('rc_buyer_none')}</span>`;
-  return `<span class="pill rc-buyer-bad" title="${rcEsc(who)}">⚠ ${t('rc_buyer_other')}</span><div class="rc-buyer-name">${rcEsc(r.buyerName||('VKN '+r.buyerTaxId))}</div>`;
-}
-const RC_AI_DONE=new Set();      // 本次開頁已處理過的收據，避免快照延遲時重複送出
-const RC_AI_PROMPT=`You read expense receipts for a Taiwanese government trade office in Istanbul, Türkiye.
-Most documents are Turkish (fiş / ÖKC receipt, e-Arşiv fatura, e-Fatura, taxi or BiTaksi receipt, bank slip);
-some are English or Chinese. Extract the fields below. Report only what is printed; never guess — use null.
-
-A document has two parties. The SELLER issued it; the BUYER is the customer it is addressed to.
-When a buyer is printed it is usually our office, so the vendor is normally the other party.
-
-vendor — the SELLER / issuer:
-  • on a till receipt (fiş): the business name printed at the very top, above the address and "V.D." line;
-  • on an e-Arşiv / e-Fatura: the issuing company (often top-left, with its own VKN), not the "SAYIN" / customer block;
-  • a short trade name a person would recognise ("Migros", "BiTaksi", "PTT", "Kahve Dünyası"); if only a legal
-    title is printed ("ABC KIRTASİYE SANAYİ VE TİCARET LTD. ŞTİ."), shorten it ("ABC Kırtasiye");
-  • keep Turkish letters (ş, ğ, ı, İ, ö, ü, ç).
-buyer_name — the BUYER exactly as printed (full title, do not shorten): the "SAYIN" / "ALICI" / "Müşteri" /
-  customer "Unvan" block of an invoice, or a customer name printed on a receipt. null if no buyer is printed
-  (normal for simple till receipts).
-buyer_tax_id — the buyer's VKN or TCKN, digits only, if printed.
-date — issue date as YYYY-MM-DD (Turkish dates are DD.MM.YYYY or DD/MM/YYYY).
-amount — the final total actually paid, tax included (TOPLAM / GENEL TOPLAM / ÖDENECEK TUTAR / TUTAR),
-  as a number with a dot decimal ("1.234,50" means 1234.50).
-currency — TRY for TL / ₺ / TRY; otherwise USD, EUR or TWD; null if unclear.
-tax_id — the SELLER's VKN or TCKN if printed. invoice_no — fiş no / fatura no if printed.
-is_receipt — false if this is not a receipt or invoice at all.
-confidence — 0 to 1, how sure you are about vendor, amount and date together.
-
-Return JSON only:
-{"is_receipt":bool,"vendor":str|null,"buyer_name":str|null,"buyer_tax_id":str|null,"date":str|null,
- "amount":number|null,"currency":str|null,"tax_id":str|null,"invoice_no":str|null,"confidence":number,"note":str|null}`;
-
-function rcAiNeeds(r){
-  // 需要 AI 的收據：還沒辨識過（或要求重新辨識），且廠商／金額有空白，
-  // 或日期仍是「上傳當天」的系統預設值（已確認的收據就不動日期）。
-  if((r.ocrTries||0)>=RC_AI_MAX_TRIES) return false;
-  if(!r.buyerRead && r.ocrStatus!=='failed') return true;          // 每張都要讀一次抬頭（含已辨識、已確認的）
-  if(r.ocrStatus && r.ocrStatus!=='pending') return false;
-  const dateIsDefault = r.status!=='verified' && (r.dateSource||'upload')==='upload';
-  return rcIncomplete(r) || dateIsDefault;
-}
-async function rcAiLoadKey(){
-  try{
-    const s=await DB.collection('config').doc('ai').get(); const d=s.exists?s.data():{};
-    RC_AI_KEY=d.geminiKey||null; RC_AI_ERR='';
-    RC_BUYER={ vkn:d.buyerVkn||RC_BUYER_DEFAULT_VKN, names:(Array.isArray(d.buyerNames)&&d.buyerNames.length)?d.buyerNames:RC_BUYER_DEFAULT_NAMES.slice() };
-  }
-  catch(err){ console.warn('[ai key]',err); RC_AI_KEY=null; RC_AI_ERR=t('rc_ai_rules'); }
-  RC_AI_KEY_LOADED=true;
-  rcAiRenderBar(); renderReceipts(); rcAiKick();
-}
-function rcAiRenderBar(){
-  const bar=$id('rcAiBar'); if(!bar) return;
-  if(!RC_AI_KEY_LOADED){ bar.innerHTML=`🤖 …`; return; }
-  if(RC_AI_ERR && !RC_AI_KEY){ bar.innerHTML=`🤖 <span style="color:var(--bad)">${rcEsc(RC_AI_ERR)}</span>`; return; }
-  if(!RC_AI_KEY){
-    bar.innerHTML=`🤖 ${t('rc_ai_off')} <button class="btn-mini" onclick="rcAiSetKey()">${t('rc_ai_setkey')}</button>`;
-    return;
-  }
-  const waiting=RECEIPTS.filter(r=>rcAiNeeds(r)).length;
-  bar.innerHTML=`🤖 <b>${t('rc_ai_on')}</b> · ${RC_AI_BUSY?rcEsc(RC_AI_MSG):(waiting?`${t('rc_ai_waiting')} ${waiting}`:t('rc_ai_idle'))}`+
-    (RC_AI_ERR?` · <span style="color:var(--bad)">${rcEsc(RC_AI_ERR)}</span>`:'')+
-    ` · ${t('rc_buyer_cfg')}：${RC_BUYER.vkn?('VKN '+rcEsc(RC_BUYER.vkn)):`<span style="color:var(--warn)">${t('rc_buyer_novkn')}</span>`}`+
-    ` <button class="btn-mini" onclick="rcSetBuyer()">${t('rc_buyer_set')}</button>`+
-    ` <button class="btn-mini" onclick="rcAiSetKey()">${t('rc_ai_changekey')}</button>`;
-}
-window.rcAiSetKey=async ()=>{
-  const k=prompt(t('rc_ai_prompt_key'));
-  if(k==null) return;
-  try{
-    if(k.trim()) await DB.collection('config').doc('ai').set({ geminiKey:k.trim(), updatedBy:CURRENT.id,
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
-    else await DB.collection('config').doc('ai').delete();
-    RC_AI_DONE.clear(); await rcAiLoadKey();
-  }catch(err){ console.error('[ai key save]',err); alert(t('rc_ai_rules')); }
-};
-window.rcSetBuyer=async ()=>{
-  const vkn=prompt(t('rc_buyer_prompt_vkn'), RC_BUYER.vkn||'');
-  if(vkn==null) return;
-  const names=prompt(t('rc_buyer_prompt_names'), (RC_BUYER.names||[]).join(', '));
-  if(names==null) return;
-  const list=names.split(/[,，\n]/).map(s=>s.trim()).filter(Boolean);
-  try{
-    await DB.collection('config').doc('ai').set({ buyerVkn:vkn.replace(/\D/g,''), buyerNames:list,
-      updatedBy:CURRENT.id, updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
-    await rcAiLoadKey();
-  }catch(err){ console.error('[buyer cfg]',err); alert(t('rc_ai_rules')); }
-};
-function rcAiKick(){
-  if(!RC_AI_KEY || RC_AI_BUSY) return;
-  const todo=RECEIPTS.filter(r=>rcAiNeeds(r) && !RC_AI_DONE.has(r.id));
-  if(todo.length) rcAiRun(todo,false);
-}
-async function rcAiDataUrl(r){
-  const snaps=await Promise.all(Array.from({length:r.chunks||1},(_,i)=>DB.collection('receiptFiles').doc(`${r.id}_${i}`).get()));
-  if(snaps.some(s=>!s.exists)) throw new Error('missing file part');
-  return snaps.map(s=>s.data().data).join('');
-}
-async function rcAiCall(mime,b64){
-  const body={ contents:[{ parts:[{ inline_data:{ mime_type:mime, data:b64 } },{ text:RC_AI_PROMPT }] }],
-    generationConfig:{ responseMimeType:'application/json', temperature:0 } };
-  let last='';
-  for(const model of RC_AI_MODELS){
-    for(let attempt=1; attempt<=2; attempt++){
-      let res;
-      try{
-        res=await fetch(`${RC_AI_BASE}/${model}:generateContent?key=${encodeURIComponent(RC_AI_KEY)}`,
-          { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-      }catch(e){ last=`${model}: network`; continue; }
-      if(res.status===404 || res.status===429){ last=`${model}: HTTP ${res.status}`; break; }   // 換下一個模型
-      if(res.status===400 || res.status===401 || res.status===403){
-        const txt=await res.text();
-        if(/API key|API_KEY|PERMISSION_DENIED|not valid/i.test(txt)){ const e=new Error('bad key'); e.badKey=true; throw e; }
-        last=`${model}: HTTP ${res.status}`; break;
-      }
-      if(!res.ok){ last=`${model}: HTTP ${res.status}`; await new Promise(r=>setTimeout(r,1500*attempt)); continue; }
-      try{
-        const j=await res.json();
-        const text=j.candidates[0].content.parts[0].text.trim().replace(/^```(?:json)?\s*|\s*```$/g,'');
-        return { res:JSON.parse(text), model };
-      }catch(e){ last=`${model}: bad response`; }
-    }
-  }
-  throw new Error(last||'no response');
-}
-function rcAiClean(res){
-  const out={};
-  const d=res.date;
-  if(typeof d==='string' && /^\d{4}-\d{2}-\d{2}$/.test(d)){
-    const day=new Date(d+'T00:00:00'), max=new Date(); max.setDate(max.getDate()+1);
-    if(!isNaN(day) && day>=new Date('2020-01-01T00:00:00') && day<=max) out.date=d;
-  }
-  if(typeof res.vendor==='string' && res.vendor.trim()) out.vendor=res.vendor.trim().slice(0,60);
-  if(typeof res.amount==='number' && res.amount>0 && res.amount<1e7) out.amount=Math.round(res.amount*100)/100;
-  if(RC_CURS.includes(res.currency)) out.currency=res.currency;
-  ['tax_id','invoice_no'].forEach(k=>{ if(typeof res[k]==='string' && res[k].trim()) out[k]=res[k].trim().slice(0,40); });
-  out.buyerName = (typeof res.buyer_name==='string' && res.buyer_name.trim()) ? res.buyer_name.trim().slice(0,120) : '';
-  out.buyerTaxId = (res.buyer_tax_id!=null) ? String(res.buyer_tax_id).replace(/\D/g,'').slice(0,11) : '';
-  return out;
-}
-function rcAiPlan(r,got){
-  const patch={}, filled=[];
-  if(got.date && r.status!=='verified' && (r.dateSource||'upload')==='upload'){
-    if(got.date!==r.date) patch.date=got.date;
-    patch.dateSource='ai'; filled.push('date');
-  }
-  if(got.vendor && !r.vendor){ patch.vendor=got.vendor; filled.push('vendor'); }
-  if(got.amount!=null && (r.amount==null || r.amount==='')){
-    patch.amount=got.amount; filled.push('amount');
-    if(got.currency){ patch.currency=got.currency; filled.push('currency'); }
-  }
-  ['tax_id','invoice_no'].forEach(k=>{ if(got[k] && !r[k]) patch[k]=got[k]; });
-  // 抬頭：人工改過（buyerSource=manual）就不覆蓋
-  if(r.buyerSource!=='manual'){ patch.buyerName=got.buyerName; patch.buyerTaxId=got.buyerTaxId; patch.buyerSource='ai'; }
-  patch.buyerRead=true;
-  return { patch, filled };
-}
-async function rcAiRun(list, manual){
-  if(!RC_AI_KEY){ return; }
-  if(RC_AI_BUSY){ if(manual) alert(t('rc_ai_busy')); return; }
-  RC_AI_BUSY=true; RC_AI_ERR='';
-  try{
-    for(let i=0;i<list.length;i++){
-      const r0=list[i]; RC_AI_DONE.add(r0.id);
-      const r=rcFind(r0.id)||r0;
-      RC_AI_MSG=`${t('rc_ocr_wait')} ${i+1}/${list.length}`; rcAiRenderBar();
-      const ref=DB.collection('receipts').doc(r.id);
-      try{
-        const dataUrl=await rcAiDataUrl(r);
-        const m=dataUrl.match(/^data:([^;]+);base64,([\s\S]*)$/);
-        if(!m) throw new Error('bad file');
-        const { res, model }=await rcAiCall(m[1], m[2]);
-        const got=rcAiClean(res);
-        const conf=typeof res.confidence==='number'?res.confidence:null;
-        let patch={}, filled=[], status;
-        if(res.is_receipt===false){ status='unreadable'; patch={ buyerRead:true, buyerName:'', buyerTaxId:'' }; }
-        else { ({patch,filled}=rcAiPlan(r,got)); status=(got.vendor||got.amount!=null||r.vendor||r.amount!=null)?'done':'unreadable'; }
-        const raw={}; ['vendor','buyer_name','buyer_tax_id','date','amount','currency','tax_id','invoice_no','note'].forEach(k=>{ raw[k]=res[k]??null; });
-        await ref.update({ ...patch, ocrStatus:status, ocrTries:0, ocrError:firebase.firestore.FieldValue.delete(),
-          ocr:{ model, confidence:conf, raw, at:firebase.firestore.FieldValue.serverTimestamp() },
-          aiFilled:[...new Set([...(r.aiFilled||[]), ...filled])] });
-      }catch(err){
-        if(err.badKey){ RC_AI_ERR=t('rc_ai_badkey'); RC_AI_DONE.delete(r.id); break; }
-        console.error('[ai]',r.id,err);
-        const tries=(r.ocrTries||0)+1;
-        try{ await ref.update({ ocrTries:tries, ocrStatus: tries>=RC_AI_MAX_TRIES?'failed':'pending', ocrError:String(err.message||err).slice(0,200) }); }catch(e){}
-        if(tries<RC_AI_MAX_TRIES) RC_AI_DONE.delete(r.id);   // 下次開頁再試
-      }
-    }
-  } finally {
-    RC_AI_BUSY=false; RC_AI_MSG=''; rcAiRenderBar();
-  }
-}
-
-/* ---- 清單 ---- */
-function rcInitFilters(){
-  $id('rcFMonth').value=currentYm();
-  ['rcFMonth','rcFEmp','rcFStatus','rcFAcct','rcFProj'].forEach(id=>{ $id(id).onchange=()=>renderReceipts(); });
-  $id('rcZipBtn').onclick=rcZip;
-  $id('rcCsvBtn').onclick=()=>rcDownloadBlob(new Blob(['﻿'+rcCsv(rcFiltered())],{type:'text/csv;charset=utf-8;'}), `receipts_${$id('rcFMonth').value||'all'}.csv`);
-}
-function rcFiltered(){
-  if(!rcIsAdmin()) return RECEIPTS;
-  const ym=$id('rcFMonth').value, who=$id('rcFEmp').value, st=$id('rcFStatus').value, ac=$id('rcFAcct').value||'all', pj=$id('rcFProj').value||'all';
-  return RECEIPTS.filter(r=>
-    (!ym || rcClaimMonth(r)===ym) &&
-    (!who || who==='all' || r.uid===who) &&
-    (st==='all' || (st==='incomplete' ? rcIncomplete(r) : st==='buyer' ? ['other','none'].includes(rcBuyerCheck(r)) : r.status===st)) &&
-    (ac==='all' || (ac==='none' ? !RC_ACCT_NAME[r.category] : r.category===ac)) &&
-    (pj==='all' || (pj==='none' ? !r.project : r.project===pj)));
-}
-function rcRowHtmlSimple(r){
-  const pill = r.status==='verified' ? `<span class="pill approved">${t('rc_st_verified')}</span>` : `<span class="pill pending">${t('rc_st_submitted')}</span>`;
-  const icon = r.mime==='application/pdf' ? '📄 ' : '🧾 ';
-  return `<tr><td style="white-space:nowrap">${rcEsc(r.date)}</td><td>${pill}</td>
-    <td><div class="rc-actions">
-      <button class="btn-mini" onclick="rcView('${r.id}')">${icon}${t('rc_view')}</button>
-      ${r.status!=='verified'?`<button class="btn-mini danger" onclick="rcDelete('${r.id}')">${t('rc_delete')}</button>`:''}
-    </div></td></tr>`;
-}
-function rcRowHtml(r, admin){
-  const canEdit = admin || (r.uid===CURRENT.id && r.status!=='verified');
-  if(RC_EDITING===r.id && canEdit){
-    const curs=RC_CURS.map(c=>`<option ${r.currency===c?'selected':''}>${c}</option>`).join('');
-    return `<tr class="rc-edit">
-      <td><input type="date" id="rcEdDate" value="${rcEsc(r.date)}">
-          ${admin?`<label class="rc-claim-lbl">${t('rc_claim')}<input type="month" id="rcEdClaim" value="${rcEsc(rcClaimMonth(r))}"></label>`:''}</td>
-      ${admin?`<td>${rcEsc(rcName(r.uid))}</td>`:''}
-      <td><input type="text" id="rcEdVendor" value="${rcEsc(r.vendor)}"></td>
-      <td><div class="rc-amt"><input type="number" step="0.01" inputmode="decimal" id="rcEdAmount" value="${r.amount==null?'':rcEsc(r.amount)}"><select id="rcEdCur">${curs}</select></div></td>
-      ${admin?`<td><select id="rcEdProj" class="rc-acct-sel">${rcProjOptions(r.project,false)}</select></td>`:''}
-      <td><select id="rcEdCat" class="rc-acct-sel">${rcAcctOptions(r.category)}</select></td>
-      <td><input type="text" id="rcEdBuyer" placeholder="${rcEsc(t('rc_buyer'))}" value="${rcEsc(r.buyerName)}">
-          <input type="text" id="rcEdBuyerTax" placeholder="VKN" inputmode="numeric" value="${rcEsc(r.buyerTaxId)}" style="margin-top:4px"></td>
-      <td><input type="text" id="rcEdNote" value="${rcEsc(r.note)}"></td>
-      <td></td>
-      <td><div class="rc-actions">
-        <button class="btn-mini" onclick="rcSave('${r.id}')">${t('rc_save')}</button>
-        <button class="btn-mini" onclick="rcCancel()">${t('rc_cancel')}</button></div></td></tr>`;
-  }
-  const inc=rcIncomplete(r);
-  const ai=f=> (r.aiFilled||[]).includes(f) ? `<span class="rc-ai" title="${t('rc_ai_tip')}">AI</span>` : '';
-  const ocrPending = admin && rcAiNeeds(r) && !!RC_AI_KEY;
-  const missing = ocrPending ? `<span class="pill rc-ocr">🤖 ${t('rc_ocr_wait')}</span>` : `<span class="pill pending">${t('rc_missing')}</span>`;
-  let pill = r.status==='verified' ? `<span class="pill approved">${t('rc_st_verified')}</span>` : `<span class="pill pending">${t('rc_st_submitted')}</span>`;
-  if(rcIncomplete(r) && (r.ocrStatus==='unreadable'||r.ocrStatus==='failed')) pill+=`<span class="pill rc-ocr-bad">${t('rc_ocr_bad')}</span>`;
-  const icon = r.mime==='application/pdf' ? '📄 ' : '🧾 ';
-  return `<tr class="${inc?'rc-incomplete':''}">
-    <td style="white-space:nowrap">${rcEsc(r.date)}${ai('date')}${admin && rcClaimMonth(r) && !(r.date||'').startsWith(rcClaimMonth(r))
-      ? `<div class="rc-claim">${t('rc_claim_short')} ${rcEsc(rcClaimMonth(r))}</div>`:''}</td>
-    ${admin?`<td style="white-space:nowrap">${rcEsc(rcName(r.uid))}</td>`:''}
-    <td>${r.vendor?rcEsc(r.vendor)+ai('vendor'):missing}</td>
-    <td style="white-space:nowrap;text-align:right">${rcAmountText(r)?rcAmountText(r)+ai('amount'):missing}</td>
-    ${admin?`<td><select class="rc-acct-sel ${r.project?'':'empty'}" onchange="rcSetProj('${r.id}',this)">${rcProjOptions(r.project,true)}</select></td>`:''}
-    <td>${admin
-      ? `<select class="rc-acct-sel ${RC_ACCT_NAME[r.category]?'':'empty'}" onchange="rcSetAcct('${r.id}',this.value)">${rcAcctOptions(r.category)}</select>`
-      : rcEsc(rcAcctLabel(r.category))}</td>
-    <td>${rcBuyerHtml(r, admin && !!RC_AI_KEY && rcAiNeeds(r))}</td>
-    <td>${rcEsc(r.note)}</td>
-    <td>${pill}</td>
-    <td><div class="rc-actions">
-      <button class="btn-mini" onclick="rcView('${r.id}')">${icon}${t('rc_view')}</button>
-      <button class="btn-mini" onclick="rcDownload('${r.id}')">${t('rc_dl')}</button>
-      ${canEdit?`<button class="btn-mini" onclick="rcEdit('${r.id}')">${t('rc_edit')}</button>`:''}
-      ${admin?`<button class="btn-mini" onclick="rcToggleVerify('${r.id}')">${r.status==='verified'?t('rc_unverify'):t('rc_verify')}</button>`:''}
-      ${admin&&RC_AI_KEY&&!ocrPending?`<button class="btn-mini" onclick="rcReOcr('${r.id}')">🤖 ${t('rc_reocr')}</button>`:''}
-      ${canEdit?`<button class="btn-mini danger" onclick="rcDelete('${r.id}')">${t('rc_delete')}</button>`:''}
-    </div></td></tr>`;
-}
-function renderReceipts(){
-  if(!CURRENT) return;
-  const admin=rcIsAdmin();
-  if(admin){
-    // 經手人選單
-    const sel=$id('rcFEmp'); const keep=sel.value||'all';
-    sel.innerHTML=`<option value="all">${t('rc_f_all')}</option>`+
-      Object.values(EMPLOYEES).map(e=>`<option value="${rcEsc(e.id)}">${rcEsc(e.name||e.id)}</option>`).join('');
-    sel.value = [...sel.options].some(o=>o.value===keep) ? keep : 'all';
-    const fa=$id('rcFAcct'); const keepA=fa.value||'all';
-    fa.innerHTML=`<option value="all">${t('rc_f_all')}</option><option value="none">${t('rc_acct_unset')}</option>`+
-      RC_ACCOUNTS.map(([g,list])=>`<optgroup label="${rcEsc(g)}">`+list.map(([c,n])=>`<option value="${c}">${c} ${rcEsc(n)}</option>`).join('')+'</optgroup>').join('');
-    fa.value=[...fa.options].some(o=>o.value===keepA)?keepA:'all';
-    const fp=$id('rcFProj'); const keepP=fp.value||'all';
-    const projCodes=[...new Set([...RC_PROJECTS.map(p=>p.code), ...RECEIPTS.map(r=>r.project).filter(Boolean)])].sort();
-    fp.innerHTML=`<option value="all">${t('rc_f_all')}</option><option value="none">${t('rc_proj_unset')}</option>`+
-      projCodes.map(c=>`<option value="${rcEsc(c)}">${rcEsc(rcProjLabel(c))}</option>`).join('');
-    fp.value=[...fp.options].some(o=>o.value===keepP)?keepP:'all';
-    rcRenderProjMgr(false);
-    rcAiRenderBar();
-    // 待確認數量徽章
-    const pending=RECEIPTS.filter(r=>r.status!=='verified').length;
-    const b=$id('rcBadge'); if(b){ b.textContent=pending; b.style.display=pending?'inline-block':'none'; }
-  }
-  const list=rcFiltered();
-  const table=$id(admin?'rcTableAdmin':'rcTableEmp');
-  if(!table) return;
-  if(admin){
-    const totals={}; list.forEach(r=>{ if(r.amount!=null&&r.amount!=='') totals[r.currency||'']=(totals[r.currency||'']||0)+Number(r.amount); });
-    const inc=list.filter(rcIncomplete).length;
-    const tot=Object.entries(totals).map(([c,v])=>`<b>${v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${rcEsc(c)}</b>`).join(' · ');
-    $id('rcSummary').innerHTML=`${t('rc_sum_n')} <b>${list.length}</b> ${t('rc_sum_unit')}${tot?' · '+tot:''}${inc?` · <span style="color:var(--warn)">${inc} ${t('rc_sum_incomplete')}</span>`:''}`;
-    // 待確認的收據如果日期不在目前選的月份（例如 AI 把電話帳單日期改成上個月），
-    // 提醒一下，不然會以為收據不見了。紅色徽章算的是全部月份。
-    const ym=$id('rcFMonth').value, el=$id('rcElsewhere');
-    if(ym){
-      const byMonth={};
-      RECEIPTS.filter(r=>r.status!=='verified' && rcClaimMonth(r)!==ym)
-        .forEach(r=>{ const m=rcClaimMonth(r)||'—'; byMonth[m]=(byMonth[m]||0)+1; });
-      const months=Object.keys(byMonth).sort();
-      const n=months.reduce((s,m)=>s+byMonth[m],0);
-      el.innerHTML = n ? `⚠ ${t('rc_else_a').replace('{n}',n).replace('{m}',ym)} `+
-        months.map(m=>`<button class="btn-mini" onclick="rcGoMonth('${rcEsc(m==='—'?'':m)}')">${rcEsc(m)}：${byMonth[m]} ${t('rc_sum_unit')}</button>`).join(' ')+
-        ` <button class="btn-mini" onclick="rcGoMonth('')">${t('rc_else_all')}</button>` : '';
-    } else el.innerHTML='';
-  }
-  if(!list.length){ table.innerHTML=`<tbody><tr><td style="color:#8a94a0">${t('rc_empty')}</td></tr></tbody>`; return; }
-  if(!admin){
-    table.innerHTML=`<thead><tr><th>${t('rc_up_date')}</th><th>${t('rc_th_status')}</th><th>${t('rc_th_action')}</th></tr></thead>
-      <tbody>${list.map(rcRowHtmlSimple).join('')}</tbody>`;
-    return;
-  }
-  table.innerHTML=`<thead><tr>
-      <th>${t('rc_date')}</th>${admin?`<th>${t('rc_th_person')}</th>`:''}<th>${t('rc_vendor')}</th><th>${t('rc_amount')}</th>
-      <th>${t('rc_proj')}</th><th>${t('rc_acct')}</th><th>${t('rc_buyer')}</th><th>${t('rc_th_note')}</th><th>${t('rc_th_status')}</th><th>${t('rc_th_action')}</th>
-    </tr></thead><tbody>${list.map(r=>rcRowHtml(r,admin)).join('')}</tbody>`;
-}
-
-/* ---- 單筆操作 ---- */
-function rcFind(id){ return RECEIPTS.find(r=>r.id===id); }
-async function rcLoadBlob(r){
-  const snaps=await Promise.all(Array.from({length:r.chunks||1},(_,i)=>DB.collection('receiptFiles').doc(`${r.id}_${i}`).get()));
-  const data=snaps.map(s=>s.exists?s.data().data:'').join('');
-  if(!data) throw new Error('empty');
-  const [head,b64]=data.split(',');
-  const mime=(head.match(/data:([^;]+)/)||[])[1]||r.mime||'application/octet-stream';
-  const bin=atob(b64); const arr=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
-  return new Blob([arr],{type:mime});
-}
-function rcDownloadBlob(blob,name){
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=name;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),4000);
-}
-window.rcView=async id=>{
-  const r=rcFind(id); if(!r) return;
-  const w=window.open('','_blank');            // 先開視窗，避免手機擋彈出視窗
-  try{
-    const url=URL.createObjectURL(await rcLoadBlob(r));
-    if(w) w.location.href=url; else location.href=url;
-  }catch(err){ console.error('[rcView]',err); if(w) w.close(); alert(t('rc_load_fail')); }
-};
-window.rcDownload=async id=>{
-  const r=rcFind(id); if(!r) return;
-  try{ rcDownloadBlob(await rcLoadBlob(r), rcFileName(r)); }
-  catch(err){ console.error('[rcDownload]',err); alert(t('rc_load_fail')); }
-};
-window.rcEdit=id=>{ RC_EDITING=id; renderReceipts(); };
-window.rcCancel=()=>{ RC_EDITING=null; renderReceipts(); };
-window.rcSave=async id=>{
-  const amt=$id('rcEdAmount').value;
-  const patch={ date:$id('rcEdDate').value, vendor:$id('rcEdVendor').value.trim(),
-    ...($id('rcEdClaim')&&$id('rcEdClaim').value ? { claimMonth:$id('rcEdClaim').value } : {}),
-    amount: amt===''?null:Number(amt), currency:$id('rcEdCur').value,
-    category:$id('rcEdCat').value, note:$id('rcEdNote').value.trim(),
-    dateSource:'manual', aiFilled:[] };
-  if($id('rcEdProj')) patch.project=$id('rcEdProj').value;
-  const bEl=$id('rcEdBuyer');
-  if(bEl){
-    const bn=bEl.value.trim(), bt=$id('rcEdBuyerTax').value.replace(/\D/g,'');
-    const r=rcFind(id)||{};
-    if(bn!==(r.buyerName||'') || bt!==(r.buyerTaxId||'')) Object.assign(patch,{ buyerName:bn, buyerTaxId:bt, buyerRead:true, buyerSource:'manual' });
-  }   // 人工看過、存檔＝以人工為準，AI 之後不會再改
-  try{ await DB.collection('receipts').doc(id).update(patch); RC_EDITING=null; renderReceipts(); }
-  catch(err){ console.error('[rcSave]',err); alert(t('save_fail')); }
-};
-window.rcReOcr=async id=>{
-  const r=rcFind(id); if(!r) return;
-  RC_AI_DONE.delete(id);
-  rcAiRun([r], true);
-};
-window.rcSetProj=async (id,sel)=>{
-  let val=sel.value;
-  if(val==='__new'){
-    const code=(prompt(t('rc_proj_prompt_code'))||'').trim();
-    if(!code){ renderReceipts(); return; }
-    const name=(prompt(t('rc_proj_prompt_name'))||'').trim();
-    if(!RC_PROJECTS.some(p=>p.code===code)){
-      const items=[...RC_PROJECTS, { code, name }];
-      try{ await DB.collection('config').doc('projects').set({ items, updatedBy:CURRENT.id,
-             updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true}); }
-      catch(err){ console.error('[project add]',err); alert(t('rc_ai_rules')); renderReceipts(); return; }
-      RC_PROJECTS=items.sort((a,b)=>String(a.code).localeCompare(String(b.code)));
-      rcRenderProjMgr(true);
-    }
-    val=code;
-  }
-  try{ await DB.collection('receipts').doc(id).update({ project: val }); }
-  catch(err){ console.error('[rcSetProj]',err); alert(t('save_fail')); }
-};
-window.rcGoMonth=m=>{ $id('rcFMonth').value=m; renderReceipts(); };
-window.rcSetAcct=async (id,val)=>{
-  try{ await DB.collection('receipts').doc(id).update({ category: val }); }
-  catch(err){ console.error('[rcSetAcct]',err); alert(t('save_fail')); }
-};
-window.rcToggleVerify=async id=>{
-  const r=rcFind(id); if(!r) return;
-  const verified=r.status!=='verified';
-  try{
-    await DB.collection('receipts').doc(id).update(verified
-      ? { status:'verified', verifiedBy:CURRENT.id, verifiedAt:firebase.firestore.FieldValue.serverTimestamp() }
-      : { status:'submitted', verifiedBy:firebase.firestore.FieldValue.delete(), verifiedAt:firebase.firestore.FieldValue.delete() });
-  }catch(err){ console.error('[rcVerify]',err); alert(t('save_fail')); }
-};
-window.rcDelete=async id=>{
-  const r=rcFind(id); if(!r || !confirm(t('rc_del_confirm'))) return;
-  try{
-    const batch=DB.batch();
-    for(let i=0;i<(r.chunks||1);i++) batch.delete(DB.collection('receiptFiles').doc(`${id}_${i}`));
-    batch.delete(DB.collection('receipts').doc(id));
-    await batch.commit();
-  }catch(err){ console.error('[rcDelete]',err); alert(t('save_fail')); }
-};
-
-/* ---- 匯出：CSV 清冊 + ZIP（檔案已自動命名） ---- */
-function rcCsv(list){
-  const head=['報帳月份 Claim month','單據日期 Doc date','計畫編號 Project','計畫名稱 Project Name','經手人 By','金額 Amount','幣別 Currency','科目代碼 Account','科目名稱 Account Name','抬頭 Buyer','買方稅號 Buyer VKN','抬頭檢查 Buyer check','用途 Purpose','狀態 Status','檔名 File'];
-  const used={};
-  const rows=list.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[
-    rcClaimMonth(r), r.date, r.project||'', ((RC_PROJECTS.find(p=>p.code===r.project)||{}).name)||'', rcName(r.uid), r.amount==null?'':Number(r.amount).toFixed(2), r.currency||'',
-    RC_ACCT_NAME[r.category]?r.category:'', RC_ACCT_NAME[r.category]||(r.category?rcAcctLabel(r.category):''),
-    r.buyerName||'', r.buyerTaxId||'', ({ours:t('rc_buyer_ours'),other:t('rc_buyer_other'),none:t('rc_buyer_none')})[rcBuyerCheck(r)]||'', r.note||'', t('rc_st_'+(r.status||'submitted')), rcUniqueName(r,used)]);
-  return [head,...rows].map(row=>row.map(csvCell).join(',')).join('\n');
-}
-// 同名檔案依日期順序加 _2、_3（CSV 與 ZIP 用同一套順序，檔名才對得上）
-function rcUniqueName(r,used){
-  let name=rcFileName(r);
-  if(used[name]){ used[name]++; name=name.replace(/(\.\w+)$/,`_${used[name]}$1`); } else used[name]=1;
-  return name;
-}
-function rcLoadJsZip(){
-  if(window.JSZip) return Promise.resolve(window.JSZip);
-  return new Promise((res,rej)=>{
-    const s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-    s.onload=()=>res(window.JSZip); s.onerror=rej; document.head.appendChild(s);
-  });
-}
-async function rcZip(){
-  const list=rcFiltered().slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')); const msg=$id('rcToolMsg'), btn=$id('rcZipBtn');
-  if(!list.length){ msg.className='msg err'; msg.textContent=t('rc_empty'); return; }
-  btn.disabled=true; msg.className='msg';
-  try{
-    const JSZip=await rcLoadJsZip();
-    const zip=new JSZip(); const used={};
-    for(let i=0;i<list.length;i++){
-      msg.textContent=`${t('rc_zipping')} ${i+1}/${list.length}`;
-      const name=rcUniqueName(list[i],used);
-      zip.file(name, await rcLoadBlob(list[i]));
-    }
-    const ym=$id('rcFMonth').value||'all';
-    zip.file(`receipts_${ym}.csv`, '﻿'+rcCsv(list));
-    rcDownloadBlob(await zip.generateAsync({type:'blob'}), `receipts_${ym}.zip`);
-    msg.textContent=`✓ ${list.length}`;
-  }catch(err){ console.error('[rcZip]',err); msg.className='msg err'; msg.textContent=t('rc_load_fail'); }
-  finally{ btn.disabled=false; }
-}
 
 /* ---- 時鐘 ---- */
 function tickClock(){ const n=new Date(); document.getElementById('liveClock').textContent=`${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`; }
