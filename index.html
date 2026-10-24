@@ -173,6 +173,10 @@
   .cal-cell.sick{ background:#fdeede; border-color:#f0d3aa; }
   .cal-cell.sick .cal-hrs{ color:#c07a1a; font-size:11px; }
   .cal-badge.sick{ background:#c07a1a; }
+  .pill.official{ background:#e0f4f3; color:#0f7f7a; }
+  .cal-cell.official{ background:#e0f4f3; border-color:#a9dcd9; }
+  .cal-cell.official .cal-hrs{ color:#0f7f7a; font-size:11px; }
+  .cal-badge.official{ background:#0f7f7a; }
   .pill.absent{ background:#f7d9d4; color:#8f1d10; font-weight:800; }
   .cal-cell.absent{ background:#fbe0da; border-color:#e9b3a8; }
   .cal-cell.absent .cal-hrs{ color:#8f1d10; font-size:11px; font-weight:800; }
@@ -190,7 +194,7 @@
              background:#fbe6e2; border:1px solid #f0c8c0; color:#8f1d10; }
   .warn-box.soft{ background:#fdf3e2; border-color:#e8d29a; color:var(--warn); }
   .type-annual{ color:var(--leave); } .type-sick{ color:#c07a1a; } .type-personal{ color:#1665c0; }
-  .type-sick_doc{ color:#c07a1a; } .type-absent{ color:#8f1d10; }
+  .type-official{ color:#0f7f7a; } .type-sick_doc{ color:#c07a1a; } .type-absent{ color:#8f1d10; }
   .tab{ padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; background:#fff; border:1px solid var(--line); color:#5b6b78; width:auto; }
   .tab.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
 
@@ -238,6 +242,7 @@
   .ov-table td.ov-work{ background:var(--good-bg); color:var(--good); font-weight:800; }
   .ov-table td.ov-leave{ background:var(--leave-bg); color:var(--leave); font-weight:800; }
   .ov-table td.ov-sick{ background:#fdeede; color:#c07a1a; font-weight:800; }
+  .ov-table td.ov-official{ background:#e0f4f3; color:#0f7f7a; font-weight:800; }
   .ov-table td.ov-absent{ background:#fbe0da; color:#8f1d10; font-weight:800; }
   .ov-table td.ov-biz{ background:#e2eefb; color:#1665c0; font-weight:800; }
   .ov-table td.ov-holiday{ background:#efeafb; color:#5b3fa8; font-weight:800; }
@@ -530,6 +535,7 @@
           <span><i class="dot leave"></i><span data-i18n="lg_leave">休假（主控端標記）</span></span>
           <span><i class="dot" style="background:#1665c0"></i><span data-i18n="lg_biz">公出（可填時間）</span></span>
           <span><i class="dot" style="background:#c07a1a"></i><span data-i18n="st_sick_doc">病假·有證明</span></span>
+          <span><i class="dot" style="background:#0f7f7a"></i><span data-i18n="st_official">公假</span></span>
           <span><i class="dot" style="background:#8f1d10"></i><span data-i18n="st_absent">曠職</span></span>
           <span><i class="dot" style="background:#5b3fa8"></i><span data-i18n="st_holiday">國定假日（有薪）</span></span>
         </div>
@@ -557,6 +563,7 @@
           <span><i class="dot leave"></i><span data-i18n="lg_leave">休假（主控端標記）</span></span>
           <span><i class="dot" style="background:#1665c0"></i><span data-i18n="lg_biz">公出（可填時間）</span></span>
           <span><i class="dot" style="background:#c07a1a"></i><span data-i18n="st_sick_doc">病假·有證明</span></span>
+          <span><i class="dot" style="background:#0f7f7a"></i><span data-i18n="st_official">公假</span></span>
           <span><i class="dot" style="background:#8f1d10"></i><span data-i18n="st_absent">曠職</span></span>
           <span><i class="dot" style="background:#5b3fa8"></i><span data-i18n="st_holiday">國定假日（有薪）</span></span>
         </div>
@@ -676,6 +683,7 @@
           <option value="business" data-i18n="m_business">公出</option>
           <option value="leave" data-i18n="m_leave">休假</option>
           <option value="sick_doc" data-i18n="m_sick_doc">病假（有證明）</option>
+          <option value="official" data-i18n="m_official">公假（不算工作日）</option>
           <option value="absent" data-i18n="m_absent">曠職（缺席／無醫生證明）</option>
         </select>
       </div>
@@ -846,7 +854,7 @@ const I18N = {
     resync_att:"🔄 重新同步已核准假單到月總表", resyncing:"同步中…", resync_done:"已同步 %d 筆已核准假單。",
     f_all:"全部", f_pending:"待審核", f_approved:"已核准", f_rejected:"已駁回",
     type_annual:"特休", type_sick:"病假", type_personal:"事假",
-    type_sick_doc:"病假（有證明）", type_absent:"曠職",
+    type_sick_doc:"病假（有證明）", type_absent:"曠職", type_official:"公假", m_official:"公假（不算工作日）", st_official:"公假",
     m_sick:"病假", st_sick:"病假", st_missing:"缺卡",
     m_sick_doc:"病假（有證明）", m_absent:"曠職（缺席／無醫生證明）",
     st_sick_doc:"病假·有證明", st_absent:"曠職",
@@ -947,7 +955,7 @@ const I18N = {
     resync_att:"🔄 Resync approved requests to monthly report", resyncing:"Syncing…", resync_done:"Synced %d approved request(s).",
     f_all:"All", f_pending:"Pending", f_approved:"Approved", f_rejected:"Rejected",
     type_annual:"Annual", type_sick:"Sick", type_personal:"Personal",
-    type_sick_doc:"Sick (with report)", type_absent:"Absent",
+    type_sick_doc:"Sick (with report)", type_absent:"Absent", type_official:"Official leave", m_official:"Official leave (not a work day)", st_official:"Official leave",
     m_sick:"Sick leave", st_sick:"Sick", st_missing:"Missing",
     m_sick_doc:"Sick leave (with report)", m_absent:"Absent (no doctor's report)",
     st_sick_doc:"Sick·report", st_absent:"Absent",
@@ -1068,6 +1076,7 @@ function ymd(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDa
 /* 產生本月假資料：工作日隨機上下班時間，穿插幾天遲到/休假 */
 const LEAVE_MARKS = {}; // key: id|date -> true  （休假，主控端標記）
 const BIZ_MARKS = {};   // key: id|date -> true  （公出，主控端標記；仍保留 ATT 上/下班時間）
+const OFFICIAL_MARKS = {};  // key: id|date -> true （公假整日標記，不算工作日、不扣特休）
 const SICK_MARKS   = {};  // key: id|date -> 'doc'   （有醫生證明的病假整日標記）
 const ABSENT_MARKS = {};  // key: id|date -> true    （曠職：缺席且沒有醫生證明）
 const ATT_FROM_REQ = {};  // key: id|date -> reqId  （這筆 attendance 標記是哪張已核准假單自動寫入的）
@@ -1077,13 +1086,13 @@ const HOURS_PER_DAY = 8;
 /* 請假單（新系統）：每筆 {id(單號), empId, type:'annual|sick|personal', date, startMin, endMin, hours, status:'pending|approved|rejected', note} */
 const LEAVE_REQUESTS = [];
 let REQ_SEQ = 1;
-const LEAVE_TYPES = ['annual','sick_doc','personal']; // 特休 / 病假(有證明) / 事假
+const LEAVE_TYPES = ['annual','sick_doc','personal','official']; // 特休 / 病假(有證明) / 事假
 /* 沒有醫生證明的缺席不是病假，而是曠職，不走請假流程，由主控端在「每日狀況」標記。 */
 
 /* 每種假是否要「先扣特休剩餘額度」。
    sick_doc=false：有醫生證明的病假不動特休，時數直接進「病假（有證明）」累計。
    要改回「有證明也先扣特休」就把 sick_doc 改成 true。 */
-const ANNUAL_FIRST_FOR = { annual:true, sick_doc:false, personal:true };
+const ANNUAL_FIRST_FOR = { annual:true, sick_doc:false, personal:true, official:false };
 
 /* SGK 病假給付：每一張醫生證明（連續的病假期間）前 2 天無給付，第 3 天起由 SGK 給付 2/3 日薪。
    雇主全程不支薪。要改天數把 SGK_WAIT_DAYS 改掉即可。 */
@@ -1156,13 +1165,14 @@ function dayStatus(id,date){
      以假單時段為準，恢復為可打卡的工作日。 */
   if(LEAVE_MARKS[key] && !leaveRequestForAttendance(id,date)) return 'leave';
   if(LEAVE_MARKS[key] && isWholeDayLeaveRequest(leaveRequestForAttendance(id,date))) return 'leave';
+  if(OFFICIAL_MARKS[key]) return 'official';
   if(SICK_MARKS[key]) return 'sick_doc';
   if(ABSENT_MARKS[key]) return 'absent';
   if(BIZ_MARKS[key]) return 'business';
   return 'work';
 }
 /* 沒有出勤紀錄的日子（病假、曠職、休假）不顯示上下班時間 */
-function noPunchDay(st){ return st==='leave'||st==='sick_doc'||st==='absent'; }
+function noPunchDay(st){ return st==='leave'||st==='sick_doc'||st==='absent'||st==='official'; }
 /* 需要打卡的員工名單（noAttendance:true 的人不列入） */
 /* ---- 到職日 / 年資 ----
    土耳其勞動法的特休級距：滿 1 年未滿 5 年 14 天、5–15 年 20 天、超過 15 年 26 天。 */
@@ -1360,7 +1370,7 @@ function leaveLedger(empId){
   let yearSickHours=0;    // 今年病假時數（請假單，不扣特休）
   let yearPersonalHours=0;
   LEAVE_REQUESTS
-    .filter(r=>r.empId===empId && r.status==='approved')
+    .filter(r=>r.empId===empId && r.status==='approved' && r.type!=='official') // 公假不進任何額度
     .sort((a,b)=> a.date===b.date ? a.reqId-b.reqId : (a.date<b.date?-1:1))
     .forEach(r=>{
       /* 新制度下，主控端調整日前的歷史假單已包含在「目前剩餘天數」裡，
@@ -1607,7 +1617,7 @@ function startListeners(){
 
   UNSUBS.push(DB.collection('attendance').onSnapshot(qs=>{
     Object.keys(ATT).forEach(k=>delete ATT[k]);
-    [LEAVE_MARKS,BIZ_MARKS,SICK_MARKS,ABSENT_MARKS,ATT_FROM_REQ].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
+    [LEAVE_MARKS,BIZ_MARKS,SICK_MARKS,OFFICIAL_MARKS,ABSENT_MARKS,ATT_FROM_REQ].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
     qs.forEach(d=>{
       const r=d.data(); if(!r||!r.uid||!r.date) return;
       const key=`${r.uid}|${r.date}`;
@@ -1615,6 +1625,7 @@ function startListeners(){
       if(r.status==='leave')     LEAVE_MARKS[key]=true;
       if(r.status==='business')  BIZ_MARKS[key]=true;
       if(r.status==='sick_doc')  SICK_MARKS[key]='doc';
+      if(r.status==='official')  OFFICIAL_MARKS[key]=true;
       if(r.status==='absent')    ABSENT_MARKS[key]=true;
       if(r.fromReq)              ATT_FROM_REQ[key]=r.fromReq;
     });
@@ -1675,6 +1686,7 @@ function collectDays(id){
   Object.keys(LEAVE_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
   Object.keys(BIZ_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
   Object.keys(SICK_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
+  Object.keys(OFFICIAL_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
   Object.keys(ABSENT_MARKS).forEach(k=>{ if(k.startsWith(id+'|')) keys.add(k.split('|')[1]); });
   // 已核准的假單（含半天假）就算當天沒打卡也要列出來，主控端才有「編輯」可以補打卡時間
   LEAVE_REQUESTS.forEach(r=>{ if(r.empId===id && r.status==='approved' && r.date) keys.add(r.date); });
@@ -1751,7 +1763,7 @@ document.getElementById('btnClockOut').onclick=()=>simClock('out');
    請假系統
    ============================================================ */
 const LEAVE_TYPE_LABELS = ()=>({
-  annual:t('type_annual'), sick_doc:t('type_sick_doc'),
+  annual:t('type_annual'), sick_doc:t('type_sick_doc'), official:t('type_official'),
   sick:t('type_sick'), personal:t('type_personal')
 });
 function typeLabel(ty){ return LEAVE_TYPE_LABELS()[ty]||ty; }
@@ -2150,7 +2162,7 @@ async function syncAttendanceForReq(r,status){
   const markKey=`${r.empId}|${r.date}`;
   if(status==='approved'){
     if(isWholeDayLeaveRequest(r)){
-      const attStatus = r.type==='sick_doc' ? 'sick_doc' : 'leave';
+      const attStatus = r.type==='sick_doc' ? 'sick_doc' : (r.type==='official' ? 'official' : 'leave');
       await DB.collection('attendance').doc(attKey).set({
         uid:r.empId, date:r.date, status:attStatus, inMs:null, outMs:null, fromReq:r.reqId
       },{merge:true});
@@ -2306,7 +2318,7 @@ function renderMonthCalendar(){
   /* 出勤天數＝實際到班（上班）＋公出。
      病假(有證明) 不算曠職，但公司不支薪，另外列出並依 SGK 規則拆成前2天／第3天起。
      曠職（沒有醫生證明的缺席）無薪，且要提醒連續天數。 */
-  const cnt={work:0, biz:0, sick_doc:0, absent:0, leave:0, missing:0, holiday:0, holidayHalf:0};
+  const cnt={work:0, biz:0, sick_doc:0, official:0, absent:0, leave:0, missing:0, holiday:0, holidayHalf:0};
   const stByDay={};
   for(let day=1; day<=dim; day++){
     const date=`${y}-${pad(m+1)}-${pad(day)}`;
@@ -2328,6 +2340,10 @@ function renderMonthCalendar(){
       cnt.sick_doc++; eff='sick_doc';
       cls+=' sick'; badge='<span class="cal-badge sick"></span>';
       hrsHtml=`<span class="cal-hrs">${t('st_sick_doc')} ✓</span>`;
+    } else if(st==='official'){
+      cnt.official++; eff='official';
+      cls+=' official'; badge='<span class="cal-badge official"></span>';
+      hrsHtml=`<span class="cal-hrs">${t('st_official')} ✓</span>`;
     } else if(st==='absent'){
       cnt.absent++; eff='absent';
       cls+=' absent'; badge='<span class="cal-badge absent"></span>';
@@ -2374,6 +2390,7 @@ function renderMonthCalendar(){
   document.getElementById('calStats').innerHTML = statCard('m_work',cnt.work)
     + statCard('st_business',cnt.biz)
     + statCard('st_sick_doc',cnt.sick_doc)
+    + statCard('st_official',cnt.official)
     + statCard('st_leave',cnt.leave);
 
   const warn=document.getElementById('calWarn');
@@ -2387,9 +2404,9 @@ document.getElementById('calNext').onclick=()=>{ CAL_M++; if(CAL_M>11){CAL_M=0;C
 
 /* --- 總覽儀表板（全體員工 × 整月，一格一天）--- */
 let OV_Y, OV_M;
-const OV_CODE = { work:'出', leave:'休', biz:'差', sick_doc:'病', absent:'曠', holiday:'國', missing:'缺' };
+const OV_CODE = { work:'出', leave:'休', biz:'差', sick_doc:'病', official:'公', absent:'曠', holiday:'國', missing:'缺' };
 function ovCodeLabel(key){
-  return { work:t('lg_green'), leave:t('lg_leave'), biz:t('lg_biz'), sick_doc:t('st_sick_doc'),
+  return { work:t('lg_green'), leave:t('lg_leave'), biz:t('lg_biz'), sick_doc:t('st_sick_doc'), official:t('st_official'),
            absent:t('st_absent'), holiday:t('st_holiday'), missing:t('lg_red') }[key] || '';
 }
 function renderOverviewDashboard(){
@@ -2422,6 +2439,7 @@ function renderOverviewDashboard(){
       let code='', cls='', statusKey='';
       if(st==='leave'){ code=OV_CODE.leave; cls='ov-leave'; statusKey='leave'; }
       else if(st==='sick_doc'){ code=OV_CODE.sick_doc; cls='ov-sick'; statusKey='sick_doc'; }
+      else if(st==='official'){ code=OV_CODE.official; cls='ov-official'; statusKey='official'; }
       else if(st==='absent'){ code=OV_CODE.absent; cls='ov-absent'; statusKey='absent'; }
       else if(st==='business'){ code=OV_CODE.biz; cls='ov-biz'; statusKey='biz'; }
       else if(rec && rec.inMs && rec.outMs && dd<=n){ code=OV_CODE.work; cls='ov-work'; statusKey='work'; }
@@ -2444,12 +2462,13 @@ function statusPillFor(id,date){
   const rec=ATT[`${id}|${date}`];
   if(st==='leave')    return `<span class="pill leave">${t('st_leave')}</span>`;
   if(st==='sick_doc') return `<span class="pill sick">${t('st_sick_doc')}</span>`;
+  if(st==='official') return `<span class="pill official">${t('st_official')}</span>`;
   if(st==='absent')   return `<span class="pill absent">${t('st_absent')}</span>`;
   if(st==='work' && !ATT[`${id}|${date}`] && holidayOf(date))
     return `<span class="pill holiday">${holidayShort(holidayOf(date))}</span>`;
   // 半天假：在狀態旁加註假別與時段，例如「病假（有證明） 08:00–12:00」
   const partial=partialLeavesFor(id,date).map(r=>
-    ` <span class="pill ${r.type==='sick_doc'?'sick':'leave'}">${typeLabel(r.type)} ${minToHHMM(r.startMin)}–${minToHHMM(r.endMin)}</span>`).join('');
+    ` <span class="pill ${r.type==='sick_doc'?'sick':(r.type==='official'?'official':'leave')}">${typeLabel(r.type)} ${minToHHMM(r.startMin)}–${minToHHMM(r.endMin)}</span>`).join('');
   if(st==='business') return `<span class="pill biz">${t('st_business')}</span>${partial}`;
   if(rec && rec.inMs) return (isLate(rec.inMs,id,date)?`<span class="pill late">${t('st_late')}</span>`:`<span class="pill ok">${t('st_normal')}</span>`)+partial;
   if(partial) return partial.trim();
@@ -2472,6 +2491,8 @@ function renderDaily(){
       inState=outState=`<span class="pill leave">${t('st_leave')}</span>`;
     }else if(st==='sick_doc'){
       inState=outState=`<span class="pill sick">${t('st_sick_doc')}</span>`;
+    }else if(st==='official'){
+      inState=outState=`<span class="pill official">${t('st_official')}</span>`;
     }else if(st==='absent'){
       inState=outState=`<span class="pill absent">${t('st_absent')}</span>`;
     }else if(!(rec&&rec.inMs) && holidayOf(date)){
@@ -2531,6 +2552,7 @@ function statusTextFor(id,date){
   const st=dayStatus(id,date);
   if(st==='leave')    return t('st_leave');
   if(st==='sick_doc') return t('st_sick_doc');
+  if(st==='official') return t('st_official');
   if(st==='absent')   return t('st_absent');
   if(st==='business') return t('st_business');
   const h=holidayOf(date);
@@ -2544,7 +2566,7 @@ function statusTextFor(id,date){
 function isPaidDay(id,date){
   const st=dayStatus(id,date);
   if(st==='absent') return false;
-  if(st==='leave'||st==='sick_doc'||st==='business') return true;
+  if(st==='leave'||st==='sick_doc'||st==='business'||st==='official') return true;
   const rec=ATT[`${id}|${date}`];
   if(rec && rec.inMs && rec.outMs) return true;
   if(!rec && holidayOf(date)) return true;
@@ -2563,7 +2585,7 @@ function buildCsv(ids,ym){
   const lines=[head.map(csvCell).join(',')];
   ids.forEach(id=>{
     const e=EMPLOYEES[id]; if(!e) return;
-    const cnt={work:0,paid:0,absent:0,sick:0,leave:0};
+    const cnt={work:0,paid:0,absent:0,sick:0,leave:0,official:0};
     monthDates(ym).forEach(date=>{
       const st=dayStatus(id,date);
       const rec=ATT[`${id}|${date}`];
@@ -2579,6 +2601,7 @@ function buildCsv(ids,ym){
       if(st==='business') cnt.work++;
       if(st==='absent') cnt.absent++;
       if(st==='sick_doc') cnt.sick++;
+      if(st==='official') cnt.official++;
       if(st==='leave') cnt.leave++;
       lines.push([e.empNo||'',e.name||'',date,weekdayLabel(date),inTxt,outTxt,hrsTxt,
                   statusTextFor(id,date), paid?t('yes'):t('no')].map(csvCell).join(','));
@@ -2588,6 +2611,7 @@ function buildCsv(ids,ym){
                 `${t('total_days')}: ${cnt.work}`,
                 `${t('total_paid_days')}: ${cnt.paid}`,
                 `${t('st_sick_doc')}: ${cnt.sick}`,
+                `${t('st_official')}: ${cnt.official}`,
                 `${t('st_leave')}: ${cnt.leave}`,
                 `${t('st_absent')}: ${cnt.absent}`].map(csvCell).join(','));
     lines.push('');
@@ -2611,7 +2635,7 @@ function monthTitle(ym){
 }
 function empReportHtml(id,ym){
   const e=EMPLOYEES[id]; if(!e) return '';
-  const cnt={work:0,biz:0,paid:0,sick:0,leave:0,absent:0,missing:0};
+  const cnt={work:0,biz:0,paid:0,sick:0,official:0,leave:0,absent:0,missing:0};
   const rows=monthDates(ym).map(date=>{
     const st=dayStatus(id,date);
     const rec=ATT[`${id}|${date}`];
@@ -2625,6 +2649,7 @@ function empReportHtml(id,ym){
     if(paid) cnt.paid++;
     if(st==='absent') cnt.absent++;
     else if(st==='sick_doc') cnt.sick++;
+    else if(st==='official') cnt.official++;
     else if(st==='leave') cnt.leave++;
     else if(st==='business') cnt.biz++;
     else if(rec && rec.inMs && rec.outMs) cnt.work++;
@@ -2656,6 +2681,7 @@ function empReportHtml(id,ym){
       ${box(t('total_days'),cnt.work)}
       ${box(t('st_business'),cnt.biz)}
       ${box(t('st_sick_doc'),cnt.sick)}
+      ${box(t('st_official'),cnt.official)}
       ${box(t('st_leave'),cnt.leave)}
       ${box(t('st_absent'),cnt.absent)}
       ${box(t('st_missing'),cnt.missing)}
