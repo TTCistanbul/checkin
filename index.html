@@ -3016,6 +3016,8 @@ window.addEmployee=async ()=>{
       quota:{
         annualRemainingHours: snapHalfHour((parseFloat((document.getElementById('qar_new')||{}).value)||0) * HOURS_PER_DAY),
         annualBalanceAsOf: ymd(new Date()),
+        yearAnnualUsedManualHours: snapHalfHour((parseFloat((document.getElementById('yau_new')||{}).value)||0) * HOURS_PER_DAY),
+        yearSickUsedManualHours: snapHalfHour((parseFloat((document.getElementById('ysu_new')||{}).value)||0) * HOURS_PER_DAY),
         sick:0, personal:0
       }
     });
