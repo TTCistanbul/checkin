@@ -335,6 +335,27 @@
   .rc-claim{ font-size:11px; color:#1665c0; margin-top:2px; }
   .rc-claim-lbl{ display:block; font-size:11px; color:#5b6b78; margin-top:4px; }
   .rc-claim-lbl input{ margin-top:2px; }
+  .pv-controls .field{ min-width:120px; }
+  .pv-check{ display:flex; align-items:flex-end; }
+  .pv-check label{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); margin:0 0 12px; cursor:pointer; }
+  .pv-check input{ width:16px; height:16px; }
+  .pv-quick{ display:flex; gap:6px; flex-wrap:wrap; margin:0 0 10px; }
+  .pv-table{ border-collapse:collapse; font-size:13px; width:auto; min-width:100%; }
+  .pv-table th, .pv-table td{ border:1px solid #e3e8ef; padding:6px 10px; white-space:nowrap; }
+  .pv-table thead th{ background:#f6f8fb; color:#5b6b78; font-weight:700; font-size:12px; text-align:right; position:sticky; top:0; }
+  .pv-table thead th:first-child{ text-align:left; }
+  .pv-table th.pv-rowh{ text-align:left; background:#fbfcfe; font-weight:600; color:var(--ink); position:sticky; left:0; }
+  .pv-table td{ text-align:right; font-family:var(--mono); font-size:12px; cursor:pointer; }
+  .pv-table td:hover{ background:var(--navy-soft); }
+  .pv-table td.pv-empty{ color:#c3cad3; cursor:default; }
+  .pv-table td.pv-empty:hover{ background:none; }
+  .pv-table td.pv-sel{ background:#dfe8f5; outline:2px solid var(--navy); outline-offset:-2px; }
+  .pv-table .pv-tot{ background:#f3f6fa; font-weight:800; }
+  .pv-table tfoot th, .pv-table tfoot td{ border-top:2px solid #cfd8e3; }
+  .pv-n{ display:block; font-size:10px; color:#8a94a0; font-family:inherit; }
+  #pvDrill{ margin-top:12px; }
+  .pv-drill{ border:1px solid var(--line); border-radius:6px; padding:10px 12px; background:#fff; }
+  .pv-drill-h{ display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--navy); margin-bottom:8px; }
   .rc-elsewhere:empty{ display:none; }
   .rc-elsewhere{ font-size:12px; background:#fff8e6; border:1px solid #f0d899; color:#7a5c00; border-radius:6px;
                  padding:8px 10px; margin:-4px 0 12px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
@@ -668,6 +689,28 @@
         <div class="msg" id="rcToolMsg"></div>
         <div class="tbl-scroll"><table id="rcTableAdmin"></table></div>
         <p class="hint" data-i18n="rc_naming_hint">下載時自動命名為：日期-科目代碼-科目名稱-金額.副檔名</p>
+
+        <!-- 支出彙總（樞紐分析） -->
+        <div class="divider"></div>
+        <p class="section-title" data-i18n="pv_title">📊 支出彙總</p>
+        <div class="rc-filters pv-controls">
+          <div class="field"><label data-i18n="pv_from">報帳月份 從</label><input type="month" id="pvFrom"></div>
+          <div class="field"><label data-i18n="pv_to">到</label><input type="month" id="pvTo"></div>
+          <div class="field"><label data-i18n="pv_rows">列</label><select id="pvRows"></select></div>
+          <div class="field"><label data-i18n="pv_cols">欄</label><select id="pvCols"></select></div>
+          <div class="field"><label data-i18n="pv_cur">幣別</label><select id="pvCur"></select></div>
+          <div class="field pv-check"><label><input type="checkbox" id="pvVerified"> <span data-i18n="pv_verified_only">只算已確認</span></label></div>
+        </div>
+        <div class="pv-quick">
+          <button class="btn-mini" data-pv-range="month" data-i18n="pv_this_month">本月</button>
+          <button class="btn-mini" data-pv-range="year" data-i18n="pv_this_year">今年</button>
+          <button class="btn-mini" data-pv-range="all" data-i18n="pv_all_time">全部期間</button>
+          <button class="btn-mini" id="pvSwap" data-i18n="pv_swap">⇄ 列欄互換</button>
+          <button class="btn-mini" id="pvCsv" data-i18n="pv_csv">⬇ 匯出彙總 CSV</button>
+        </div>
+        <div class="rc-sum" id="pvNote"></div>
+        <div class="tbl-scroll"><table class="pv-table" id="pvTable"></table></div>
+        <div id="pvDrill"></div>
       </div>
     </div>
   </div>
@@ -1017,7 +1060,7 @@ Object.assign(I18N['zh-Hant'],{
   rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
   rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
   rc_st_submitted:"待確認", rc_st_verified:"已確認", rc_missing:"待補",
-  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_pm_title:"📁 管理計畫編號", rc_pm_name:"計畫名稱", rc_pm_used:"使用中", rc_pm_empty:"還沒有計畫編號，從下面新增。", rc_pm_newcode:"新的計畫編號", rc_pm_add:"新增", rc_pm_needcode:"請輸入計畫編號。", rc_pm_dup:"這個計畫編號已經存在。", rc_pm_orphans:"以下編號有收據在用、但不在清單裡，可以用上面的新增補回：", rc_pm_rename_confirm:"有 {n} 張收據使用「{a}」，會一起改成「{b}」。確定嗎？", rc_pm_del_used:"有 {n} 張收據使用「{a}」，刪除後這些收據會變成「未指定計畫」。確定刪除嗎？", rc_pm_del:"確定刪除計畫編號「{a}」？", rc_else_a:"另有 {n} 張待確認的收據，報帳月份不在 {m}：", rc_claim:"報帳月份", rc_claim_short:"報帳", rc_else_all:"顯示全部月份", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
+  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_pm_title:"📁 管理計畫編號", rc_pm_name:"計畫名稱", rc_pm_used:"使用中", rc_pm_empty:"還沒有計畫編號，從下面新增。", rc_pm_newcode:"新的計畫編號", rc_pm_add:"新增", rc_pm_needcode:"請輸入計畫編號。", rc_pm_dup:"這個計畫編號已經存在。", rc_pm_orphans:"以下編號有收據在用、但不在清單裡，可以用上面的新增補回：", rc_pm_rename_confirm:"有 {n} 張收據使用「{a}」，會一起改成「{b}」。確定嗎？", rc_pm_del_used:"有 {n} 張收據使用「{a}」，刪除後這些收據會變成「未指定計畫」。確定刪除嗎？", rc_pm_del:"確定刪除計畫編號「{a}」？", rc_else_a:"另有 {n} 張待確認的收據，報帳月份不在 {m}：", rc_claim:"報帳月份", rc_claim_short:"報帳", rc_else_all:"顯示全部月份", pv_title:"📊 支出彙總", pv_from:"報帳月份 從", pv_to:"到", pv_rows:"列", pv_cols:"欄", pv_cur:"幣別", pv_verified_only:"只算已確認", pv_this_month:"本月", pv_this_year:"今年", pv_all_time:"全部期間", pv_swap:"⇄ 列欄互換", pv_csv:"⬇ 匯出彙總 CSV", pv_total:"合計", pv_empty:"這段期間沒有可計算的金額。", pv_note_cur:"另有 {n} 張是其他幣別（切換「幣別」查看）", pv_note_noamt:"{n} 張沒有金額，未計入", pv_click_hint:"點任一格可看組成的收據明細。", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
   rc_view:"檢視", rc_dl:"下載", rc_edit:"編輯", rc_save:"儲存", rc_cancel:"取消",
   rc_verify:"確認", rc_unverify:"取消確認", rc_delete:"刪除",
   rc_del_confirm:"確定刪除這張收據？檔案也會一併刪除，無法復原。",
@@ -1039,7 +1082,7 @@ Object.assign(I18N['en'],{
   rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
   rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
   rc_st_submitted:"Submitted", rc_st_verified:"Verified", rc_missing:"Missing",
-  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_pm_title:"📁 Manage project numbers", rc_pm_name:"Project name", rc_pm_used:"In use", rc_pm_empty:"No project numbers yet — add one below.", rc_pm_newcode:"New project number", rc_pm_add:"Add", rc_pm_needcode:"Enter a project number.", rc_pm_dup:"That project number already exists.", rc_pm_orphans:"These numbers are used on receipts but missing from the list — add them back above: ", rc_pm_rename_confirm:"{n} receipts use “{a}” and will be changed to “{b}”. Continue?", rc_pm_del_used:"{n} receipts use “{a}”; they will become “No project”. Delete anyway?", rc_pm_del:"Delete project number “{a}”?", rc_else_a:"{n} more receipts waiting for review are claimed outside {m}:", rc_claim:"Claim month", rc_claim_short:"claim", rc_else_all:"Show all months", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
+  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_pm_title:"📁 Manage project numbers", rc_pm_name:"Project name", rc_pm_used:"In use", rc_pm_empty:"No project numbers yet — add one below.", rc_pm_newcode:"New project number", rc_pm_add:"Add", rc_pm_needcode:"Enter a project number.", rc_pm_dup:"That project number already exists.", rc_pm_orphans:"These numbers are used on receipts but missing from the list — add them back above: ", rc_pm_rename_confirm:"{n} receipts use “{a}” and will be changed to “{b}”. Continue?", rc_pm_del_used:"{n} receipts use “{a}”; they will become “No project”. Delete anyway?", rc_pm_del:"Delete project number “{a}”?", rc_else_a:"{n} more receipts waiting for review are claimed outside {m}:", rc_claim:"Claim month", rc_claim_short:"claim", rc_else_all:"Show all months", pv_title:"📊 Spending summary", pv_from:"Claim month from", pv_to:"to", pv_rows:"Rows", pv_cols:"Columns", pv_cur:"Currency", pv_verified_only:"Verified only", pv_this_month:"This month", pv_this_year:"This year", pv_all_time:"All time", pv_swap:"⇄ Swap rows/columns", pv_csv:"⬇ Export summary CSV", pv_total:"Total", pv_empty:"No amounts in this period.", pv_note_cur:"{n} more in other currencies (switch Currency)", pv_note_noamt:"{n} without an amount, not counted", pv_click_hint:"Click any cell to see the receipts behind it.", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
   rc_view:"View", rc_dl:"Download", rc_edit:"Edit", rc_save:"Save", rc_cancel:"Cancel",
   rc_verify:"Verify", rc_unverify:"Unverify", rc_delete:"Delete",
   rc_del_confirm:"Delete this receipt and its file? This can't be undone.",
@@ -3670,6 +3713,7 @@ function renderReceipts(){
       projCodes.map(c=>`<option value="${rcEsc(c)}">${rcEsc(rcProjLabel(c))}</option>`).join('');
     fp.value=[...fp.options].some(o=>o.value===keepP)?keepP:'all';
     rcRenderProjMgr(false);
+    safe(renderPivot,'pivot');
     rcAiRenderBar();
     // 待確認數量徽章
     const pending=RECEIPTS.filter(r=>r.status!=='verified').length;
@@ -3806,6 +3850,125 @@ window.rcDelete=async id=>{
     await batch.commit();
   }catch(err){ console.error('[rcDelete]',err); alert(t('save_fail')); }
 };
+
+/* ============================================================
+   ★ 支出彙總（樞紐分析）：每個計畫 × 每個會計科目 花了多少
+   期間用「報帳月份」；不同幣別不能相加，一次看一種幣別。
+   沒有金額的收據不計入，會在上方註明張數。點格子可看組成的收據。
+   ============================================================ */
+const PV_DIMS={
+  proj:  { label:()=>t('rc_proj'),       key:r=>r.project||'',
+           name:k=>k?rcProjLabel(k):t('rc_proj_unset'),
+           order:k=>k?'0'+k:'9' },
+  acct:  { label:()=>t('rc_acct'),       key:r=>RC_ACCT_NAME[r.category]?r.category:'',
+           name:k=>k?`${k} ${RC_ACCT_NAME[k]}`:t('rc_acct_unset'),
+           order:k=>{ if(!k) return '9'; let i=0,pos=0; RC_ACCOUNTS.forEach(([,l])=>l.forEach(([c])=>{ if(c===k) pos=i; i++; })); return '0'+String(pos).padStart(3,'0'); } },
+  person:{ label:()=>t('rc_th_person'),  key:r=>r.uid||'',
+           name:k=>rcName(k), order:k=>rcName(k) },
+  month: { label:()=>t('rc_claim'),      key:r=>rcClaimMonth(r)||'',
+           name:k=>k||'—', order:k=>k||'9' },
+};
+let PV_INIT=false, PV_SEL=null;   // PV_SEL = {rk, ck}，被點的格子（'*' = 合計）
+function pvInit(){
+  if(PV_INIT) return; PV_INIT=true;
+  const now=new Date(), ym=ymd(now).slice(0,7);
+  $id('pvFrom').value=ym.slice(0,4)+'-01'; $id('pvTo').value=ym;
+  const opts=sel=>Object.keys(PV_DIMS).map(k=>`<option value="${k}" ${k===sel?'selected':''}>${rcEsc(PV_DIMS[k].label())}</option>`).join('');
+  $id('pvRows').innerHTML=opts('proj'); $id('pvCols').innerHTML=opts('acct');
+  ['pvFrom','pvTo','pvRows','pvCols','pvCur','pvVerified'].forEach(id=>{ $id(id).onchange=()=>{ PV_SEL=null; renderPivot(); }; });
+  document.querySelectorAll('[data-pv-range]').forEach(b=>{ b.onclick=()=>{
+    const y=ymd(new Date()).slice(0,7), kind=b.dataset.pvRange;
+    if(kind==='month'){ $id('pvFrom').value=y; $id('pvTo').value=y; }
+    if(kind==='year'){ $id('pvFrom').value=y.slice(0,4)+'-01'; $id('pvTo').value=y; }
+    if(kind==='all'){ $id('pvFrom').value=''; $id('pvTo').value=''; }
+    PV_SEL=null; renderPivot(); }; });
+  $id('pvSwap').onclick=()=>{ const a=$id('pvRows').value; $id('pvRows').value=$id('pvCols').value; $id('pvCols').value=a; PV_SEL=null; renderPivot(); };
+  $id('pvCsv').onclick=()=>{ const d=pvCompute(); if(!d) return;
+    rcDownloadBlob(new Blob(['\ufeff'+pvCsv(d)],{type:'text/csv;charset=utf-8;'}), `支出彙總_${$id('pvFrom').value||'start'}_${$id('pvTo').value||'now'}_${d.cur}.csv`); };
+}
+function pvScope(){
+  const from=$id('pvFrom').value, to=$id('pvTo').value, onlyV=$id('pvVerified').checked;
+  return RECEIPTS.filter(r=>{
+    const m=rcClaimMonth(r)||'';
+    return (!from || m>=from) && (!to || m<=to) && (!onlyV || r.status==='verified');
+  });
+}
+function pvCompute(){
+  if(!$id('pvTable')) return null;
+  const scope=pvScope();
+  // 幣別選單：期間內出現過的幣別，TRY 優先
+  const curs=[...new Set(scope.filter(r=>r.amount!=null&&r.amount!=='').map(r=>r.currency||'TRY'))]
+    .sort((a,b)=>(a==='TRY'?-1:b==='TRY'?1:a.localeCompare(b)));
+  const sel=$id('pvCur'), keep=sel.value;
+  if(!curs.length) curs.push('TRY');
+  sel.innerHTML=curs.map(c=>`<option>${c}</option>`).join('');
+  sel.value=curs.includes(keep)?keep:curs[0];
+  const cur=sel.value;
+  const R=PV_DIMS[$id('pvRows').value], C=PV_DIMS[$id('pvCols').value];
+  const noAmt=scope.filter(r=>r.amount==null||r.amount==='').length;
+  const otherCur=scope.filter(r=>r.amount!=null&&r.amount!==''&&(r.currency||'TRY')!==cur).length;
+  const items=scope.filter(r=>r.amount!=null&&r.amount!==''&&(r.currency||'TRY')===cur);
+  const cell={}, rowT={}, colT={}; let grand={s:0,n:0};
+  const add=(o,k,v)=>{ o[k]=o[k]||{s:0,n:0}; o[k].s+=v; o[k].n++; };
+  items.forEach(r=>{
+    const rk=R.key(r), ck=C.key(r), v=Number(r.amount)||0;
+    add(cell, rk+'\u0000'+ck, v); add(rowT, rk, v); add(colT, ck, v); grand.s+=v; grand.n++;
+  });
+  const sortK=(D,ks)=>ks.sort((a,b)=>String(D.order(a)).localeCompare(String(D.order(b))));
+  return { R, C, cur, items, cell, rowT, colT, grand, noAmt, otherCur,
+           rows:sortK(R,Object.keys(rowT)), cols:sortK(C,Object.keys(colT)) };
+}
+const pvFmt=v=>v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+function renderPivot(){
+  if(!rcIsAdmin() || !$id('pvTable')) return;
+  pvInit();
+  const d=pvCompute(), tbl=$id('pvTable');
+  const notes=[`${t('rc_sum_n')} <b>${d.grand.n}</b> ${t('rc_sum_unit')} · <b>${pvFmt(d.grand.s)} ${d.cur}</b>`];
+  if(d.otherCur) notes.push(t('pv_note_cur').replace('{n}',d.otherCur));
+  if(d.noAmt) notes.push(`<span style="color:var(--warn)">${t('pv_note_noamt').replace('{n}',d.noAmt)}</span>`);
+  $id('pvNote').innerHTML=notes.join(' · ');
+  if(!d.items.length){ tbl.innerHTML=`<tbody><tr><td class="pv-empty" style="text-align:left">${t('pv_empty')}</td></tr></tbody>`; $id('pvDrill').innerHTML=''; return; }
+  const isSel=(rk,ck)=>PV_SEL && PV_SEL.rk===rk && PV_SEL.ck===ck;
+  const td=(o,rk,ck,cls='')=>{
+    const c=o; if(!c) return `<td class="pv-empty ${cls}">—</td>`;
+    return `<td class="${cls} ${isSel(rk,ck)?'pv-sel':''}" data-rk="${rcEsc(rk)}" data-ck="${rcEsc(ck)}">${pvFmt(c.s)}<span class="pv-n">${c.n} ${t('rc_sum_unit')}</span></td>`;
+  };
+  tbl.innerHTML=`<thead><tr><th>${rcEsc(d.R.label())} ＼ ${rcEsc(d.C.label())}</th>`+
+      d.cols.map(ck=>`<th>${rcEsc(d.C.name(ck))}</th>`).join('')+`<th class="pv-tot">${t('pv_total')}</th></tr></thead>
+    <tbody>`+d.rows.map(rk=>`<tr><th class="pv-rowh">${rcEsc(d.R.name(rk))}</th>`+
+      d.cols.map(ck=>td(d.cell[rk+'\u0000'+ck],rk,ck)).join('')+td(d.rowT[rk],rk,'*','pv-tot')+`</tr>`).join('')+`</tbody>
+    <tfoot><tr><th class="pv-rowh pv-tot">${t('pv_total')}</th>`+
+      d.cols.map(ck=>td(d.colT[ck],'*',ck,'pv-tot')).join('')+td(d.grand,'*','*','pv-tot')+`</tr></tfoot>`;
+  tbl.querySelectorAll('td[data-rk]').forEach(el=>{ el.onclick=()=>{
+    const s={rk:el.dataset.rk, ck:el.dataset.ck};
+    PV_SEL = (PV_SEL && PV_SEL.rk===s.rk && PV_SEL.ck===s.ck) ? null : s;
+    renderPivot(); }; });
+  pvRenderDrill(d);
+}
+function pvRenderDrill(d){
+  const box=$id('pvDrill');
+  if(!PV_SEL){ box.innerHTML=`<p class="hint">${t('pv_click_hint')}</p>`; return; }
+  const {rk,ck}=PV_SEL;
+  const list=d.items.filter(r=>(rk==='*'||d.R.key(r)===rk) && (ck==='*'||d.C.key(r)===ck))
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const title=[rk==='*'?null:d.R.name(rk), ck==='*'?null:d.C.name(ck)].filter(Boolean).join(' × ')||t('pv_total');
+  const sum=list.reduce((s,r)=>s+Number(r.amount||0),0);
+  box.innerHTML=`<div class="pv-drill"><div class="pv-drill-h"><span>${rcEsc(title)} · ${list.length} ${t('rc_sum_unit')} · ${pvFmt(sum)} ${d.cur}</span>
+      <button class="btn-mini" onclick="PV_SEL=null;renderPivot()">✕</button></div>
+    <div class="tbl-scroll"><table><thead><tr><th>${t('rc_date')}</th><th>${t('rc_claim')}</th><th>${t('rc_vendor')}</th><th>${t('rc_proj')}</th><th>${t('rc_acct')}</th><th>${t('rc_th_person')}</th><th style="text-align:right">${t('rc_amount')}</th><th>${t('rc_th_status')}</th><th></th></tr></thead>
+    <tbody>${list.map(r=>`<tr><td>${rcEsc(r.date)}</td><td>${rcEsc(rcClaimMonth(r))}</td><td>${rcEsc(r.vendor||'')}</td>
+      <td>${rcEsc(r.project?rcProjLabel(r.project):'—')}</td><td>${rcEsc(rcAcctLabel(r.category)||'—')}</td><td>${rcEsc(rcName(r.uid))}</td>
+      <td style="text-align:right;white-space:nowrap">${rcEsc(rcAmountText(r))}</td>
+      <td>${r.status==='verified'?`<span class="pill approved">${t('rc_st_verified')}</span>`:`<span class="pill pending">${t('rc_st_submitted')}</span>`}</td>
+      <td><button class="btn-mini" onclick="rcView('${r.id}')">${t('rc_view')}</button></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function pvCsv(d){
+  const head=[`${d.R.label()} \\ ${d.C.label()}`, ...d.cols.map(ck=>d.C.name(ck)), t('pv_total')];
+  const rows=d.rows.map(rk=>[d.R.name(rk), ...d.cols.map(ck=>{ const c=d.cell[rk+'\u0000'+ck]; return c?c.s.toFixed(2):''; }), d.rowT[rk].s.toFixed(2)]);
+  rows.push([t('pv_total'), ...d.cols.map(ck=>d.colT[ck].s.toFixed(2)), d.grand.s.toFixed(2)]);
+  const meta=[[`${t('pv_from')} ${$id('pvFrom').value||'—'} ~ ${$id('pvTo').value||'—'}`, `${t('pv_cur')} ${d.cur}`, $id('pvVerified').checked?t('pv_verified_only'):'']];
+  return [...meta,[],head,...rows].map(r=>r.map(csvCell).join(',')).join('\n');
+}
 
 /* ---- 匯出：CSV 清冊 + ZIP（檔案已自動命名） ---- */
 function rcCsv(list){
