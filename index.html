@@ -1055,7 +1055,7 @@ Object.assign(I18N['zh-Hant'],{
   rc_date:"收據日期", rc_vendor:"廠商／店家", rc_amount:"金額", rc_cat:"類別", rc_note:"用途說明（選填）",
   rc_multi_hint:"一次選多張時，日期、類別、用途會套用到每一張；廠商和金額之後在清單中逐筆補（標示「待補」）。",
   rc_submit:"上傳", rc_need_file:"請先拍照或選擇檔案。", rc_uploading:"上傳中…", rc_done:"已上傳",
-  rc_fail:"上傳失敗，請檢查網路後再試一次。", rc_too_big:"PDF 超過 5MB，請壓縮後再上傳：",
+  rc_fail:"上傳失敗，請檢查網路後再試一次。", rc_too_big:"PDF 超過 10MB，請壓縮後再上傳：", rc_not_uploaded:"{n} 個檔案沒有上傳（留在上方，可以處理後再按一次「上傳」）：", rc_why_big:"PDF 超過 10MB，請用掃描 App 的「壓縮／降低畫質」重新存一次，或改拍照上傳", rc_why_image:"無法讀取這張照片（可能是 HEIC 格式），請改用「拍照」或轉成 JPG", rc_why_net:"網路中斷或伺服器沒有回應，請再按一次「上傳」",
   rc_bad_image:"無法讀取這張照片（可能是 HEIC 格式），請直接用「拍照」或轉成 JPG：",
   rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
   rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
@@ -1077,7 +1077,7 @@ Object.assign(I18N['en'],{
   rc_date:"Receipt date", rc_vendor:"Vendor", rc_amount:"Amount", rc_cat:"Category", rc_note:"Purpose (optional)",
   rc_multi_hint:"With several files, date, category and purpose apply to all; fill in vendor and amount per row later (marked “Missing”).",
   rc_submit:"Upload", rc_need_file:"Take a photo or choose a file first.", rc_uploading:"Uploading…", rc_done:"Uploaded",
-  rc_fail:"Upload failed. Check your connection and try again.", rc_too_big:"PDF is larger than 5MB: ",
+  rc_fail:"Upload failed. Check your connection and try again.", rc_too_big:"PDF is larger than 10MB: ", rc_not_uploaded:"{n} file(s) were not uploaded (kept above — fix and press Upload again):", rc_why_big:"PDF is over 10MB — save it again with lower quality in your scanner app, or take a photo instead", rc_why_image:"Can\'t read this image (maybe HEIC) — use Take photo or convert to JPG", rc_why_net:"Connection dropped or server did not respond — press Upload again",
   rc_bad_image:"Can't read this image (maybe HEIC). Use “Take photo” or convert to JPG: ",
   rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
   rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
@@ -3220,7 +3220,7 @@ function rcAcctOptions(sel){
 }
 const RC_CURS=['TRY','USD','EUR','TWD'];
 const RC_CHUNK=700000;              // 每段字元數
-const RC_MAX_PDF=5*1024*1024;       // PDF 上限 5MB
+const RC_MAX_PDF=10*1024*1024;      // PDF 上限 10MB（掃描 App 產生的 PDF 常超過 5MB）
 const RC_IMG_MAX=1800;              // 照片長邊上限（px）
 let RECEIPTS=[];
 let RC_EDITING=null;                // 正在編輯的收據 id
@@ -3358,24 +3358,29 @@ async function rcSubmit(p){
   btn.disabled=true;
   let done=0;
   RC_DATE_TOUCHED[p]=false;
+  // 一張失敗不擋其他張：全部跑完再一起回報，失敗的留在預覽區可以重試
+  const failed=[];
   try{
-    for(const f of files){
-      msg.className='msg'; msg.textContent=`${t('rc_uploading')} ${done+1}/${files.length}`;
-      try{ await rcUploadOne(f, meta); }
+    for(let i=0;i<files.length;i++){
+      const f=files[i];
+      msg.className='msg'; msg.textContent=`${t('rc_uploading')} ${i+1}/${files.length}`;
+      try{ await rcUploadOne(f, meta); done++; }
       catch(err){
         console.error('[receipt upload]',err);
-        msg.className='msg err';
-        msg.textContent = err.code==='too_big' ? t('rc_too_big')+f.name
-                        : err.code==='bad_image' ? t('rc_bad_image')+f.name
-                        : t('rc_fail');
-        RC_PENDING[p]=files.slice(done); rcRenderPrev(p);
-        return;
+        const why = err.code==='too_big' ? t('rc_why_big') : err.code==='bad_image' ? t('rc_why_image') : t('rc_why_net');
+        failed.push({ f, why });
       }
-      done++;
     }
-    msg.className='msg'; msg.textContent=`✓ ${t('rc_done')} ${done}`;
-    RC_PENDING[p]=[]; rcRenderPrev(p);
-    ['Vendor','Amount','Note'].forEach(k=>{ const el=$id(p+k); if(el) el.value=''; });
+    RC_PENDING[p]=failed.map(x=>x.f); rcRenderPrev(p);
+    if(!failed.length){
+      msg.className='msg'; msg.textContent=`✓ ${t('rc_done')} ${done}`;
+      ['Vendor','Amount','Note'].forEach(k=>{ const el=$id(p+k); if(el) el.value=''; });
+    }else{
+      msg.className='msg err';
+      msg.innerHTML=(done?`✓ ${t('rc_done')} ${done}<br>`:'')+
+        `⚠ ${t('rc_not_uploaded').replace('{n}',failed.length)}<br>`+
+        failed.map(x=>`• ${rcEsc(x.f.name||'')}：${rcEsc(x.why)}`).join('<br>');
+    }
   } finally { btn.disabled=false; }
 }
 
