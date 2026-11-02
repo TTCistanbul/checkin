@@ -2018,7 +2018,7 @@ function initTimePicker(hiddenId, wrapId){
     const [h,m]=(v||'08:00').split(':').map(Number);
     const period = h<12 ? 'am':'pm';
     let h12 = h%12; if(h12===0) h12=12;
-    return {h12, period, m:(m<30?0:30)};
+    return {h12, period, m:(Number.isFinite(m)?m:0)};
   }
   function fmtDisplay(v){
     if(!v) return '--:--';
@@ -2031,7 +2031,7 @@ function initTimePicker(hiddenId, wrapId){
     const cur=parseVal(hidden.value);
     let hoursHtml='', minsHtml='', periodHtml='';
     for(let h=1; h<=12; h++) hoursHtml+=`<div class="tp-opt${h===cur.h12?' sel':''}" data-h="${h}">${h}</div>`;
-    [0,30].forEach(m=>{ minsHtml+=`<div class="tp-opt${m===cur.m?' sel':''}" data-m="${m}">${pad(m)}</div>`; });
+    for(let m=0;m<60;m+=5){ minsHtml+=`<div class="tp-opt${m===cur.m?' sel':''}" data-m="${m}">${pad(m)}</div>`; }
     ['am','pm'].forEach(p=>{ periodHtml+=`<div class="tp-opt${p===cur.period?' sel':''}" data-p="${p}">${t(p)}</div>`; });
     wrap.innerHTML = `
       <button type="button" class="tp-btn" id="${wrapId}_btn"><span>${fmtDisplay(hidden.value)}</span><span class="ic">&#128336;</span></button>
@@ -2089,7 +2089,9 @@ function updateReqCalc(){
   return totalHrs;
 }
 ['reqStart','reqEnd'].forEach(idn=>document.getElementById(idn).addEventListener('change',updateReqCalc));
+let SUBMITTING_REQ=false;
 document.getElementById('submitReqBtn').onclick=()=>{
+  if(SUBMITTING_REQ) return;
   const empId=CURRENT.id;
   const type=document.getElementById('reqType').value;
   const multi=document.getElementById('reqMultiDay').checked;
@@ -2105,6 +2107,13 @@ document.getElementById('submitReqBtn').onclick=()=>{
   const workDays=workDaysInRange(startDate,endDate);
   if(workDays.length===0){ msg.classList.add('err'); msg.textContent=t('no_workday_in_range'); return; }
   const note=document.getElementById('reqNote').value.trim();
+  const rangeTxt = workDays.length>1 ? `${workDays[0]} ~ ${workDays[workDays.length-1]}（${workDays.length}）` : workDays[0];
+  const confirmTxt = LANG==='zh-Hant'
+    ? `確認送出請假申請？\n\n假別：${typeLabel(type)}\n日期：${rangeTxt}\n時間：${minToHHMM(s)}–${minToHHMM(e)}`
+    : `Submit this leave request?\n\nType: ${typeLabel(type)}\nDate: ${rangeTxt}\nTime: ${minToHHMM(s)}–${minToHHMM(e)}`;
+  if(!confirm(confirmTxt)) return;
+  SUBMITTING_REQ=true;
+  const submitBtn=document.getElementById('submitReqBtn'); submitBtn.disabled=true;
   const batch=DB.batch();
   workDays.forEach(date=>{
     const ref=DB.collection('requests').doc();
@@ -2130,7 +2139,7 @@ document.getElementById('submitReqBtn').onclick=()=>{
   }).catch(err=>{
     console.error('[submitReq]',err);
     msg.classList.add('err'); msg.textContent=t('save_fail');
-  });
+  }).finally(()=>{ SUBMITTING_REQ=false; submitBtn.disabled=false; });
 };
 function minToHHMM(min){ return `${pad(Math.floor(min/60))}:${pad(min%60)}`; }
 function reqStatusPill(st){ return `<span class="pill ${st}">${t('rs_'+st)}</span>`; }
