@@ -637,7 +637,7 @@
         <div class="divider"></div>
         <p class="section-title">請假統計表（樞紐分析・今年已核准）</p>
         <div class="tbl-scroll"><table id="leavePivot"></table></div>
-        <div class="hint" style="margin:6px 0 14px">單位：天。「特休已請」「病假」含系統上線前手動補登的天數；「特休剩餘」就是系統目前實際計算出的餘額，已扣掉核准的特休。待審核的假單還沒扣。</div>
+        <div class="hint" style="margin:6px 0 14px">單位：天。「特休已請」「病假」含系統上線前手動補登的天數；「餘額基準日」是你上次存員工設定的日期，這天（含）之後核准的特休才會從餘額扣，「基準日後已扣」就是扣了幾天；「特休剩餘」就是系統目前實際計算出的餘額，已扣掉核准的特休。待審核的假單還沒扣。</div>
         <div class="divider"></div>
         <p class="section-title" data-i18n="admin_leave_title">請假審核</p>
         <div class="field" style="max-width:220px;">
@@ -2203,11 +2203,13 @@ function renderLeavePivot(){
       <td class="mono">${d(L.yearSickHours)}</td>
       <td class="mono">${d(personalH)}</td>
       <td class="mono">${officialD}</td>
+      <td class="mono">${annualBalanceAsOf(e)}</td>
+      <td class="mono">${d(L.annualUsed)}</td>
       <td class="mono"><b>${d(L.annualLeft)}</b></td>
       <td class="mono">${pendH?d(pendH):'—'}</td></tr>`;
   }).join('');
-  tb.innerHTML=`<tr><th>員工</th><th>特休已請</th><th>病假</th><th>事假</th><th>公假</th><th>特休剩餘</th><th>待審核</th></tr>${rows}
-    <tr style="background:#f3f5f8;font-weight:700"><td>合計</td><td class="mono">${d(tot.annual)}</td><td class="mono">${d(tot.sick)}</td><td class="mono">${d(tot.personal)}</td><td class="mono">${d(tot.official)}</td><td></td><td class="mono">${tot.pending?d(tot.pending):'—'}</td></tr>`;
+  tb.innerHTML=`<tr><th>員工</th><th>特休已請</th><th>病假</th><th>事假</th><th>公假</th><th>餘額基準日</th><th>基準日後已扣</th><th>特休剩餘</th><th>待審核</th></tr>${rows}
+    <tr style="background:#f3f5f8;font-weight:700"><td>合計</td><td class="mono">${d(tot.annual)}</td><td class="mono">${d(tot.sick)}</td><td class="mono">${d(tot.personal)}</td><td class="mono">${d(tot.official)}</td><td></td><td></td><td></td><td class="mono">${tot.pending?d(tot.pending):'—'}</td></tr>`;
 }
 function renderAllRequests(){
   renderLeaveBalanceDash();
