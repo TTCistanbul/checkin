@@ -635,6 +635,10 @@
         <p class="section-title" data-i18n="balance_dash_title">員工休假餘額</p>
         <div id="leaveBalanceDash"></div>
         <div class="divider"></div>
+        <p class="section-title">請假統計表（樞紐分析・今年已核准）</p>
+        <div class="tbl-scroll"><table id="leavePivot"></table></div>
+        <div class="hint" style="margin:6px 0 14px">單位：天。「特休已請」「病假」含系統上線前手動補登的天數；「特休剩餘」就是系統目前實際計算出的餘額，已扣掉核准的特休。待審核的假單還沒扣。</div>
+        <div class="divider"></div>
         <p class="section-title" data-i18n="admin_leave_title">請假審核</p>
         <div class="field" style="max-width:220px;">
           <label data-i18n="filter_status">狀態篩選</label>
@@ -2179,8 +2183,35 @@ function renderLeaveBalanceDash(){
     </div>`;
   }).join('');
 }
+function renderLeavePivot(){
+  const tb=document.getElementById('leavePivot'); if(!tb) return;
+  const ids=rosterIds();
+  const tot={annual:0,sick:0,personal:0,official:0,pending:0};
+  const d=(h)=>dayStr(h);
+  const rows=ids.map(id=>{
+    const e=EMPLOYEES[id]; if(!e) return '';
+    const L=leaveLedger(id);
+    const mine=LEAVE_REQUESTS.filter(r=>r.empId===id && isThisYear(r.date));
+    const personalH=mine.filter(r=>r.status==='approved' && r.type==='personal').reduce((a,r)=>a+Number(r.hours||0),0);
+    const offDates=new Set(mine.filter(r=>r.status==='approved' && r.type==='official').map(r=>r.date));
+    Object.keys(OFFICIAL_MARKS).forEach(k=>{ if(k.startsWith(id+'|') && isThisYear(k.split('|')[1])) offDates.add(k.split('|')[1]); });
+    const officialD=offDates.size;
+    const pendH=mine.filter(r=>r.status==='pending').reduce((a,r)=>a+Number(r.hours||0),0);
+    tot.annual+=L.yearAnnualUsed; tot.sick+=L.yearSickHours; tot.personal+=personalH; tot.official+=officialD*HOURS_PER_DAY; tot.pending+=pendH;
+    return `<tr><td>${e.name||id}<br><span class="ident-meta">#${e.empNo||''}</span></td>
+      <td class="mono">${d(L.yearAnnualUsed)}</td>
+      <td class="mono">${d(L.yearSickHours)}</td>
+      <td class="mono">${d(personalH)}</td>
+      <td class="mono">${officialD}</td>
+      <td class="mono"><b>${d(L.annualLeft)}</b></td>
+      <td class="mono">${pendH?d(pendH):'—'}</td></tr>`;
+  }).join('');
+  tb.innerHTML=`<tr><th>員工</th><th>特休已請</th><th>病假</th><th>事假</th><th>公假</th><th>特休剩餘</th><th>待審核</th></tr>${rows}
+    <tr style="background:#f3f5f8;font-weight:700"><td>合計</td><td class="mono">${d(tot.annual)}</td><td class="mono">${d(tot.sick)}</td><td class="mono">${d(tot.personal)}</td><td class="mono">${d(tot.official)}</td><td></td><td class="mono">${tot.pending?d(tot.pending):'—'}</td></tr>`;
+}
 function renderAllRequests(){
   renderLeaveBalanceDash();
+  renderLeavePivot();
   updatePendingBadge();
   const filter=document.getElementById('reqFilter').value;
   const list=LEAVE_REQUESTS.filter(r=>filter==='all'||r.status===filter).sort((a,b)=>b.reqId-a.reqId);
