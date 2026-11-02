@@ -719,6 +719,25 @@
     </div>
   </div>
 
+  <!-- 編輯假單 Modal -->
+  <div id="reqEditModal" style="display:none; position:fixed; inset:0; background:rgba(20,40,70,0.35); z-index:50; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:10px; padding:24px; width:min(380px,92vw); box-shadow:0 8px 30px rgba(0,0,0,0.2);">
+      <p class="section-title" style="margin-bottom:6px;">編輯假單</p>
+      <p class="ident-meta" id="reqEditSub" style="margin-bottom:14px;">—</p>
+      <div class="field"><label>假別</label><select id="reqEditType"></select></div>
+      <div class="field"><label>日期</label><input type="date" id="reqEditDate"></div>
+      <div class="field"><label>起</label><input type="time" id="reqEditStart" step="300"></div>
+      <div class="field"><label>迄</label><input type="time" id="reqEditEnd" step="300"></div>
+      <div class="field"><label>備註</label><input type="text" id="reqEditNote"></div>
+      <div class="hint" id="reqEditHours" style="margin:4px 0 10px"></div>
+      <div class="msg" id="reqEditMsg"></div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn-primary" id="reqEditSave" style="flex:1">儲存</button>
+        <button class="btn-mini" id="reqEditCancel" style="flex:1">取消</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 編輯時間 Modal -->
   <div id="timeModal" style="display:none; position:fixed; inset:0; background:rgba(20,40,70,0.35); z-index:50; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:10px; padding:24px; width:min(360px,92vw); box-shadow:0 8px 30px rgba(0,0,0,0.2);">
@@ -2223,6 +2242,7 @@ function renderAllRequests(){
       ? `<button class="btn-mini" style="background:var(--good-bg);color:var(--good)" onclick="approveReq('${r.reqId}')">${t('approve')}</button>
          <button class="btn-mini" style="background:#f2e7e5;color:var(--bad)" onclick="rejectReq('${r.reqId}')">${t('reject')}</button>`
       : `<button class="btn-mini" onclick="resetReq('${r.reqId}')">${t('reset')}</button>`;
+    const actionsAll = actions + ` <button class="btn-mini" onclick="editReq('${r.reqId}')">✏️ 編輯</button>`;
     return `<tr>
       <td>${emp?emp.name:r.empId}<br><span class="ident-meta">#${empNoOf(r.empId)}</span></td>
       <td class="type-${r.type}">${typeLabel(r.type)}</td>
@@ -2231,7 +2251,7 @@ function renderAllRequests(){
       <td class="mono">${r.hours}</td>
       <td>${reqStatusPill(r.status)}</td>
       <td>${r.note||''}</td>
-      <td style="white-space:nowrap">${actions}</td>
+      <td style="white-space:nowrap">${actionsAll}</td>
     </tr>`;
   }).join('');
   document.getElementById('allReqTable').innerHTML=`
@@ -2270,6 +2290,49 @@ async function setReqStatus(reqId,status){
     await syncAttendanceForReq(r,status);
   }catch(err){ console.error('[review]',err); alert(t('save_fail')); }
 }
+let EDITING_REQ=null;
+function reqEditUpdateHours(){
+  const s=hhmmToMin(document.getElementById('reqEditStart').value), e=hhmmToMin(document.getElementById('reqEditEnd').value);
+  document.getElementById('reqEditHours').textContent = e>s ? `請假時數：${calcLeaveHours(s,e)} 小時（已扣午休）` : '迄時間需晚於起時間';
+}
+window.editReq=(reqId)=>{
+  const r=findReq(reqId); if(!r) return;
+  EDITING_REQ=reqId;
+  const types = LEAVE_TYPES.includes(r.type) ? LEAVE_TYPES : [r.type].concat(LEAVE_TYPES);
+  const sel=document.getElementById('reqEditType');
+  sel.innerHTML=types.map(ty=>`<option value="${ty}">${typeLabel(ty)}</option>`).join('');
+  sel.value=r.type;
+  document.getElementById('reqEditSub').textContent=`${(EMPLOYEES[r.empId]||{}).name||r.empId} · ${t('rs_'+r.status)}`;
+  document.getElementById('reqEditDate').value=r.date;
+  document.getElementById('reqEditStart').value=minToHHMM(r.startMin);
+  document.getElementById('reqEditEnd').value=minToHHMM(r.endMin);
+  document.getElementById('reqEditNote').value=r.note||'';
+  document.getElementById('reqEditMsg').textContent=''; document.getElementById('reqEditMsg').className='msg';
+  reqEditUpdateHours();
+  document.getElementById('reqEditModal').style.display='flex';
+};
+['reqEditStart','reqEditEnd'].forEach(i=>document.getElementById(i).addEventListener('input',reqEditUpdateHours));
+document.getElementById('reqEditCancel').onclick=()=>{ document.getElementById('reqEditModal').style.display='none'; EDITING_REQ=null; };
+document.getElementById('reqEditSave').onclick=async ()=>{
+  const old=findReq(EDITING_REQ); if(!old) return;
+  const msg=document.getElementById('reqEditMsg'); msg.className='msg err'; msg.textContent='';
+  const type=document.getElementById('reqEditType').value;
+  const date=document.getElementById('reqEditDate').value;
+  const s=hhmmToMin(document.getElementById('reqEditStart').value), e=hhmmToMin(document.getElementById('reqEditEnd').value);
+  const note=document.getElementById('reqEditNote').value.trim();
+  if(!date){ msg.textContent=t('need_date'); return; }
+  const hours=calcLeaveHours(s,e);
+  if(hours<=0){ msg.textContent=t('bad_time'); return; }
+  const btn=document.getElementById('reqEditSave'); btn.disabled=true;
+  try{
+    /* 已核准的假單：先清掉舊日期寫進每日狀態的標記，更新後再用新內容重新寫入 */
+    if(old.status==='approved') await syncAttendanceForReq(old,'pending');
+    await DB.collection('requests').doc(String(old.reqId)).update({ type, date, startMin:s, endMin:e, hours, note });
+    if(old.status==='approved') await syncAttendanceForReq({...old, type, date, startMin:s, endMin:e, hours, note},'approved');
+    document.getElementById('reqEditModal').style.display='none'; EDITING_REQ=null;
+  }catch(err){ console.error('[editReq]',err); msg.textContent=t('save_fail'); }
+  btn.disabled=false;
+};
 window.approveReq=(reqId)=>setReqStatus(reqId,'approved');
 window.rejectReq =(reqId)=>setReqStatus(reqId,'rejected');
 window.resetReq  =(reqId)=>setReqStatus(reqId,'pending');
