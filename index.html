@@ -665,6 +665,10 @@
         <div class="divider"></div>
         <p class="section-title" data-i18n="rc_list_title">收據清單</p>
         <div class="rc-aibar" id="rcAiBar"></div>
+        <details class="rc-projmgr" id="rcBuyerMgr">
+          <summary data-i18n="bm_title">🔍 抬頭與稅號比對</summary>
+          <div id="rcBuyerMgrBody"></div>
+        </details>
         <details class="rc-projmgr" id="rcProjMgr">
           <summary data-i18n="rc_pm_title">📁 管理計畫編號</summary>
           <div id="rcProjMgrBody"></div>
@@ -1083,7 +1087,7 @@ Object.assign(I18N['zh-Hant'],{
   rc_cat_transport:"交通", rc_cat_meals:"餐費", rc_cat_office:"文具辦公", rc_cat_postage:"郵電快遞",
   rc_cat_entertain:"交際招待", rc_cat_misc:"雜支",
   rc_st_submitted:"待確認", rc_st_verified:"已確認", rc_missing:"待補",
-  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_pm_title:"📁 管理計畫編號", rc_pm_name:"計畫名稱", rc_pm_used:"使用中", rc_pm_empty:"還沒有計畫編號，從下面新增。", rc_pm_newcode:"新的計畫編號", rc_pm_add:"新增", rc_pm_needcode:"請輸入計畫編號。", rc_pm_dup:"這個計畫編號已經存在。", rc_pm_orphans:"以下編號有收據在用、但不在清單裡，可以用上面的新增補回：", rc_pm_rename_confirm:"有 {n} 張收據使用「{a}」，會一起改成「{b}」。確定嗎？", rc_pm_del_used:"有 {n} 張收據使用「{a}」，刪除後這些收據會變成「未指定計畫」。確定刪除嗎？", rc_pm_del:"確定刪除計畫編號「{a}」？", rc_else_a:"另有 {n} 張待確認的收據，報帳月份不在 {m}：", rc_claim:"報帳月份", rc_claim_short:"報帳", rc_else_all:"顯示全部月份", pv_title:"📊 支出彙總", pv_from:"報帳月份 從", pv_to:"到", pv_rows:"列", pv_cols:"欄", pv_cur:"幣別", pv_verified_only:"只算已確認", pv_this_month:"本月", pv_this_year:"今年", pv_all_time:"全部期間", pv_swap:"⇄ 列欄互換", pv_csv:"⬇ 匯出彙總 CSV", pv_total:"合計", pv_empty:"這段期間沒有可計算的金額。", pv_note_cur:"另有 {n} 張是其他幣別（切換「幣別」查看）", pv_note_noamt:"{n} 張沒有金額，未計入", pv_click_hint:"點任一格可看組成的收據明細。", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer_car:"本中心（公務車）", rc_plate:"公務車車牌", rc_buyer_prompt_plates:"本中心公務車車牌（用逗號分隔）。沒印買方的單據上，車牌對到其中一台就判定是本中心：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
+  rc_simple_hint:"拍照或選照片／PDF（可一次選多張），按「上傳」就完成了。", rc_up_date:"上傳日期", rc_ai_tip:"AI 自動辨識填入，請核對", rc_ocr_wait:"AI 辨識中", rc_ocr_bad:"AI 無法辨識，請手動補", rc_reocr:"重新辨識", rc_pm_title:"📁 管理計畫編號", rc_pm_name:"計畫名稱", rc_pm_used:"使用中", rc_pm_empty:"還沒有計畫編號，從下面新增。", rc_pm_newcode:"新的計畫編號", rc_pm_add:"新增", rc_pm_needcode:"請輸入計畫編號。", rc_pm_dup:"這個計畫編號已經存在。", rc_pm_orphans:"以下編號有收據在用、但不在清單裡，可以用上面的新增補回：", rc_pm_rename_confirm:"有 {n} 張收據使用「{a}」，會一起改成「{b}」。確定嗎？", rc_pm_del_used:"有 {n} 張收據使用「{a}」，刪除後這些收據會變成「未指定計畫」。確定刪除嗎？", rc_pm_del:"確定刪除計畫編號「{a}」？", rc_else_a:"另有 {n} 張待確認的收據，報帳月份不在 {m}：", rc_claim:"報帳月份", rc_claim_short:"報帳", rc_else_all:"顯示全部月份", pv_title:"📊 支出彙總", pv_from:"報帳月份 從", pv_to:"到", pv_rows:"列", pv_cols:"欄", pv_cur:"幣別", pv_verified_only:"只算已確認", pv_this_month:"本月", pv_this_year:"今年", pv_all_time:"全部期間", pv_swap:"⇄ 列欄互換", pv_csv:"⬇ 匯出彙總 CSV", pv_total:"合計", pv_empty:"這段期間沒有可計算的金額。", pv_note_cur:"另有 {n} 張是其他幣別（切換「幣別」查看）", pv_note_noamt:"{n} 張沒有金額，未計入", pv_click_hint:"點任一格可看組成的收據明細。", rc_proj:"計畫編號", rc_proj_none:"— 選擇計畫 —", rc_proj_unset:"未指定計畫", rc_proj_add:"＋ 新增計畫編號…", rc_proj_prompt_code:"新的計畫編號：", rc_proj_prompt_name:"計畫名稱（選填，方便辨認）：", rc_buyer_car:"本中心（公務車）", rc_plate:"公務車車牌", rc_buyer_prompt_plates:"本中心公務車車牌（用逗號分隔）。沒印買方的單據上，車牌對到其中一台就判定是本中心：", bm_title:"🔍 抬頭與稅號比對", bm_intro:"下面是 AI 從所有單據讀到的買方（抬頭）與買方稅號。開給本中心的正式發票，買方稅號應該都一樣——出現最多、名稱是本中心的那個，就是本中心稅號。只有名稱已被認定為本中心的那一組，才能「設為本中心稅號」，避免誤把別家公司的稅號設進來。", bm_current_vkn:"目前設定的本中心稅號", bm_vkn_seen:"已在發票上找到這個稅號", bm_vkn_unseen:"還沒有任何發票印這個稅號，請再確認", bm_names:"名稱關鍵字", bm_suspect:"這些稅號的抬頭是本中心名稱，但跟目前設定的稅號不同，可能才是本中心真正的稅號：", bm_buyer_name:"買方名稱（抬頭）", bm_buyer_vkn:"買方稅號", bm_count:"張數", bm_result:"比對結果", bm_by_vkn:"本中心（稅號相符）", bm_by_name:"本中心（名稱相符）", bm_current:"目前設定", bm_variants:"寫法", bm_set_vkn:"設為本中心稅號", bm_add_name:"加入本中心名稱", bm_empty:"還沒有讀到任何買方資料。", bm_nobuyer:"另有 {n} 張沒印買方（收銀小票），其中 {c} 張是公務車", bm_unread:"{n} 張還沒讀抬頭", bm_confirm_vkn:"把本中心稅號從 {old} 改成 {new}（抬頭：{name}）？所有收據會立即重新比對。", bm_done_vkn:"本中心稅號已改為 {v}", bm_prompt_name:"加入本中心名稱關鍵字（買方名稱包含這段文字就算本中心，可以刪短一點）：", rc_buyer:"抬頭", rc_buyer_ours:"本中心", rc_buyer_other:"非本中心", rc_buyer_none:"無抬頭", rc_buyer_none_tip:"單據上沒有印買方（收銀小票常見），請依報帳規定判斷是否可用", rc_f_buyer:"抬頭需確認", rc_buyer_cfg:"本中心抬頭", rc_buyer_novkn:"尚未設定稅號", rc_buyer_set:"抬頭比對設定", rc_buyer_prompt_vkn:"本中心的稅號（VKN，10 位數字）。發票上的買方稅號跟這個一樣，就判定是開給本中心：", rc_buyer_prompt_names:"本中心在發票上可能出現的名稱（用逗號分隔）。買方名稱包含其中任何一個，也判定是本中心：", rc_acct:"會計科目", rc_acct_none:"— 選擇科目 —", rc_acct_unset:"未選科目", rc_legacy:"舊分類，請改選科目", rc_ai_off:"AI 自動辨識尚未啟用。", rc_ai_on:"AI 自動辨識已啟用", rc_ai_idle:"新收據會在你打開這頁時自動辨識", rc_ai_waiting:"待辨識", rc_ai_setkey:"設定 Gemini 金鑰", rc_ai_changekey:"更換金鑰", rc_ai_prompt_key:"貼上 Gemini API 金鑰（只存在資料庫、只有主控端讀得到；留空按確定＝停用 AI）", rc_ai_badkey:"Gemini 金鑰無效，請按「更換金鑰」重新設定", rc_ai_rules:"讀不到 AI 設定：請確認 Firestore 規則已加上 config 那一段", rc_ai_busy:"AI 正在處理其他收據，請稍候再試", rc_th_person:"經手人", rc_th_note:"用途", rc_th_status:"狀態", rc_th_action:"操作",
   rc_view:"檢視", rc_dl:"下載", rc_edit:"編輯", rc_save:"儲存", rc_cancel:"取消",
   rc_verify:"確認", rc_unverify:"取消確認", rc_delete:"刪除",
   rc_del_confirm:"確定刪除這張收據？檔案也會一併刪除，無法復原。",
@@ -1105,7 +1109,7 @@ Object.assign(I18N['en'],{
   rc_cat_transport:"Transport", rc_cat_meals:"Meals", rc_cat_office:"Office supplies", rc_cat_postage:"Postage & telecom",
   rc_cat_entertain:"Entertainment", rc_cat_misc:"Misc",
   rc_st_submitted:"Submitted", rc_st_verified:"Verified", rc_missing:"Missing",
-  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_pm_title:"📁 Manage project numbers", rc_pm_name:"Project name", rc_pm_used:"In use", rc_pm_empty:"No project numbers yet — add one below.", rc_pm_newcode:"New project number", rc_pm_add:"Add", rc_pm_needcode:"Enter a project number.", rc_pm_dup:"That project number already exists.", rc_pm_orphans:"These numbers are used on receipts but missing from the list — add them back above: ", rc_pm_rename_confirm:"{n} receipts use “{a}” and will be changed to “{b}”. Continue?", rc_pm_del_used:"{n} receipts use “{a}”; they will become “No project”. Delete anyway?", rc_pm_del:"Delete project number “{a}”?", rc_else_a:"{n} more receipts waiting for review are claimed outside {m}:", rc_claim:"Claim month", rc_claim_short:"claim", rc_else_all:"Show all months", pv_title:"📊 Spending summary", pv_from:"Claim month from", pv_to:"to", pv_rows:"Rows", pv_cols:"Columns", pv_cur:"Currency", pv_verified_only:"Verified only", pv_this_month:"This month", pv_this_year:"This year", pv_all_time:"All time", pv_swap:"⇄ Swap rows/columns", pv_csv:"⬇ Export summary CSV", pv_total:"Total", pv_empty:"No amounts in this period.", pv_note_cur:"{n} more in other currencies (switch Currency)", pv_note_noamt:"{n} without an amount, not counted", pv_click_hint:"Click any cell to see the receipts behind it.", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer_car:"Our office (car)", rc_plate:"Office car plate", rc_buyer_prompt_plates:"Office car plates (comma separated). Receipts with no buyer but one of these plates count as ours:", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
+  rc_simple_hint:"Take a photo or pick photos / PDFs (several at once is fine), then tap Upload.", rc_up_date:"Uploaded", rc_ai_tip:"Filled by AI — please check", rc_ocr_wait:"AI reading", rc_ocr_bad:"AI couldn't read — fill in manually", rc_reocr:"Re-read", rc_pm_title:"📁 Manage project numbers", rc_pm_name:"Project name", rc_pm_used:"In use", rc_pm_empty:"No project numbers yet — add one below.", rc_pm_newcode:"New project number", rc_pm_add:"Add", rc_pm_needcode:"Enter a project number.", rc_pm_dup:"That project number already exists.", rc_pm_orphans:"These numbers are used on receipts but missing from the list — add them back above: ", rc_pm_rename_confirm:"{n} receipts use “{a}” and will be changed to “{b}”. Continue?", rc_pm_del_used:"{n} receipts use “{a}”; they will become “No project”. Delete anyway?", rc_pm_del:"Delete project number “{a}”?", rc_else_a:"{n} more receipts waiting for review are claimed outside {m}:", rc_claim:"Claim month", rc_claim_short:"claim", rc_else_all:"Show all months", pv_title:"📊 Spending summary", pv_from:"Claim month from", pv_to:"to", pv_rows:"Rows", pv_cols:"Columns", pv_cur:"Currency", pv_verified_only:"Verified only", pv_this_month:"This month", pv_this_year:"This year", pv_all_time:"All time", pv_swap:"⇄ Swap rows/columns", pv_csv:"⬇ Export summary CSV", pv_total:"Total", pv_empty:"No amounts in this period.", pv_note_cur:"{n} more in other currencies (switch Currency)", pv_note_noamt:"{n} without an amount, not counted", pv_click_hint:"Click any cell to see the receipts behind it.", rc_proj:"Project", rc_proj_none:"— choose project —", rc_proj_unset:"No project", rc_proj_add:"+ New project number…", rc_proj_prompt_code:"New project number:", rc_proj_prompt_name:"Project name (optional):", rc_buyer_car:"Our office (car)", rc_plate:"Office car plate", rc_buyer_prompt_plates:"Office car plates (comma separated). Receipts with no buyer but one of these plates count as ours:", bm_title:"🔍 Buyer & tax ID check", bm_intro:"Buyers and buyer tax IDs that AI read from all documents. Invoices addressed to our office should all carry the same buyer tax ID — the most frequent one with our name is our tax ID.", bm_current_vkn:"Current office tax ID", bm_vkn_seen:"found on invoices", bm_vkn_unseen:"not found on any invoice yet — please double-check", bm_names:"Name keywords", bm_suspect:"These tax IDs carry our office name but differ from the current setting — one may be our real tax ID:", bm_buyer_name:"Buyer name", bm_buyer_vkn:"Buyer tax ID", bm_count:"Count", bm_result:"Result", bm_by_vkn:"Ours (tax ID)", bm_by_name:"Ours (name)", bm_current:"current", bm_variants:"spellings", bm_set_vkn:"Set as our tax ID", bm_add_name:"Add as our name", bm_empty:"No buyer data read yet.", bm_nobuyer:"{n} more have no buyer printed (till receipts), {c} of them office car", bm_unread:"{n} not read yet", bm_confirm_vkn:"Change our tax ID from {old} to {new} (buyer: {name})? All receipts are re-checked immediately.", bm_done_vkn:"Office tax ID set to {v}", bm_prompt_name:"Add a name keyword for our office (a buyer name containing it counts as ours):", rc_buyer:"Billed to", rc_buyer_ours:"Our office", rc_buyer_other:"Not our office", rc_buyer_none:"No buyer", rc_buyer_none_tip:"No buyer printed (common on till receipts) — check against the expense rules", rc_f_buyer:"Buyer to check", rc_buyer_cfg:"Our office", rc_buyer_novkn:"tax ID not set", rc_buyer_set:"Buyer matching", rc_buyer_prompt_vkn:"Our office tax ID (VKN, 10 digits). Invoices whose buyer VKN matches are treated as ours:", rc_buyer_prompt_names:"Names our office may appear under on invoices (comma separated). A buyer name containing any of them counts as ours:", rc_acct:"Account", rc_acct_none:"— choose account —", rc_acct_unset:"No account", rc_legacy:"old category — choose an account", rc_ai_off:"AI recognition is off.", rc_ai_on:"AI recognition on", rc_ai_idle:"new receipts are read when you open this page", rc_ai_waiting:"waiting", rc_ai_setkey:"Set Gemini key", rc_ai_changekey:"Change key", rc_ai_prompt_key:"Paste the Gemini API key (stored in the database, readable by admins only; leave empty to turn AI off)", rc_ai_badkey:"Gemini key is invalid — click Change key", rc_ai_rules:"Can't read AI settings: add the config block to the Firestore rules", rc_ai_busy:"AI is busy with other receipts, try again shortly", rc_th_person:"By", rc_th_note:"Purpose", rc_th_status:"Status", rc_th_action:"Actions",
   rc_view:"View", rc_dl:"Download", rc_edit:"Edit", rc_save:"Save", rc_cancel:"Cancel",
   rc_verify:"Verify", rc_unverify:"Unverify", rc_delete:"Delete",
   rc_del_confirm:"Delete this receipt and its file? This can't be undone.",
@@ -3309,6 +3313,82 @@ window.rcPmDelete=async i=>{
     rcRenderProjMgr(true); renderReceipts(); rcPmMsg('✓', true);
   }catch(err){ console.error('[pm delete]',err); rcPmMsg(t('save_fail')); }
 };
+/* ---- 抬頭與稅號比對：單據上讀到的每組買方，一眼看出本中心的稅號是哪個 ---- */
+let BM_OPEN=null;    // 展開明細的那一組
+function rcBuyerGroups(){
+  const g={};
+  RECEIPTS.filter(r=>r.buyerRead && (r.buyerName||r.buyerTaxId)).forEach(r=>{
+    const tax=String(r.buyerTaxId||'').replace(/\D/g,'');
+    const key=tax ? 'v:'+tax : 'n:'+rcNorm(r.buyerName);
+    const x=g[key]=g[key]||{ key, tax, names:{}, list:[] };
+    if(r.buyerName) x.names[r.buyerName]=(x.names[r.buyerName]||0)+1;
+    x.list.push(r);
+  });
+  return Object.values(g).map(x=>{
+    x.name=Object.entries(x.names).sort((a,b)=>b[1]-a[1]).map(e=>e[0])[0]||'';
+    const bases=x.list.map(rcBuyerBasis);
+    x.basis = bases.includes('vkn')?'vkn' : bases.includes('name')?'name' : null;
+    return x;
+  }).sort((a,b)=>b.list.length-a.list.length);
+}
+function rcRenderBuyerMgr(force){
+  const body=$id('rcBuyerMgrBody'); if(!body) return;
+  if(!force && body.contains(document.activeElement)) return;
+  const groups=rcBuyerGroups();
+  const vkn=String(RC_BUYER.vkn||'');
+  const noBuyer=RECEIPTS.filter(r=>r.buyerRead && !r.buyerName && !r.buyerTaxId);
+  const car=noBuyer.filter(r=>rcBuyerBasis(r)==='plate').length;
+  const unread=RECEIPTS.filter(r=>!r.buyerRead).length;
+  // 稅號建議：被名稱判定為本中心、但稅號跟目前設定不同的那組，最可能才是真正的本中心稅號
+  const suspect=groups.filter(g=>g.tax && g.tax!==vkn && g.basis==='name');
+  const vknSeen=groups.some(g=>g.tax===vkn);
+  const status=(g)=>g.basis==='vkn' ? `<span class="pill approved">✓ ${t('bm_by_vkn')}</span>`
+    : g.basis==='name' ? `<span class="pill approved">✓ ${t('bm_by_name')}</span>`
+    : `<span class="pill rc-buyer-bad">⚠ ${t('rc_buyer_other')}</span>`;
+  const rows=groups.map((g,i)=>`<tr>
+      <td>${rcEsc(g.name)||'<span style="color:#8a94a0">—</span>'}${Object.keys(g.names).length>1?`<div class="rc-claim">${t('bm_variants')} ${Object.keys(g.names).length}</div>`:''}</td>
+      <td style="font-family:var(--mono)">${g.tax?rcEsc(g.tax):'<span style="color:#8a94a0">—</span>'}${g.tax&&g.tax===vkn?` <span class="pill approved">${t('bm_current')}</span>`:''}</td>
+      <td class="rc-pm-count"><a href="#" onclick="BM_OPEN=BM_OPEN==='${rcEsc(g.key)}'?null:'${rcEsc(g.key)}';rcRenderBuyerMgr(true);return false;">${g.list.length} ${t('rc_sum_unit')}</a></td>
+      <td>${status(g)}</td>
+      <td><div class="rc-actions">
+        ${g.tax&&g.tax!==vkn&&g.basis==='name'?`<button class="btn-mini" onclick="rcBmSetVkn(${i})">${t('bm_set_vkn')}</button>`:''}
+        ${g.name&&g.basis!=='name'&&g.basis!=='vkn'?`<button class="btn-mini" onclick="rcBmAddName(${i})">${t('bm_add_name')}</button>`:''}
+      </div></td></tr>
+      ${BM_OPEN===g.key?`<tr><td colspan="5" style="background:#fbfcfe">${g.list.map(r=>`<div style="font-size:12px;padding:2px 0">
+        ${rcEsc(r.date||'')} · ${rcEsc(r.vendor||'—')} · ${rcEsc(rcAmountText(r))} · ${rcEsc(r.buyerName||'')}
+        <button class="btn-mini" onclick="rcView('${r.id}')">${t('rc_view')}</button></div>`).join('')}</td></tr>`:''}`).join('');
+  body.innerHTML=`
+    <p class="hint" style="margin-top:0">${t('bm_intro')}</p>
+    <div class="rc-sum">${t('bm_current_vkn')}：<b style="font-family:var(--mono)">${rcEsc(vkn)||'—'}</b>
+      ${vkn?(vknSeen?` · <span style="color:var(--good)">${t('bm_vkn_seen')}</span>`:` · <span style="color:var(--warn)">${t('bm_vkn_unseen')}</span>`):''}
+      · ${t('bm_names')}：${rcEsc((RC_BUYER.names||[]).join('、'))}</div>
+    ${suspect.length?`<div class="rc-elsewhere">⚠ ${t('bm_suspect')} ${suspect.map(g=>`<b style="font-family:var(--mono)">${rcEsc(g.tax)}</b>（${g.list.length} ${t('rc_sum_unit')}）`).join('、')}</div>`:''}
+    <div class="tbl-scroll"><table class="rc-pm-table">
+      <thead><tr><th>${t('bm_buyer_name')}</th><th>${t('bm_buyer_vkn')}</th><th>${t('bm_count')}</th><th>${t('bm_result')}</th><th></th></tr></thead>
+      <tbody>${rows||`<tr><td colspan="5" style="color:#8a94a0">${t('bm_empty')}</td></tr>`}</tbody></table></div>
+    <p class="hint">${t('bm_nobuyer').replace('{n}',noBuyer.length).replace('{c}',car)}${unread?' · '+t('bm_unread').replace('{n}',unread):''}</p>
+    <div class="msg" id="rcBmMsg"></div>`;
+}
+window.rcBmSetVkn=async i=>{
+  const g=rcBuyerGroups()[i]; if(!g||!g.tax) return;
+  if(!confirm(t('bm_confirm_vkn').replace('{old}',RC_BUYER.vkn||'—').replace('{new}',g.tax).replace('{name}',g.name||'—'))) return;
+  try{
+    await DB.collection('config').doc('ai').set({ buyerVkn:g.tax, updatedBy:CURRENT.id,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
+    await rcAiLoadKey(); rcRenderBuyerMgr(true);
+    const m=$id('rcBmMsg'); if(m){ m.className='msg'; m.textContent='✓ '+t('bm_done_vkn').replace('{v}',g.tax); }
+  }catch(err){ console.error('[bm vkn]',err); alert(t('rc_ai_rules')); }
+};
+window.rcBmAddName=async i=>{
+  const g=rcBuyerGroups()[i]; if(!g||!g.name) return;
+  const kw=prompt(t('bm_prompt_name'), g.name); if(!kw||!kw.trim()) return;
+  const names=[...new Set([...(RC_BUYER.names||[]), kw.trim()])];
+  try{
+    await DB.collection('config').doc('ai').set({ buyerNames:names, updatedBy:CURRENT.id,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
+    await rcAiLoadKey(); rcRenderBuyerMgr(true);
+  }catch(err){ console.error('[bm name]',err); alert(t('rc_ai_rules')); }
+};
 async function rcLoadProjects(){
   try{
     const s=await DB.collection('config').doc('projects').get();
@@ -3520,6 +3600,16 @@ const RC_BUYER_DEFAULT_PLATES=['34GMD775'];  // 本中心公務車（加油、�
 let RC_BUYER={ vkn:RC_BUYER_DEFAULT_VKN, names:RC_BUYER_DEFAULT_NAMES.slice(), plates:RC_BUYER_DEFAULT_PLATES.slice() };
 function rcPlateNorm(s){ return String(s||'').toUpperCase().replace(/İ/g,'I').replace(/[^0-9A-Z]/g,''); }
 function rcNorm(s){ return String(s||'').toLocaleLowerCase('tr').replace(/[^0-9a-zçğıöşüâîû\u4e00-\u9fff]/g,''); }
+// 比對依據：'vkn' 稅號相同、'name' 名稱關鍵字、'plate' 公務車車牌、null 不是本中心
+function rcBuyerBasis(r){
+  const name=r.buyerName||'', tax=String(r.buyerTaxId||'').replace(/\D/g,'');
+  const vkn=String(RC_BUYER.vkn||'').replace(/\D/g,'');
+  if(vkn && tax && tax===vkn) return 'vkn';
+  const n=rcNorm(name);
+  if(n && (RC_BUYER.names||[]).some(k=>rcNorm(k) && n.includes(rcNorm(k)))) return 'name';
+  if(!name && !tax){ const pl=rcPlateNorm(r.plate); if(pl && (RC_BUYER.plates||[]).some(x=>rcPlateNorm(x)===pl)) return 'plate'; }
+  return null;
+}
 function rcBuyerCheck(r){
   // 每次畫面重畫時即時比對（改了本中心稅號／名稱設定，舊收據會跟著更新）
   if(!r.buyerRead) return null;                                   // 還沒讀過抬頭
@@ -3842,6 +3932,7 @@ function renderReceipts(){
       projCodes.map(c=>`<option value="${rcEsc(c)}">${rcEsc(rcProjLabel(c))}</option>`).join('');
     fp.value=[...fp.options].some(o=>o.value===keepP)?keepP:'all';
     rcRenderProjMgr(false);
+    rcRenderBuyerMgr(false);
     safe(renderPivot,'pivot');
     rcAiRenderBar();
     // 待確認數量徽章
