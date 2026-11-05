@@ -2122,6 +2122,12 @@ function updateReqCalc(){
   return totalHrs;
 }
 ['reqStart','reqEnd'].forEach(idn=>document.getElementById(idn).addEventListener('change',updateReqCalc));
+/* 找同一員工、同一天、時段重疊且仍有效（待審核／已核准）的假單；excludeId 用於編輯時排除自己 */
+function findOverlapReq(empId,date,s,e,excludeId){
+  return LEAVE_REQUESTS.find(r=>r.empId===empId && r.date===date && r.reqId!==excludeId
+    && (r.status==='pending'||r.status==='approved')
+    && s<Number(r.endMin) && e>Number(r.startMin));
+}
 let SUBMITTING_REQ=false;
 document.getElementById('submitReqBtn').onclick=()=>{
   if(SUBMITTING_REQ) return;
@@ -2139,6 +2145,16 @@ document.getElementById('submitReqBtn').onclick=()=>{
   if(hrsPerDay<=0){ msg.classList.add('err'); msg.textContent=t('bad_time'); return; }
   const workDays=workDaysInRange(startDate,endDate);
   if(workDays.length===0){ msg.classList.add('err'); msg.textContent=t('no_workday_in_range'); return; }
+  /* 不能重複請假：同一天已有「待審核／已核准」的假單且時段重疊，就擋下來 */
+  const clash=workDays.map(date=>({date, r:findOverlapReq(empId,date,s,e)})).filter(x=>x.r);
+  if(clash.length){
+    const c=clash[0];
+    msg.classList.add('err');
+    msg.textContent = LANG==='zh-Hant'
+      ? `${c.date} 已經有一筆${typeLabel(c.r.type)}假單（${minToHHMM(c.r.startMin)}–${minToHHMM(c.r.endMin)}，${t('rs_'+c.r.status)}），時段重疊，不能重複申請。`
+      : `You already have a ${typeLabel(c.r.type)} request on ${c.date} (${minToHHMM(c.r.startMin)}–${minToHHMM(c.r.endMin)}, ${t('rs_'+c.r.status)}) that overlaps. Duplicate requests are not allowed.`;
+    return;
+  }
   const note=document.getElementById('reqNote').value.trim();
   const rangeTxt = workDays.length>1 ? `${workDays[0]} ~ ${workDays[workDays.length-1]}（${workDays.length}）` : workDays[0];
   const confirmTxt = LANG==='zh-Hant'
@@ -2354,6 +2370,10 @@ document.getElementById('reqEditSave').onclick=async ()=>{
   if(!date){ msg.textContent=t('need_date'); return; }
   const hours=calcLeaveHours(s,e);
   if(hours<=0){ msg.textContent=t('bad_time'); return; }
+  const dup=findOverlapReq(old.empId,date,s,e,old.reqId);
+  if((old.status==='pending'||old.status==='approved') && dup){
+    msg.textContent=`${date} 已有另一筆${typeLabel(dup.type)}假單（${minToHHMM(dup.startMin)}–${minToHHMM(dup.endMin)}）時段重疊，請先處理那一筆。`; return;
+  }
   const btn=document.getElementById('reqEditSave'); btn.disabled=true;
   try{
     /* 已核准的假單：先清掉舊日期寫進每日狀態的標記，更新後再用新內容重新寫入 */
