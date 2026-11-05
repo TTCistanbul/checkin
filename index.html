@@ -635,9 +635,9 @@
         <p class="section-title" data-i18n="balance_dash_title">員工休假餘額</p>
         <div id="leaveBalanceDash"></div>
         <div class="divider"></div>
-        <p class="section-title">請假統計表（樞紐分析・今年已核准）</p>
+        <p class="section-title" id="pivotTitle">請假統計表（樞紐分析・今年已核准）</p>
         <div class="tbl-scroll"><table id="leavePivot"></table></div>
-        <div class="hint" style="margin:6px 0 14px">單位：天。「特休已請」「病假」含系統上線前手動補登的天數；「餘額基準日」是你上次存員工設定的日期，這天（含）之後核准的特休才會從餘額扣，「基準日後已扣」就是扣了幾天；「特休剩餘」就是系統目前實際計算出的餘額，已扣掉核准的特休。待審核的假單還沒扣。</div>
+        <div class="hint" style="margin:6px 0 14px">單位：天。下方選了月份或員工，這張表會跟著只算那個月／那個人（選月份時不含手動補登，「特休剩餘」永遠是目前餘額）。「特休已請」「病假」含系統上線前手動補登的天數；「餘額基準日」是你上次存員工設定的日期，這天（含）之後核准的特休才會從餘額扣，「基準日後已扣」就是扣了幾天；「特休剩餘」就是系統目前實際計算出的餘額，已扣掉核准的特休。待審核的假單還沒扣。</div>
         <div class="divider"></div>
         <p class="section-title" data-i18n="admin_leave_title">請假審核</p>
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
@@ -2214,22 +2214,34 @@ function renderLeaveBalanceDash(){
 }
 function renderLeavePivot(){
   const tb=document.getElementById('leavePivot'); if(!tb) return;
-  const ids=rosterIds();
+  const monthSel=(document.getElementById('reqMonthFilter')||{}).value||'all';
+  const empSel=(document.getElementById('reqEmpFilter')||{}).value||'all';
+  const inScope=(date)=> monthSel==='all' ? isThisYear(date) : (date||'').startsWith(monthSel);
+  const ids=rosterIds().filter(id=>empSel==='all'||id===empSel);
   const tot={annual:0,sick:0,personal:0,official:0,pending:0};
   const d=(h)=>dayStr(h);
   const rows=ids.map(id=>{
     const e=EMPLOYEES[id]; if(!e) return '';
     const L=leaveLedger(id);
-    const mine=LEAVE_REQUESTS.filter(r=>r.empId===id && isThisYear(r.date));
+    const mine=LEAVE_REQUESTS.filter(r=>r.empId===id && inScope(r.date));
     const personalH=mine.filter(r=>r.status==='approved' && r.type==='personal').reduce((a,r)=>a+Number(r.hours||0),0);
     const offDates=new Set(mine.filter(r=>r.status==='approved' && r.type==='official').map(r=>r.date));
-    Object.keys(OFFICIAL_MARKS).forEach(k=>{ if(k.startsWith(id+'|') && isThisYear(k.split('|')[1])) offDates.add(k.split('|')[1]); });
+    Object.keys(OFFICIAL_MARKS).forEach(k=>{ if(k.startsWith(id+'|') && inScope(k.split('|')[1])) offDates.add(k.split('|')[1]); });
     const officialD=offDates.size;
     const pendH=mine.filter(r=>r.status==='pending').reduce((a,r)=>a+Number(r.hours||0),0);
-    tot.annual+=L.yearAnnualUsed; tot.sick+=L.yearSickHours; tot.personal+=personalH; tot.official+=officialD*HOURS_PER_DAY; tot.pending+=pendH;
+    let annualH=L.yearAnnualUsed, sickH=L.yearSickHours;
+    if(monthSel!=='all'){
+      /* 選了某個月：只加總該月已核准的假單（特休類含事假先扣特休，與年度統計口徑一致；不含系統上線前的手動補登） */
+      const ap=mine.filter(r=>r.status==='approved');
+      annualH=ap.filter(r=>ANNUAL_FIRST_FOR[r.type]!==false && r.type!=='official').reduce((a,r)=>a+Number(r.hours||0),0);
+      sickH=ap.filter(r=>r.type==='sick_doc'||r.type==='sick').reduce((a,r)=>a+Number(r.hours||0),0);
+      const sd=new Set(ap.filter(r=>r.type==='sick_doc'||r.type==='sick').map(r=>r.date));
+      Object.keys(SICK_MARKS).forEach(k=>{ const dt=k.split('|')[1]; if(k.startsWith(id+'|') && inScope(dt) && !sd.has(dt)) sickH+=HOURS_PER_DAY; });
+    }
+    tot.annual+=annualH; tot.sick+=sickH; tot.personal+=personalH; tot.official+=officialD*HOURS_PER_DAY; tot.pending+=pendH;
     return `<tr><td>${e.name||id}<br><span class="ident-meta">#${e.empNo||''}</span></td>
-      <td class="mono">${d(L.yearAnnualUsed)}</td>
-      <td class="mono">${d(L.yearSickHours)}</td>
+      <td class="mono">${d(annualH)}</td>
+      <td class="mono">${d(sickH)}</td>
       <td class="mono">${d(personalH)}</td>
       <td class="mono">${officialD}</td>
       <td class="mono">${annualBalanceAsOf(e)}</td>
@@ -2237,6 +2249,7 @@ function renderLeavePivot(){
       <td class="mono"><b>${d(L.annualLeft)}</b></td>
       <td class="mono">${pendH?d(pendH):'—'}</td></tr>`;
   }).join('');
+  const pt=document.getElementById('pivotTitle'); if(pt) pt.textContent = monthSel==='all' ? '請假統計表（樞紐分析・今年已核准）' : `請假統計表（樞紐分析・${monthSel} 已核准）`;
   tb.innerHTML=`<tr><th>員工</th><th>特休已請</th><th>病假</th><th>事假</th><th>公假</th><th>餘額基準日</th><th>基準日後已扣</th><th>特休剩餘</th><th>待審核</th></tr>${rows}
     <tr style="background:#f3f5f8;font-weight:700"><td>合計</td><td class="mono">${d(tot.annual)}</td><td class="mono">${d(tot.sick)}</td><td class="mono">${d(tot.personal)}</td><td class="mono">${d(tot.official)}</td><td></td><td></td><td></td><td class="mono">${tot.pending?d(tot.pending):'—'}</td></tr>`;
 }
