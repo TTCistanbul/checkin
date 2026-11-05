@@ -640,6 +640,12 @@
         <div class="hint" style="margin:6px 0 14px">單位：天。「特休已請」「病假」含系統上線前手動補登的天數；「餘額基準日」是你上次存員工設定的日期，這天（含）之後核准的特休才會從餘額扣，「基準日後已扣」就是扣了幾天；「特休剩餘」就是系統目前實際計算出的餘額，已扣掉核准的特休。待審核的假單還沒扣。</div>
         <div class="divider"></div>
         <p class="section-title" data-i18n="admin_leave_title">請假審核</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+          <div class="field" style="min-width:130px;flex:1"><label>員工</label><select id="reqEmpFilter"><option value="all">全部員工</option></select></div>
+          <div class="field" style="min-width:130px;flex:1"><label>月份</label><select id="reqMonthFilter"><option value="all">全部月份</option></select></div>
+          <div class="field" style="min-width:130px;flex:1"><label>假別</label><select id="reqTypeFilter"><option value="all">全部假別</option></select></div>
+          <div class="field" style="min-width:130px;flex:1"><label>排序</label><select id="reqSortOrder"><option value="desc">日期：新→舊</option><option value="asc">日期：舊→新</option></select></div>
+        </div>
         <div class="field" style="max-width:220px;">
           <label data-i18n="filter_status">狀態篩選</label>
           <select id="reqFilter">
@@ -2239,7 +2245,15 @@ function renderAllRequests(){
   renderLeavePivot();
   updatePendingBadge();
   const filter=document.getElementById('reqFilter').value;
-  const list=LEAVE_REQUESTS.filter(r=>filter==='all'||r.status===filter).sort((a,b)=>b.reqId-a.reqId);
+  /* 篩選選項（員工／月份／假別）依目前資料動態產生，並保留原本的選擇 */
+  const keepSel=(id,html,all)=>{ const el=document.getElementById(id); const cur=el.value; el.innerHTML=`<option value="all">${all}</option>`+html; el.value=[...el.options].some(o=>o.value===cur)?cur:'all'; return el.value; };
+  const empSel=keepSel('reqEmpFilter', [...new Set(LEAVE_REQUESTS.map(r=>r.empId))].map(id=>`<option value="${id}">${(EMPLOYEES[id]||{}).name||id}</option>`).join(''),'全部員工');
+  const monthSel=keepSel('reqMonthFilter', [...new Set(LEAVE_REQUESTS.map(r=>(r.date||'').slice(0,7)).filter(Boolean))].sort().reverse().map(m=>`<option value="${m}">${m}</option>`).join(''),'全部月份');
+  const typeSel=keepSel('reqTypeFilter', [...new Set(LEAVE_REQUESTS.map(r=>r.type))].map(ty=>`<option value="${ty}">${typeLabel(ty)}</option>`).join(''),'全部假別');
+  const dir=document.getElementById('reqSortOrder').value==='asc'?1:-1;
+  const list=LEAVE_REQUESTS
+    .filter(r=>(filter==='all'||r.status===filter) && (empSel==='all'||r.empId===empSel) && (monthSel==='all'||(r.date||'').startsWith(monthSel)) && (typeSel==='all'||r.type===typeSel))
+    .sort((a,b)=> a.date!==b.date ? (a.date<b.date?-1:1)*dir : ((EMPLOYEES[a.empId]||{}).name||'').localeCompare((EMPLOYEES[b.empId]||{}).name||'') );
   const rows=list.map(r=>{
     const emp=EMPLOYEES[r.empId];
     const actions = r.status==='pending'
@@ -2344,7 +2358,7 @@ function afterReqChange(r){
   renderAllRequests();
   if(CURRENT && CURRENT.id===r.empId) renderEmpLeavePage(r.empId);
 }
-document.getElementById('reqFilter').addEventListener('change',renderAllRequests);
+['reqFilter','reqEmpFilter','reqMonthFilter','reqTypeFilter','reqSortOrder'].forEach(i=>document.getElementById(i).addEventListener('change',renderAllRequests));
 /* 補救用：把「已經核准、但因為當初系統版本較舊而沒寫進 attendance」的假單，重新同步一次。
    可重複點擊，不會造成重複或錯誤（每筆都是用假單自己的 uid+date 覆蓋寫入）。 */
 document.getElementById('resyncAttBtn').onclick=async ()=>{
