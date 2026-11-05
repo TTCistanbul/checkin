@@ -4343,6 +4343,11 @@ async function rcZip(){
       msg.textContent=`${t('rc_zipping')} ${i+1}/${list.length}`;
       const name=rcUniqueName(list[i],used);
       zip.file(name, await rcLoadBlob(list[i]));
+      /* 非消耗品的物品照片：跟收據放在一起，檔名＝收據檔名＋「_物品照片」 */
+      if(list[i].itemChunks){
+        try{ zip.file(name.replace(/\.\w+$/,'')+'_物品照片.jpg', await rcLoadItemBlob(list[i])); }
+        catch(e){ console.error('[rcZip item]',list[i].id,e); }
+      }
     }
     const ym=$id('rcFMonth').value||'all';
     zip.file(`receipts_${ym}.csv`, '﻿'+rcCsv(list));
