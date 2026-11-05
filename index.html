@@ -1101,7 +1101,8 @@ Object.assign(I18N['zh-Hant'],{
   rc_zip:"⬇ 下載全部收據（ZIP，已自動命名）", rc_csv:"⬇ 匯出清冊 CSV", rc_zipping:"打包中…",
   rc_empty:"目前沒有收據。", rc_sum_n:"共", rc_sum_unit:"張", rc_sum_incomplete:"張待補",
   rc_naming_hint:"AI 會自動讀出日期、廠商、金額（標 AI 的欄位請核對），計畫編號與會計科目請在清單上直接選，核對後按「確認」。下載時自動命名為：日期-科目代碼-科目名稱-金額（例：20261001-620101-文具紙張-1850.00TRY.jpg），未選科目會是「未分類」；ZIP 內附清冊 CSV。",
-  rc_load_fail:"檔案讀取失敗。"
+  rc_load_fail:"檔案讀取失敗。",
+  rc_item_photo:"物品照片", rc_item_missing:"待補物品照片", rc_item_upload:"📸 上傳", rc_item_replace:"更換", rc_item_view:"檢視", rc_item_del:"移除", rc_item_del_confirm:"移除這張物品照片？", rc_item_bad:"物品照片請選擇圖片檔。"
 });
 Object.assign(I18N['en'],{
   etab_receipt:"Receipts", tab_receipts:"Receipts",
@@ -1123,7 +1124,8 @@ Object.assign(I18N['en'],{
   rc_zip:"⬇ Download all (ZIP, auto-named)", rc_csv:"⬇ Export CSV", rc_zipping:"Zipping…",
   rc_empty:"No receipts yet.", rc_sum_n:"Total", rc_sum_unit:"receipts", rc_sum_incomplete:"incomplete",
   rc_naming_hint:"AI fills in date, vendor and amount (check fields tagged AI); pick the project and account in the list, then Verify. Files are named Date-AccountCode-AccountName-Amount (e.g. 20261001-620101-文具紙張-1850.00TRY.jpg); the ZIP includes a CSV ledger.",
-  rc_load_fail:"Couldn't load the file."
+  rc_load_fail:"Couldn't load the file.",
+  rc_item_photo:"Item photo", rc_item_missing:"Item photo needed", rc_item_upload:"📸 Upload", rc_item_replace:"Replace", rc_item_view:"View", rc_item_del:"Remove", rc_item_del_confirm:"Remove this item photo?", rc_item_bad:"Please choose an image file for the item photo."
 });
 
 let LANG='zh-Hant';
@@ -3910,6 +3912,16 @@ function rcRowHtmlSimple(r){
       ${r.status!=='verified'?`<button class="btn-mini danger" onclick="rcDelete('${r.id}')">${t('rc_delete')}</button>`:''}
     </div></td></tr>`;
 }
+/* 非消耗品（科目 620901）多一個「物品照片」欄位：拍物品本身的照片，跟收據分開存放 */
+const RC_NONCONSUMABLE='620901';
+function rcItemPhotoHtml(r,canEdit){
+  if(r.category!==RC_NONCONSUMABLE) return '';
+  const has=!!r.itemChunks;
+  const btn=(label,fn,cls)=>`<button class="btn-mini ${cls||''}" onclick="${fn}('${r.id}')">${label}</button>`;
+  return `<div class="rc-item" style="margin-top:6px;font-size:12px;${has?'':'color:#c07a1a;font-weight:700'}">📸 ${t('rc_item_photo')}：
+    ${has ? btn(t('rc_item_view'),'rcItemView')+(canEdit?btn(t('rc_item_replace'),'rcItemPick')+btn(t('rc_item_del'),'rcItemRemove','danger'):'')
+          : (canEdit ? btn(t('rc_item_upload'),'rcItemPick') : t('rc_item_missing'))}</div>`;
+}
 function rcRowHtml(r, admin){
   const canEdit = admin || (r.uid===CURRENT.id && r.status!=='verified');
   if(RC_EDITING===r.id && canEdit){
@@ -3946,8 +3958,8 @@ function rcRowHtml(r, admin){
     <td style="white-space:nowrap;text-align:right">${rcAmountText(r)?rcAmountText(r)+ai('amount'):missing}</td>
     ${admin?`<td><select class="rc-acct-sel ${r.project?'':'empty'}" onchange="rcSetProj('${r.id}',this)">${rcProjOptions(r.project,true)}</select></td>`:''}
     <td>${admin
-      ? `<select class="rc-acct-sel ${RC_ACCT_NAME[r.category]?'':'empty'}" onchange="rcSetAcct('${r.id}',this.value)">${rcAcctOptions(r.category)}</select>`
-      : rcEsc(rcAcctLabel(r.category))}</td>
+      ? `<select class="rc-acct-sel ${RC_ACCT_NAME[r.category]?'':'empty'}" onchange="rcSetAcct('${r.id}',this.value)">${rcAcctOptions(r.category)}</select>${rcItemPhotoHtml(r,canEdit)}`
+      : rcEsc(rcAcctLabel(r.category))+rcItemPhotoHtml(r,false)}</td>
     <td>${rcBuyerHtml(r, admin && !!RC_AI_KEY && rcAiNeeds(r))}</td>
     <td>${rcEsc(r.note)}</td>
     <td>${pill}</td>
@@ -4038,6 +4050,62 @@ function rcDownloadBlob(blob,name){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),4000);
 }
+async function rcLoadItemBlob(r){
+  const snaps=await Promise.all(Array.from({length:r.itemChunks||0},(_,i)=>DB.collection('receiptFiles').doc(`${r.id}_item_${i}`).get()));
+  const data=snaps.map(s=>s.exists?s.data().data:'').join('');
+  if(!data) throw new Error('empty');
+  const [head,b64]=data.split(',');
+  const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/jpeg';
+  const bin=atob(b64); const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type:mime});
+}
+window.rcItemView=async id=>{
+  const r=rcFind(id); if(!r||!r.itemChunks) return;
+  const w=window.open('','_blank');
+  try{
+    const url=URL.createObjectURL(await rcLoadItemBlob(r));
+    if(w) w.location.href=url; else location.href=url;
+  }catch(err){ console.error('[rcItemView]',err); if(w) w.close(); alert(t('rc_load_fail')); }
+};
+let RC_ITEM_TARGET=null;
+window.rcItemPick=id=>{
+  RC_ITEM_TARGET=id;
+  let inp=$id('rcItemInput');
+  if(!inp){
+    inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.id='rcItemInput'; inp.style.display='none';
+    inp.onchange=async e=>{
+      const f=(e.target.files||[])[0]; e.target.value='';
+      const rid=RC_ITEM_TARGET; const r=rcFind(rid);
+      if(!f||!r) return;
+      if(rcIsPdf(f)||!/^image\//.test(f.type||'image/')){ alert(t('rc_item_bad')); return; }
+      try{
+        const { data } = await rcPrepare(f);
+        const chunks=[];
+        for(let i=0;i<data.length;i+=RC_CHUNK) chunks.push(data.slice(i,i+RC_CHUNK));
+        for(let i=0;i<chunks.length;i++){
+          await DB.collection('receiptFiles').doc(`${rid}_item_${i}`).set({ uid:r.uid, receiptId:rid, item:true, i, data:chunks[i] });
+        }
+        /* 換照片時，舊的多出來的分段要清掉 */
+        const batch=DB.batch();
+        for(let i=chunks.length;i<(r.itemChunks||0);i++) batch.delete(DB.collection('receiptFiles').doc(`${rid}_item_${i}`));
+        batch.update(DB.collection('receipts').doc(rid),{ itemChunks:chunks.length, itemMime:'image/jpeg' });
+        await batch.commit();
+      }catch(err){ console.error('[rcItemPick]',err); alert(t('rc_fail')); }
+    };
+    document.body.appendChild(inp);
+  }
+  inp.click();
+};
+window.rcItemRemove=async id=>{
+  const r=rcFind(id); if(!r||!r.itemChunks||!confirm(t('rc_item_del_confirm'))) return;
+  try{
+    const batch=DB.batch();
+    for(let i=0;i<r.itemChunks;i++) batch.delete(DB.collection('receiptFiles').doc(`${id}_item_${i}`));
+    batch.update(DB.collection('receipts').doc(id),{ itemChunks:firebase.firestore.FieldValue.delete(), itemMime:firebase.firestore.FieldValue.delete() });
+    await batch.commit();
+  }catch(err){ console.error('[rcItemRemove]',err); alert(t('save_fail')); }
+};
 window.rcView=async id=>{
   const r=rcFind(id); if(!r) return;
   const w=window.open('','_blank');            // 先開視窗，避免手機擋彈出視窗
@@ -4115,6 +4183,7 @@ window.rcDelete=async id=>{
   try{
     const batch=DB.batch();
     for(let i=0;i<(r.chunks||1);i++) batch.delete(DB.collection('receiptFiles').doc(`${id}_${i}`));
+    for(let i=0;i<(r.itemChunks||0);i++) batch.delete(DB.collection('receiptFiles').doc(`${id}_item_${i}`));
     batch.delete(DB.collection('receipts').doc(id));
     await batch.commit();
   }catch(err){ console.error('[rcDelete]',err); alert(t('save_fail')); }
