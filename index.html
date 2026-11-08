@@ -123,6 +123,51 @@
   .clock-actions button{ flex:1; padding:16px; font-size:16px; }
   .clock-flash{ text-align:center; font-family:var(--mono); font-size:22px; color:var(--navy); margin-top:14px; min-height:26px; font-weight:700; }
 
+  /* ---- 打卡（單一按鈕＋今日狀況） ---- */
+  .today{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:16px; }
+  .today div{ background:var(--paper); border-radius:10px; padding:10px 8px; text-align:center; }
+  .today .k{ font-size:11px; color:#5b6b78; font-weight:700; }
+  .today .v{ font-family:var(--mono); font-size:clamp(13px,4vw,18px); font-weight:800; margin-top:2px; color:var(--ink); }
+  .punch{ width:100%; margin-top:14px; padding:20px 16px; font-size:19px; font-weight:800; border:0; border-radius:14px;
+    color:#fff; cursor:pointer; background:var(--navy); box-shadow:0 6px 18px rgba(11,58,122,.22); transition:transform .08s, opacity .2s; }
+  .punch.out{ background:#b4532a; box-shadow:0 6px 18px rgba(180,83,42,.22); }
+  .punch:active{ transform:scale(.985); }
+  .punch:disabled{ opacity:.55; cursor:default; }
+  .punch small{ display:block; font-size:12px; font-weight:600; opacity:.85; margin-top:4px; }
+  .clock-flash{ font-size:15px !important; min-height:20px; }
+  .clock-flash.ok{ color:var(--good); } .clock-flash.err{ color:var(--bad); }
+  details.acct{ margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
+  details.acct summary{ cursor:pointer; font-size:13px; font-weight:700; color:#5b6b78; list-style:none; }
+  details.acct summary::-webkit-details-marker{ display:none; }
+  details.acct summary:before{ content:'▸ '; } details.acct[open] summary:before{ content:'▾ '; }
+
+  /* ---- 請假：三選一 ---- */
+  .seg{ display:flex; background:var(--paper); border-radius:10px; padding:3px; gap:3px; margin-bottom:14px; }
+  .seg button{ flex:1; border:0; background:transparent; padding:9px 6px; border-radius:8px; font-size:14px; font-weight:700; color:#5b6b78; cursor:pointer; width:auto; }
+  .seg button.on{ background:#fff; color:var(--navy); box-shadow:0 1px 3px rgba(0,0,0,.12); }
+
+  /* ---- 主控端待辦 ---- */
+  .todo{ display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px; }
+  .todo button{ width:auto; display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid var(--line);
+    background:#fff; font-size:13px; font-weight:700; color:var(--ink); cursor:pointer; }
+  .todo button b{ font-family:var(--mono); font-size:16px; color:var(--bad); }
+  .todo button.zero b{ color:var(--good); }
+  .todo .lst{ font-weight:500; color:#5b6b78; font-size:12px; }
+
+  /* ---- 頁面內對話框（取代 alert / confirm / prompt） ---- */
+  .dlg-back{ position:fixed; inset:0; background:rgba(15,25,40,.45); display:flex; align-items:center; justify-content:center; z-index:9999; padding:16px; }
+  .dlg{ background:#fff; border-radius:14px; width:100%; max-width:400px; padding:20px; box-shadow:0 20px 50px rgba(0,0,0,.25); }
+  .dlg p{ margin:0 0 14px; white-space:pre-line; font-size:15px; line-height:1.55; color:var(--ink); overflow-wrap:anywhere; }
+  .dlg input{ width:100%; box-sizing:border-box; margin-bottom:14px; }
+  .dlg .row{ display:flex; gap:8px; justify-content:flex-end; }
+  .dlg .row button{ width:auto; padding:10px 18px; }
+
+  @media (max-width:560px){
+    .topbar{ flex-wrap:wrap; row-gap:10px; }
+    .brand h1{ white-space:nowrap; font-size:17px; }
+    .topbar-right{ width:100%; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+    .role-badge,.btn-ghost#logoutBtn{ white-space:nowrap; }
+  }
   /* tables */
   table{ width:100%; border-collapse:collapse; font-size:13px; }
   th,td{ text-align:left; padding:9px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
@@ -424,22 +469,25 @@
             <div class="ident-meta" id="empMeta">—</div>
           </div>
         </div>
-        <div class="clock-actions">
-          <button class="btn-in" id="btnClockIn" data-i18n="clock_in">上班打卡</button>
-          <button class="btn-out" id="btnClockOut" data-i18n="clock_out">下班打卡</button>
+        <div class="today">
+          <div><div class="k" data-i18n="th_in">上班</div><div class="v" id="tdIn">—</div></div>
+          <div><div class="k" data-i18n="th_out">下班</div><div class="v" id="tdOut">—</div></div>
+          <div><div class="k" data-i18n="td_hours">今日工時</div><div class="v" id="tdHrs">—</div></div>
         </div>
+        <button class="punch" id="btnPunch"><span id="punchLbl">上班打卡</span><small id="punchSub"></small></button>
         <div class="clock-flash" id="clockFlash"></div>
-        <div class="divider"></div>
-        <p class="section-title" data-i18n="change_pw">更改密碼</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-          <div class="field" style="flex:1;min-width:180px;margin:0;">
-            <label data-i18n="new_pw">新密碼（至少 6 碼）</label>
-            <input type="password" id="newPw" autocomplete="new-password">
+        <details class="acct">
+          <summary data-i18n="acct_settings">帳號設定（更改密碼）</summary>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;">
+            <div class="field" style="flex:1;min-width:180px;margin:0;">
+              <label data-i18n="new_pw">新密碼（至少 6 碼）</label>
+              <input type="password" id="newPw" autocomplete="new-password">
+            </div>
+            <button class="btn-mini" id="changePwBtn" style="padding:10px 16px" data-i18n="save">儲存</button>
           </div>
-          <button class="btn-mini" id="changePwBtn" style="padding:10px 16px" data-i18n="save">儲存</button>
-        </div>
-        <div class="msg" id="pwMsg"></div>
-        <p class="hint" data-i18n="emp_rule">上班取當天最早、下班取當天最晚。重複打卡不覆蓋。</p>
+          <div class="msg" id="pwMsg"></div>
+        </details>
+        <p class="hint" data-i18n="emp_rule">第一次按是上班，之後按是下班（以最後一次為準）。手機時間要正確，差超過 5 分鐘會被擋下。</p>
       </div>
 
       <div class="card">
@@ -469,7 +517,8 @@
             <div class="field"><label data-i18n="leave_type">請假類別</label>
               <select id="reqType"></select>
             </div>
-            <div class="field" style="display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:14px;">
+            <div class="seg" id="reqMode"><button type="button" data-m="hours" class="on" data-i18n="mode_hours">幾小時</button><button type="button" data-m="day" data-i18n="mode_day">整天</button><button type="button" data-m="multi" data-i18n="mode_multi">連續多天</button></div>
+            <div class="field" style="display:none;">
               <label style="display:flex; align-items:center; gap:6px; font-weight:500; cursor:pointer; margin:0;">
                 <input type="checkbox" id="reqMultiDay" style="width:16px;height:16px;">
                 <span data-i18n="multi_day">連續多天</span>
@@ -535,6 +584,8 @@
         <button class="tab" data-tab="leavereview"><span data-i18n="tab_leave_review">請假審核</span><span class="tab-badge" id="pendingBadge" style="display:none"></span></button>
         <button class="tab" data-tab="receipts"><span data-i18n="tab_receipts">報帳收據</span><span class="tab-badge" id="rcBadge" style="display:none"></span></button>
       </div>
+
+      <div class="todo" id="adminTodo"></div>
 
       <!-- Overview dashboard -->
       <div class="card tabpanel" id="panel-overview">
@@ -787,10 +838,10 @@
    設定步驟：
    1. 到 https://www.emailjs.com/ 免費註冊帳號
    2. Email Services → Add New Service（可串 Gmail／Outlook），拿到 Service ID
-   3. Email Templates → Create New Template，收件人填 istanbul@taitra.org.tw，
-      內文可用下面這些變數：
-      {{employee_name}} {{employee_no}} {{leave_type}} {{date_range}}
-      {{days_count}} {{hours_total}} {{note}}
+   3. Email Templates → Create New Template（一個範本就夠，申請通知和核准通知共用）：
+        To Email 欄位填 {{to_email}}
+        Subject 欄位填 {{subject}}
+        Content 內文只放 {{message}}
       存檔後拿到 Template ID
    4. Account → General，複製 Public Key
    5. 把下面三個值換成你自己申請到的（換掉引號內容即可，其他都不用動）
@@ -807,9 +858,27 @@ function notifyLeaveRequest(payload){
     console.warn('[emailjs] 尚未設定 EMAILJS_PUBLIC_KEY / SERVICE_ID / TEMPLATE_ID，略過寄信通知。');
     return;
   }
+  const p=payload;
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
     to_email: LEAVE_NOTIFY_EMAIL,
+    subject: `請假申請：${p.employee_name}　${p.leave_type}　${p.date_range}`,
+    message: `${p.employee_name}（${p.employee_no}）送出請假申請，請到打卡系統「請假審核」處理。\n\n假別：${p.leave_type}\n日期：${p.date_range}（${p.days_count} 天）\n時數：${p.hours_total} 小時\n備註：${p.note}\n\nhttps://ttcistanbul.github.io/checkin/`,
     ...payload
+  }).catch(err=>console.error('[emailjs]',err));
+}
+/* 主控端核准／駁回後，寄信通知該員工（寄到員工設定裡的 email） */
+function notifyLeaveDecision(r,status){
+  if(!window.emailjs || !EMAILJS_CONFIGURED || !r) return;
+  if(status!=='approved' && status!=='rejected') return;
+  const emp=EMPLOYEES[r.uid||r.empId]||{};
+  if(!emp.email) return;
+  const ok=status==='approved';
+  const hhmm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+  const time=(r.startMin!=null&&r.endMin!=null)?`${hhmm(r.startMin)}–${hhmm(r.endMin)}`:'';
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    to_email: emp.email,
+    subject: ok ? `İzin talebiniz onaylandı / Leave approved — ${r.date}` : `İzin talebiniz reddedildi / Leave rejected — ${r.date}`,
+    message: `Merhaba ${emp.name||''},\n\n${r.date} ${time} tarihli izin talebiniz ${ok?'ONAYLANDI':'REDDEDİLDİ'}.\nYour leave request for ${r.date} ${time} has been ${ok?'APPROVED':'REJECTED'}.\n\nhttps://ttcistanbul.github.io/checkin/`
   }).catch(err=>console.error('[emailjs]',err));
 }
 </script>
@@ -868,7 +937,7 @@ function creatorAuth(){
   if(!CREATOR_APP) CREATOR_APP = firebase.initializeApp(FIREBASE_CONFIG,'creator');
   return CREATOR_APP.auth();
 }
-AUTH.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(()=>{});
+AUTH.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
 
 /* 員工資料由 Firestore 帶入，key = Auth 的 uid */
 let EMPLOYEES = {};
@@ -894,7 +963,7 @@ const I18N = {
     bad_email:"請填 Email 或另設密碼，兩者至少要有一個。",
     pw_field:"另設密碼（留空＝用 Email 當密碼）", custom_pw:"自訂密碼",
     clock_in:"上班打卡", clock_out:"下班打卡",
-    emp_rule:"上班取當天最早、下班取當天最晚。重複打卡不覆蓋。",
+    emp_rule:"第一次按是上班，之後按是下班（以最後一次為準）。手機時間要正確，差超過 5 分鐘會被擋下。",
     my_log:"我的考勤紀錄",
     tab_overview:"總覽儀表板", tab_monthly:"月總表", tab_daily:"每日狀況", tab_emp:"員工設定",
     admin_month_title:"月總表 — 每人每日工時", select_month:"選擇月份",
@@ -916,7 +985,7 @@ const I18N = {
     edit:"編輯", save:"儲存", name:"姓名", emp_no:"員工編號", photo_url:"照片網址", dept:"部門",
     upload_photo:"上傳照片", emp_id_account:"員工編號（即帳號，四碼）", login_pw:"登入密碼", role:"角色",
     add_employee:"新增員工", add_save:"確定新增", delete:"刪除", confirm_delete:"確定要刪除這位員工及其打卡資料嗎？", id_taken:"此編號已存在，請換一個。",
-    total:"當月加總", total_hours:"當月工時加總", clocked_in_at:"上班打卡 ", clocked_out_at:"下班打卡 ",
+    total:"當月加總", total_hours:"當月工時加總", clocked_in_at:"上班打卡 ", clocked_out_at:"下班打卡 ", td_hours:"今日工時", acct_settings:"帳號設定（更改密碼）", punch_again:"已打過下班，再按會更新成現在", saving:"儲存中…", punch_denied:"打卡被拒絕：手機時間可能不準（差超過 5 分鐘），請把手機設成自動校時再試。", mode_hours:"幾小時", mode_day:"整天", mode_multi:"連續多天", todo_leave:"待審假單", todo_rc:"待確認收據", todo_missing:"今天還沒打卡", dlg_ok:"確定", dlg_cancel:"取消",
     login_fail:"姓名或密碼錯誤，請再確認一次。", id_format:"請輸入四位數字編號。",
     hours_unit:"時",
     etab_clock:"打卡", etab_leave:"請假", tab_leave_review:"請假審核",
@@ -995,7 +1064,7 @@ const I18N = {
     bad_email:"Enter an email or set a password — at least one is required.",
     pw_field:"Custom password (blank = use email)", custom_pw:"Custom password",
     clock_in:"Clock In", clock_out:"Clock Out",
-    emp_rule:"Earliest clock-in and latest clock-out per day are kept; repeats don't overwrite.",
+    emp_rule:"First press clocks in; later presses clock out (the last one counts). Your phone clock must be within 5 minutes.",
     my_log:"My attendance",
     tab_overview:"Overview", tab_monthly:"Monthly", tab_daily:"Daily", tab_emp:"Employees",
     admin_month_title:"Monthly overview — daily hours per person", select_month:"Month",
@@ -1017,7 +1086,7 @@ const I18N = {
     edit:"Edit", save:"Save", name:"Name", emp_no:"Emp. No.", photo_url:"Photo URL", dept:"Dept.",
     upload_photo:"Upload photo", emp_id_account:"Employee ID (account, 4 digits)", login_pw:"Login password", role:"Role",
     add_employee:"Add employee", add_save:"Add", delete:"Delete", confirm_delete:"Delete this employee and their attendance data?", id_taken:"This ID already exists, choose another.",
-    total:"Month total", total_hours:"Monthly total hours", clocked_in_at:"Clock In ", clocked_out_at:"Clock Out ",
+    total:"Month total", total_hours:"Monthly total hours", clocked_in_at:"Clock In ", clocked_out_at:"Clock Out ", td_hours:"Today", acct_settings:"Account (change password)", punch_again:"Already clocked out — pressing again updates it to now", saving:"Saving…", punch_denied:"Rejected: your phone clock may be off by more than 5 minutes. Turn on automatic time and try again.", mode_hours:"Hours", mode_day:"Whole day", mode_multi:"Several days", todo_leave:"Pending leave", todo_rc:"Receipts to check", todo_missing:"Not clocked in today", dlg_ok:"OK", dlg_cancel:"Cancel",
     login_fail:"Wrong name or password, please check again.", id_format:"Please enter a 4-digit number.",
     hours_unit:"h",
     etab_clock:"Clock", etab_leave:"Leave", tab_leave_review:"Leave review",
@@ -1641,6 +1710,31 @@ window.forgotPassword=async ()=>{
 };
 document.getElementById('forgotPwLink').onclick=(e)=>{ e.preventDefault(); forgotPassword(); };
 
+/* ---- 頁面內對話框：取代瀏覽器的 alert / confirm / prompt（手機上比較不會被擋、也比較好看） ---- */
+function uiDialog(text,{input=null,cancel=false}={}){
+  return new Promise(res=>{
+    const back=document.createElement('div'); back.className='dlg-back';
+    const box=document.createElement('div'); box.className='dlg'; box.setAttribute('role','dialog'); box.setAttribute('aria-modal','true');
+    const p=document.createElement('p'); p.textContent=String(text??''); box.appendChild(p);
+    let inp=null;
+    if(input!==null){ inp=document.createElement('input'); inp.type='text'; inp.value=input||''; box.appendChild(inp); }
+    const row=document.createElement('div'); row.className='row';
+    const no=document.createElement('button'); no.className='btn-ghost'; no.textContent=t('dlg_cancel');
+    const ok=document.createElement('button'); ok.className='btn-primary'; ok.textContent=t('dlg_ok');
+    if(cancel||input!==null) row.appendChild(no);
+    row.appendChild(ok); box.appendChild(row); back.appendChild(box); document.body.appendChild(back);
+    const done=v=>{ back.remove(); document.removeEventListener('keydown',key,true); res(v); };
+    const key=e=>{ if(e.key==='Escape'){ e.preventDefault(); done(input!==null?null:false); } else if(e.key==='Enter'){ e.preventDefault(); ok.click(); } };
+    document.addEventListener('keydown',key,true);
+    ok.onclick=()=>done(input!==null ? inp.value : true);
+    no.onclick=()=>done(input!==null ? null : false);
+    (inp||ok).focus();
+  });
+}
+const uiAlert  =(m)=>uiDialog(m);
+const uiConfirm=(m)=>uiDialog(m,{cancel:true});
+const uiPrompt =(m,def='')=>uiDialog(m,{input:def});
+
 /* ---- 登入狀態改變 ---- */
 let UNSUBS=[];
 function stopListeners(){ UNSUBS.forEach(fn=>{ try{fn();}catch(e){} }); UNSUBS=[]; }
@@ -1695,7 +1789,11 @@ function startListeners(){
     setDbState(t('db_ok'),'ok'); renderAll();
   }, err=>{ console.error('[employees]',err); setDbState(t('db_error'),'bad'); }));
 
-  UNSUBS.push(DB.collection('attendance').onSnapshot(qs=>{
+  /* 員工只抓自己的出勤和假單（規則也只允許這樣讀）；主控端抓全部 */
+  const mine = CURRENT && CURRENT.role!=='admin';
+  const attQ = mine ? DB.collection('attendance').where('uid','==',CURRENT.id) : DB.collection('attendance');
+  const reqQ = mine ? DB.collection('requests').where('uid','==',CURRENT.id) : DB.collection('requests');
+  UNSUBS.push(attQ.onSnapshot(qs=>{
     Object.keys(ATT).forEach(k=>delete ATT[k]);
     [LEAVE_MARKS,BIZ_MARKS,SICK_MARKS,OFFICIAL_MARKS,ABSENT_MARKS,ATT_FROM_REQ].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
     qs.forEach(d=>{
@@ -1712,7 +1810,7 @@ function startListeners(){
     setDbState(t('db_ok'),'ok'); renderAll();
   }, err=>{ console.error('[attendance]',err); setDbState(t('db_error'),'bad'); }));
 
-  UNSUBS.push(DB.collection('requests').onSnapshot(qs=>{
+  UNSUBS.push(reqQ.onSnapshot(qs=>{
     LEAVE_REQUESTS.length=0;
     qs.forEach(d=>{ const r=d.data(); LEAVE_REQUESTS.push({ reqId:d.id, empId:r.uid, ...r }); });
     setDbState(t('db_ok'),'ok'); renderAll();
@@ -1734,6 +1832,29 @@ document.getElementById('langToggleLogin').onclick=toggleLang;
 
 /* ---- 統一渲染 ---- */
 function safe(fn,label){ try{ fn(); }catch(err){ console.error('[render '+label+']',err); } }
+function renderAdminTodo(){
+  const box=document.getElementById('adminTodo'); if(!box) return;
+  const today=ymd(new Date()), n=new Date(), nowMin=n.getHours()*60+n.getMinutes();
+  const pend=LEAVE_REQUESTS.filter(r=>r.status==='pending').length;
+  const rc=(typeof RECEIPTS!=='undefined'?RECEIPTS:[]).filter(r=>r.status!=='verified').length;
+  let missing=[];
+  const workday=!isWeekendDate(today) && !holidayOf(today);
+  if(workday && nowMin>=shiftMin(SHIFT_START)+15){
+    missing=rosterIds().filter(id=>{
+      if(EMPLOYEES[id] && EMPLOYEES[id].role==='admin') return false;
+      const st=dayStatus(id,today); if(st!=='work') return false;
+      const rec=ATT[`${id}|${today}`]; if(rec && rec.inMs) return false;
+      return !LEAVE_REQUESTS.some(r=>r.empId===id && r.date===today && r.status==='approved');
+    });
+  }
+  const names=missing.map(id=>(EMPLOYEES[id]||{}).name||id).join('、');
+  const item=(tab,label,num,extra)=>`<button class="${num?'':'zero'}" data-go="${tab}">${label}<b>${num}</b>${extra?`<span class="lst">${extra}</span>`:''}</button>`;
+  box.innerHTML = item('leavereview',t('todo_leave'),pend) + item('receipts',t('todo_rc'),rc)
+    + item('daily',t('todo_missing'),missing.length,names);
+  box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{
+    const tab=document.querySelector(`#adminUI .tab[data-tab="${b.dataset.go}"]`); if(tab) tab.click();
+  });
+}
 function renderAll(){
   if(!CURRENT) return;
   if(CURRENT.role==='employee'){
@@ -1744,6 +1865,7 @@ function renderAll(){
     safe(renderDaily,'daily');
     safe(renderEmpAdmin,'employees');
     safe(renderAllRequests,'requests');
+    safe(renderAdminTodo,'todo');
   }
   if(!RC_EDITING) safe(renderReceipts,'receipts');   // 編輯中不重畫，免得輸入被洗掉
 }
@@ -1757,6 +1879,7 @@ function renderEmployee(){
   document.getElementById('empName').textContent=e.name;
   document.getElementById('empMeta').textContent=`#${e.id}`;
   renderEmpLog(e.id);
+  renderToday();
   renderEmpLeavePage(e.id);
 }
 function collectDays(id){
@@ -1797,23 +1920,47 @@ function renderEmpLog(id){
     ${rows}`;
 }
 
-/* 模擬打卡（不寫入 Firebase）*/
-async function simClock(kind){
-  if(!CURRENT) return;
-  const flash=document.getElementById('clockFlash');
+/* ---- 打卡：單一按鈕。今天還沒有上班時間 → 上班；有了 → 下班（可重按，以最後一次為準）。
+   寫入成功才顯示成功；被規則擋下（多半是手機時間不準）就說清楚。 ---- */
+let PUNCHING=false;
+function todayRec(){ return (CURRENT && ATT[`${CURRENT.id}|${ymd(new Date())}`]) || {}; }
+function renderToday(){
+  if(!CURRENT || CURRENT.role==='admin' || !document.getElementById('btnPunch')) return;
+  const r=todayRec(), btn=document.getElementById('btnPunch');
+  document.getElementById('tdIn').textContent = r.inMs ? fmtTime(r.inMs) : '—';
+  document.getElementById('tdOut').textContent = r.outMs ? fmtTime(r.outMs) : '—';
+  const end = r.outMs || (r.inMs ? Date.now() : null);
+  document.getElementById('tdHrs').textContent = (r.inMs && end) ? fmtHMS(hoursBetween(r.inMs,end)) : '—';
+  if(PUNCHING) return;
+  const isOut=!!r.inMs;
+  btn.classList.toggle('out',isOut);
+  document.getElementById('punchLbl').textContent = t(isOut?'clock_out':'clock_in');
+  document.getElementById('punchSub').textContent = isOut ? (r.outMs ? t('punch_again') : '') : '';
+}
+async function punch(){
+  if(!CURRENT || PUNCHING) return;
+  const flash=document.getElementById('clockFlash'), btn=document.getElementById('btnPunch');
+  flash.className='clock-flash';
   if(IP_LOCK_ENABLED && CURRENT.role!=='admin' && IP_STATE!=='ok'){
-    flash.textContent=ipBlockMessage(); return;
+    flash.classList.add('err'); flash.textContent=ipBlockMessage(); return;
   }
-  const now=new Date(), date=ymd(now), key=`${CURRENT.id}|${date}`;
-  const rec=Object.assign({},ATT[key]||{});
-  const nowMs=now.getTime();
-  if(kind==='in'){ if(!rec.inMs || nowMs<rec.inMs) rec.inMs=nowMs; }   // 保留最早
-  else           { if(!rec.outMs || nowMs>rec.outMs) rec.outMs=nowMs; } // 保留最晚
-  const payload={ uid:CURRENT.id, date, inMs:rec.inMs??null, outMs:rec.outMs??null };
-  flash.textContent=(kind==='in'?t('clocked_in_at'):t('clocked_out_at'))+fmtTime(nowMs);
+  const now=new Date(), date=ymd(now), nowMs=now.getTime();
+  const r=todayRec(), kind = r.inMs ? 'out' : 'in';
+  const payload={ uid:CURRENT.id, date };
+  if(kind==='in') payload.inMs=nowMs; else payload.outMs=nowMs;
+  PUNCHING=true; btn.disabled=true;
+  document.getElementById('punchLbl').textContent=t('saving');
   try{
     await DB.collection('attendance').doc(`${CURRENT.id}_${date}`).set(payload,{merge:true});
-  }catch(err){ console.error('[clock]',err); flash.textContent=t('save_fail'); }
+    flash.classList.add('ok');
+    flash.textContent='✓ '+(kind==='in'?t('clocked_in_at'):t('clocked_out_at'))+fmtTime(nowMs);
+  }catch(err){
+    console.error('[clock]',err);
+    flash.classList.add('err');
+    flash.textContent = err && err.code==='permission-denied' ? t('punch_denied') : t('save_fail');
+  }finally{
+    PUNCHING=false; btn.disabled=false; renderToday();
+  }
 }
 document.getElementById('changePwBtn').onclick=async ()=>{
   const v=document.getElementById('newPw').value.trim();
@@ -1833,11 +1980,11 @@ document.getElementById('changePwBtn').onclick=async ()=>{
 window.sendReset=(id)=>{
   const e=EMPLOYEES[id]; if(!e||!e.email) return;
   AUTH.sendPasswordResetEmail(e.email)
-    .then(()=>alert(t('reset_sent')+e.email))
-    .catch(err=>{ console.error('[reset]',err); alert(t('save_fail')); });
+    .then(()=>uiAlert(t('reset_sent')+e.email))
+    .catch(err=>{ console.error('[reset]',err); uiAlert(t('save_fail')); });
 };
-document.getElementById('btnClockIn').onclick=()=>simClock('in');
-document.getElementById('btnClockOut').onclick=()=>simClock('out');
+document.getElementById('btnPunch').onclick=punch;
+setInterval(renderToday,30000);
 
 /* ============================================================
    請假系統
@@ -1948,6 +2095,13 @@ function setupReqFormToggles(){
     initDatePicker('reqDateEnd','reqDateEndWrap');
   });
   document.getElementById('reqWholeDay').addEventListener('change',updateReqFormVisibility);
+  document.querySelectorAll('#reqMode button').forEach(b=>b.addEventListener('click',()=>{
+    const m=b.dataset.m, md=document.getElementById('reqMultiDay'), wd=document.getElementById('reqWholeDay');
+    const wantMulti=m==='multi', wantWhole=m!=='hours';
+    document.querySelectorAll('#reqMode button').forEach(x=>x.classList.toggle('on',x===b));
+    if(wd.checked!==wantWhole){ wd.checked=wantWhole; wd.dispatchEvent(new Event('change')); }
+    if(md.checked!==wantMulti){ md.checked=wantMulti; md.dispatchEvent(new Event('change')); }
+  }));
   document.getElementById('reqDate').addEventListener('change',updateReqCalc);
   document.getElementById('reqDateEnd').addEventListener('change',updateReqCalc);
 }
@@ -2133,7 +2287,7 @@ function findOverlapReq(empId,date,s,e,excludeId){
     && s<Number(r.endMin) && e>Number(r.startMin));
 }
 let SUBMITTING_REQ=false;
-document.getElementById('submitReqBtn').onclick=()=>{
+document.getElementById('submitReqBtn').onclick=async ()=>{
   if(SUBMITTING_REQ) return;
   const empId=CURRENT.id;
   const type=document.getElementById('reqType').value;
@@ -2164,7 +2318,7 @@ document.getElementById('submitReqBtn').onclick=()=>{
   const confirmTxt = LANG==='zh-Hant'
     ? `確認送出請假申請？\n\n假別：${typeLabel(type)}\n日期：${rangeTxt}\n時間：${minToHHMM(s)}–${minToHHMM(e)}`
     : `Submit this leave request?\n\nType: ${typeLabel(type)}\nDate: ${rangeTxt}\nTime: ${minToHHMM(s)}–${minToHHMM(e)}`;
-  if(!confirm(confirmTxt)) return;
+  if(!await uiConfirm(confirmTxt)) return;
   SUBMITTING_REQ=true;
   const submitBtn=document.getElementById('submitReqBtn'); submitBtn.disabled=true;
   const batch=DB.batch();
@@ -2339,7 +2493,8 @@ async function setReqStatus(reqId,status){
   try{
     await DB.collection('requests').doc(String(reqId)).update({status});
     await syncAttendanceForReq(r,status);
-  }catch(err){ console.error('[review]',err); alert(t('save_fail')); }
+    notifyLeaveDecision(r,status);
+  }catch(err){ console.error('[review]',err); uiAlert(t('save_fail')); }
 }
 let EDITING_REQ=null;
 function reqEditUpdateHours(){
@@ -2907,7 +3062,7 @@ function exportPdf(ids,ym){
   if(!ids.length) return;
   const body=ids.map(id=>empReportHtml(id,ym)).join('');
   const win=window.open('','_blank');
-  if(!win){ alert(t('popup_blocked')); return; }
+  if(!win){ uiAlert(t('popup_blocked')); return; }
   win.document.write(`<!DOCTYPE html><html lang="${LANG}"><head><meta charset="utf-8">
   <title>${t('report_title')} ${ym}</title>
   <style>
@@ -3051,7 +3206,7 @@ document.getElementById('modalSave').onclick=async ()=>{
   try{
     await DB.collection('attendance').doc(`${id}_${date}`).set(payload,{merge:true});
     await syncRequestForManualStatus(id,date,st);
-  }catch(err){ console.error('[modalSave]',err); alert(t('save_fail')); }
+  }catch(err){ console.error('[modalSave]',err); uiAlert(t('save_fail')); }
 };
 
 /* --- 員工設定（可新增、可改編號/密碼/照片/姓名）--- */
@@ -3236,13 +3391,13 @@ window.addEmployee=async ()=>{
 
 window.deleteEmp=async (id)=>{
   if(id===CURRENT.id) return; // 不能刪自己
-  if(!confirm(t('confirm_delete'))) return;
+  if(!await uiConfirm(t('confirm_delete'))) return;
   try{
     await DB.collection('employees').doc(id).delete();
     if(DRILL_ID===id) DRILL_ID=null;
     if(CAL_EMP===id) CAL_EMP=null;
-    alert(t('deleted_note'));
-  }catch(err){ console.error('[deleteEmp]',err); alert(t('save_fail')); }
+    uiAlert(t('deleted_note'));
+  }catch(err){ console.error('[deleteEmp]',err); uiAlert(t('save_fail')); }
 };
 
 /* ============================================================
@@ -3345,7 +3500,7 @@ window.rcPmSave=async i=>{
   if(!code){ rcPmMsg(t('rc_pm_needcode')); return; }
   if(code!==old.code && RC_PROJECTS.some(p=>p.code===code)){ rcPmMsg(t('rc_pm_dup')); return; }
   const n=RECEIPTS.filter(r=>r.project===old.code).length;
-  if(code!==old.code && n && !confirm(t('rc_pm_rename_confirm').replace('{n}',n).replace('{a}',old.code).replace('{b}',code))) return;
+  if(code!==old.code && n && !await uiConfirm(t('rc_pm_rename_confirm').replace('{n}',n).replace('{a}',old.code).replace('{b}',code))) return;
   try{
     await rcSaveProjects(RC_PROJECTS.map((p,j)=>j===i?{code,name}:p));
     const moved = code!==old.code ? await rcRelabelReceipts(old.code, code) : 0;
@@ -3357,7 +3512,7 @@ window.rcPmDelete=async i=>{
   const p=RC_PROJECTS[i]; if(!p) return;
   const n=RECEIPTS.filter(r=>r.project===p.code).length;
   const q = n ? t('rc_pm_del_used').replace('{n}',n).replace('{a}',p.code) : t('rc_pm_del').replace('{a}',p.code);
-  if(!confirm(q)) return;
+  if(!await uiConfirm(q)) return;
   try{
     if(n) await rcRelabelReceipts(p.code,'');
     await rcSaveProjects(RC_PROJECTS.filter((_,j)=>j!==i));
@@ -3422,23 +3577,23 @@ function rcRenderBuyerMgr(force){
 }
 window.rcBmSetVkn=async i=>{
   const g=rcBuyerGroups()[i]; if(!g||!g.tax) return;
-  if(!confirm(t('bm_confirm_vkn').replace('{old}',RC_BUYER.vkn||'—').replace('{new}',g.tax).replace('{name}',g.name||'—'))) return;
+  if(!await uiConfirm(t('bm_confirm_vkn').replace('{old}',RC_BUYER.vkn||'—').replace('{new}',g.tax).replace('{name}',g.name||'—'))) return;
   try{
     await DB.collection('config').doc('ai').set({ buyerVkn:g.tax, updatedBy:CURRENT.id,
       updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
     await rcAiLoadKey(); rcRenderBuyerMgr(true);
     const m=$id('rcBmMsg'); if(m){ m.className='msg'; m.textContent='✓ '+t('bm_done_vkn').replace('{v}',g.tax); }
-  }catch(err){ console.error('[bm vkn]',err); alert(t('rc_ai_rules')); }
+  }catch(err){ console.error('[bm vkn]',err); uiAlert(t('rc_ai_rules')); }
 };
 window.rcBmAddName=async i=>{
   const g=rcBuyerGroups()[i]; if(!g||!g.name) return;
-  const kw=prompt(t('bm_prompt_name'), g.name); if(!kw||!kw.trim()) return;
+  const kw=await uiPrompt(t('bm_prompt_name'), g.name); if(!kw||!kw.trim()) return;
   const names=[...new Set([...(RC_BUYER.names||[]), kw.trim()])];
   try{
     await DB.collection('config').doc('ai').set({ buyerNames:names, updatedBy:CURRENT.id,
       updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
     await rcAiLoadKey(); rcRenderBuyerMgr(true);
-  }catch(err){ console.error('[bm name]',err); alert(t('rc_ai_rules')); }
+  }catch(err){ console.error('[bm name]',err); uiAlert(t('rc_ai_rules')); }
 };
 async function rcLoadProjects(){
   try{
@@ -3755,29 +3910,29 @@ function rcAiRenderBar(){
     ` <button class="btn-mini" onclick="rcAiSetKey()">${t('rc_ai_changekey')}</button>`;
 }
 window.rcAiSetKey=async ()=>{
-  const k=prompt(t('rc_ai_prompt_key'));
+  const k=await uiPrompt(t('rc_ai_prompt_key'));
   if(k==null) return;
   try{
     if(k.trim()) await DB.collection('config').doc('ai').set({ geminiKey:k.trim(), updatedBy:CURRENT.id,
       updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
     else await DB.collection('config').doc('ai').delete();
     RC_AI_DONE.clear(); await rcAiLoadKey();
-  }catch(err){ console.error('[ai key save]',err); alert(t('rc_ai_rules')); }
+  }catch(err){ console.error('[ai key save]',err); uiAlert(t('rc_ai_rules')); }
 };
 window.rcSetBuyer=async ()=>{
-  const vkn=prompt(t('rc_buyer_prompt_vkn'), RC_BUYER.vkn||'');
+  const vkn=await uiPrompt(t('rc_buyer_prompt_vkn'), RC_BUYER.vkn||'');
   if(vkn==null) return;
-  const names=prompt(t('rc_buyer_prompt_names'), (RC_BUYER.names||[]).join(', '));
+  const names=await uiPrompt(t('rc_buyer_prompt_names'), (RC_BUYER.names||[]).join(', '));
   if(names==null) return;
   const list=names.split(/[,，\n]/).map(s=>s.trim()).filter(Boolean);
-  const plates=prompt(t('rc_buyer_prompt_plates'), (RC_BUYER.plates||[]).join(', '));
+  const plates=await uiPrompt(t('rc_buyer_prompt_plates'), (RC_BUYER.plates||[]).join(', '));
   if(plates==null) return;
   const plateList=plates.split(/[,，\n]/).map(rcPlateNorm).filter(Boolean);
   try{
     await DB.collection('config').doc('ai').set({ buyerVkn:vkn.replace(/\D/g,''), buyerNames:list, buyerPlates:plateList,
       updatedBy:CURRENT.id, updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
     await rcAiLoadKey();
-  }catch(err){ console.error('[buyer cfg]',err); alert(t('rc_ai_rules')); }
+  }catch(err){ console.error('[buyer cfg]',err); uiAlert(t('rc_ai_rules')); }
 };
 function rcAiKick(){
   if(!RC_AI_KEY || RC_AI_BUSY) return;
@@ -3853,7 +4008,7 @@ function rcAiPlan(r,got){
 }
 async function rcAiRun(list, manual){
   if(!RC_AI_KEY){ return; }
-  if(RC_AI_BUSY){ if(manual) alert(t('rc_ai_busy')); return; }
+  if(RC_AI_BUSY){ if(manual) uiAlert(t('rc_ai_busy')); return; }
   RC_AI_BUSY=true; RC_AI_ERR='';
   try{
     for(let i=0;i<list.length;i++){
@@ -4068,7 +4223,7 @@ window.rcItemView=async id=>{
   try{
     const url=URL.createObjectURL(await rcLoadItemBlob(r));
     if(w) w.location.href=url; else location.href=url;
-  }catch(err){ console.error('[rcItemView]',err); if(w) w.close(); alert(t('rc_load_fail')); }
+  }catch(err){ console.error('[rcItemView]',err); if(w) w.close(); uiAlert(t('rc_load_fail')); }
 };
 let RC_ITEM_TARGET=null;
 window.rcItemPick=id=>{
@@ -4080,7 +4235,7 @@ window.rcItemPick=id=>{
       const f=(e.target.files||[])[0]; e.target.value='';
       const rid=RC_ITEM_TARGET; const r=rcFind(rid);
       if(!f||!r) return;
-      if(rcIsPdf(f)||!/^image\//.test(f.type||'image/')){ alert(t('rc_item_bad')); return; }
+      if(rcIsPdf(f)||!/^image\//.test(f.type||'image/')){ uiAlert(t('rc_item_bad')); return; }
       try{
         const { data } = await rcPrepare(f);
         const chunks=[];
@@ -4093,20 +4248,20 @@ window.rcItemPick=id=>{
         for(let i=chunks.length;i<(r.itemChunks||0);i++) batch.delete(DB.collection('receiptFiles').doc(`${rid}_item_${i}`));
         batch.update(DB.collection('receipts').doc(rid),{ itemChunks:chunks.length, itemMime:'image/jpeg' });
         await batch.commit();
-      }catch(err){ console.error('[rcItemPick]',err); alert(t('rc_fail')); }
+      }catch(err){ console.error('[rcItemPick]',err); uiAlert(t('rc_fail')); }
     };
     document.body.appendChild(inp);
   }
   inp.click();
 };
 window.rcItemRemove=async id=>{
-  const r=rcFind(id); if(!r||!r.itemChunks||!confirm(t('rc_item_del_confirm'))) return;
+  const r=rcFind(id); if(!r||!r.itemChunks||!await uiConfirm(t('rc_item_del_confirm'))) return;
   try{
     const batch=DB.batch();
     for(let i=0;i<r.itemChunks;i++) batch.delete(DB.collection('receiptFiles').doc(`${id}_item_${i}`));
     batch.update(DB.collection('receipts').doc(id),{ itemChunks:firebase.firestore.FieldValue.delete(), itemMime:firebase.firestore.FieldValue.delete() });
     await batch.commit();
-  }catch(err){ console.error('[rcItemRemove]',err); alert(t('save_fail')); }
+  }catch(err){ console.error('[rcItemRemove]',err); uiAlert(t('save_fail')); }
 };
 window.rcView=async id=>{
   const r=rcFind(id); if(!r) return;
@@ -4114,12 +4269,12 @@ window.rcView=async id=>{
   try{
     const url=URL.createObjectURL(await rcLoadBlob(r));
     if(w) w.location.href=url; else location.href=url;
-  }catch(err){ console.error('[rcView]',err); if(w) w.close(); alert(t('rc_load_fail')); }
+  }catch(err){ console.error('[rcView]',err); if(w) w.close(); uiAlert(t('rc_load_fail')); }
 };
 window.rcDownload=async id=>{
   const r=rcFind(id); if(!r) return;
   try{ rcDownloadBlob(await rcLoadBlob(r), rcFileName(r)); }
-  catch(err){ console.error('[rcDownload]',err); alert(t('rc_load_fail')); }
+  catch(err){ console.error('[rcDownload]',err); uiAlert(t('rc_load_fail')); }
 };
 window.rcEdit=id=>{ RC_EDITING=id; renderReceipts(); };
 window.rcCancel=()=>{ RC_EDITING=null; renderReceipts(); };
@@ -4140,7 +4295,7 @@ window.rcSave=async id=>{
     if(pl!==(r.plate||'')) Object.assign(patch,{ plate:pl, plateRead:true, plateSource:'manual' });
   }   // 人工看過、存檔＝以人工為準，AI 之後不會再改
   try{ await DB.collection('receipts').doc(id).update(patch); RC_EDITING=null; renderReceipts(); }
-  catch(err){ console.error('[rcSave]',err); alert(t('save_fail')); }
+  catch(err){ console.error('[rcSave]',err); uiAlert(t('save_fail')); }
 };
 window.rcReOcr=async id=>{
   const r=rcFind(id); if(!r) return;
@@ -4150,26 +4305,26 @@ window.rcReOcr=async id=>{
 window.rcSetProj=async (id,sel)=>{
   let val=sel.value;
   if(val==='__new'){
-    const code=(prompt(t('rc_proj_prompt_code'))||'').trim();
+    const code=(await uiPrompt(t('rc_proj_prompt_code'))||'').trim();
     if(!code){ renderReceipts(); return; }
-    const name=(prompt(t('rc_proj_prompt_name'))||'').trim();
+    const name=(await uiPrompt(t('rc_proj_prompt_name'))||'').trim();
     if(!RC_PROJECTS.some(p=>p.code===code)){
       const items=[...RC_PROJECTS, { code, name }];
       try{ await DB.collection('config').doc('projects').set({ items, updatedBy:CURRENT.id,
              updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true}); }
-      catch(err){ console.error('[project add]',err); alert(t('rc_ai_rules')); renderReceipts(); return; }
+      catch(err){ console.error('[project add]',err); uiAlert(t('rc_ai_rules')); renderReceipts(); return; }
       RC_PROJECTS=items.sort((a,b)=>String(a.code).localeCompare(String(b.code)));
       rcRenderProjMgr(true);
     }
     val=code;
   }
   try{ await DB.collection('receipts').doc(id).update({ project: val }); }
-  catch(err){ console.error('[rcSetProj]',err); alert(t('save_fail')); }
+  catch(err){ console.error('[rcSetProj]',err); uiAlert(t('save_fail')); }
 };
 window.rcGoMonth=m=>{ $id('rcFMonth').value=m; renderReceipts(); };
 window.rcSetAcct=async (id,val)=>{
   try{ await DB.collection('receipts').doc(id).update({ category: val }); }
-  catch(err){ console.error('[rcSetAcct]',err); alert(t('save_fail')); }
+  catch(err){ console.error('[rcSetAcct]',err); uiAlert(t('save_fail')); }
 };
 window.rcToggleVerify=async id=>{
   const r=rcFind(id); if(!r) return;
@@ -4178,17 +4333,17 @@ window.rcToggleVerify=async id=>{
     await DB.collection('receipts').doc(id).update(verified
       ? { status:'verified', verifiedBy:CURRENT.id, verifiedAt:firebase.firestore.FieldValue.serverTimestamp() }
       : { status:'submitted', verifiedBy:firebase.firestore.FieldValue.delete(), verifiedAt:firebase.firestore.FieldValue.delete() });
-  }catch(err){ console.error('[rcVerify]',err); alert(t('save_fail')); }
+  }catch(err){ console.error('[rcVerify]',err); uiAlert(t('save_fail')); }
 };
 window.rcDelete=async id=>{
-  const r=rcFind(id); if(!r || !confirm(t('rc_del_confirm'))) return;
+  const r=rcFind(id); if(!r || !await uiConfirm(t('rc_del_confirm'))) return;
   try{
     const batch=DB.batch();
     for(let i=0;i<(r.chunks||1);i++) batch.delete(DB.collection('receiptFiles').doc(`${id}_${i}`));
     for(let i=0;i<(r.itemChunks||0);i++) batch.delete(DB.collection('receiptFiles').doc(`${id}_item_${i}`));
     batch.delete(DB.collection('receipts').doc(id));
     await batch.commit();
-  }catch(err){ console.error('[rcDelete]',err); alert(t('save_fail')); }
+  }catch(err){ console.error('[rcDelete]',err); uiAlert(t('save_fail')); }
 };
 
 /* ============================================================
