@@ -1431,7 +1431,9 @@ function countSickMarkDaysThisYear(empId){
   Object.keys(SICK_MARKS).forEach(k=>{
     if(!k.startsWith(empId+'|')) return;
     const date=k.split('|')[1];
-    if(isThisYear(date)) n++;
+    /* 已核准的病假單會自動把當天標成病假；那天已經算在假單時數裡了，不能再當「後台手動標記」多算一次 */
+    const hasSickReq=LEAVE_REQUESTS.some(r=>r.empId===empId && r.date===date && r.status==='approved' && (r.type==='sick_doc'||r.type==='sick'));
+    if(isThisYear(date) && !hasSickReq) n++;
   });
   return n;
 }
