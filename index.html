@@ -408,6 +408,45 @@
   .pill.rc-ocr{ background:#e8e2fb; color:#5b3fa8; margin-left:4px; }
   .pill.rc-ocr-bad{ background:#f2e7e5; color:var(--bad); margin-left:4px; }
   .rc-edit input,.rc-edit select{ width:100%; padding:6px; border:1px solid var(--line); border-radius:4px; font-size:13px; min-width:70px; font-family:inherit; }
+  /* ===== 主題：玻璃質感（藍＋青綠，無紫、無大紅） ===== */
+  :root{ --paper:#eef4fb; --line:rgba(15,40,80,.10); --navy:#0b3a7a; --navy-soft:rgba(11,58,122,.07); --ink:#0f1f36;
+    --grad:linear-gradient(135deg,#0b3a7a 0%,#1d5fd1 60%,#2b86e8 100%);
+    --grad-out:linear-gradient(135deg,#0d6b74 0%,#14919b 60%,#1fb3b0 100%);
+    --glass:rgba(255,255,255,.62); --glass-bd:rgba(255,255,255,.78); --glass-sh:0 10px 40px rgba(11,58,122,.10); }
+  body{ background:
+      radial-gradient(1100px 600px at 0% -10%,#cfe0fb 0%,transparent 60%),
+      radial-gradient(900px 600px at 110% 5%,#d3eef4 0%,transparent 55%),
+      radial-gradient(900px 700px at 50% 115%,#d8f1ea 0%,transparent 60%),
+      #eef4fb;
+    background-attachment:fixed; }
+  body::before{ opacity:.035; }
+  .topbar{ border-bottom:0; padding:12px 16px; background:rgba(255,255,255,.55); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border-radius:18px; border:1px solid var(--glass-bd); box-shadow:var(--glass-sh); }
+  .brand h1{ color:var(--ink); font-weight:800; letter-spacing:.2px; }
+  .card,#loginView .card{ background:var(--glass); backdrop-filter:blur(22px) saturate(1.4); -webkit-backdrop-filter:blur(22px) saturate(1.4);
+    border:1px solid var(--glass-bd); border-radius:22px; box-shadow:var(--glass-sh); }
+  .section-title{ color:var(--ink); font-size:15px; }
+  .tab{ background:rgba(255,255,255,.55); border:1px solid var(--glass-bd); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#42506a; }
+  .tab.active{ background:var(--grad); border-color:transparent; color:#fff; box-shadow:0 6px 18px rgba(29,95,209,.30); }
+  .today div{ background:rgba(255,255,255,.72); border:1px solid rgba(255,255,255,.9); border-radius:14px; }
+  .punch{ background:var(--grad); border-radius:18px; box-shadow:0 12px 30px rgba(29,95,209,.32); }
+  .punch.out{ background:var(--grad-out); box-shadow:0 12px 30px rgba(20,145,155,.30); }
+  .btn-primary{ background:var(--grad); border-radius:12px; box-shadow:0 6px 16px rgba(29,95,209,.22); }
+  .btn-primary:hover{ background:var(--grad); filter:brightness(1.06); }
+  .btn-mini{ background:rgba(255,255,255,.7); border:1px solid var(--line); border-radius:10px; }
+  .btn-ghost{ background:rgba(255,255,255,.6); border:1px solid var(--line); border-radius:10px; }
+  .lang-toggle{ background:rgba(255,255,255,.7); }
+  .role-badge{ background:var(--grad); border:0; }
+  .field input,.field select,.field textarea{ border-radius:12px; background:rgba(255,255,255,.78); border:1px solid var(--line); }
+  .field input:focus,.field select:focus{ border-color:#1d5fd1; box-shadow:0 0 0 3px rgba(29,95,209,.12); }
+  th{ background:rgba(11,58,122,.06); }
+  .todo button{ background:rgba(255,255,255,.65); border:1px solid var(--glass-bd); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-radius:16px; }
+  .seg{ background:rgba(11,58,122,.07); border-radius:14px; } .seg button{ border-radius:11px; }
+  .ip-banner,.demo-accounts{ border-radius:12px; }
+  .dlg{ background:rgba(255,255,255,.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:20px; }
+  .dlg-back{ backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+  .rc-pick button{ border-radius:12px; } .rc-pick button:first-child{ background:var(--grad); color:#fff; border:0; }
+
 </style>
 </head>
 <body>
