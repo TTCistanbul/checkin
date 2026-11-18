@@ -117,6 +117,11 @@
   .avatar svg{ width:30px; height:30px; fill:#9fb0c4; }
   .ident-name{ font-size:17px; font-weight:800; }
   .ident-meta{ font-size:12px; color:#5b6b78; font-family:var(--mono); }
+  .leave-chip{ margin-left:auto; border:1px solid var(--line); background:#f4f8fb; border-radius:10px; padding:8px 12px; text-align:right; cursor:pointer; font:inherit; }
+  .leave-chip:hover{ background:#e9f1f7; }
+  .leave-chip .lc-k{ font-size:11px; color:#5b6b78; }
+  .leave-chip .lc-v{ font-size:18px; font-weight:800; font-family:var(--mono); color:var(--navy); }
+  .leave-chip .lc-v.low{ color:var(--bad); }
 
   /* clock buttons (employee) */
   .clock-actions{ display:flex; gap:12px; margin-top:16px; }
@@ -507,6 +512,10 @@
             <div class="ident-name" id="empName">—</div>
             <div class="ident-meta" id="empMeta">—</div>
           </div>
+          <button type="button" class="leave-chip" id="empLeaveChip">
+            <div class="lc-k" data-i18n="chip_annual_left">特休剩餘 ›</div>
+            <div class="lc-v" id="empLeaveChipVal">—</div>
+          </button>
         </div>
         <div class="today">
           <div><div class="k" data-i18n="th_in">上班</div><div class="v" id="tdIn">—</div></div>
@@ -1190,6 +1199,7 @@ const I18N = {
 };
 /* ---- 報帳收據 文字 ---- */
 Object.assign(I18N['zh-Hant'],{
+  chip_annual_left:"特休剩餘 ›",
   etab_receipt:"報帳", tab_receipts:"報帳收據",
   rc_upload_title:"上傳收據", rc_my_title:"我的收據", rc_list_title:"收據清單",
   rc_take_photo:"📷 拍照", rc_choose_files:"📁 選照片／PDF",
@@ -1213,6 +1223,7 @@ Object.assign(I18N['zh-Hant'],{
   rc_item_photo:"物品照片", rc_item_missing:"待補物品照片", rc_item_upload:"📸 上傳", rc_item_replace:"更換", rc_item_view:"檢視", rc_item_del:"移除", rc_item_del_confirm:"移除這張物品照片？", rc_item_bad:"物品照片請選擇圖片檔。"
 });
 Object.assign(I18N['en'],{
+  chip_annual_left:"Annual leave left ›",
   etab_receipt:"Receipts", tab_receipts:"Receipts",
   rc_upload_title:"Upload receipts", rc_my_title:"My receipts", rc_list_title:"Receipt list",
   rc_take_photo:"📷 Take photo", rc_choose_files:"📁 Photos / PDF",
@@ -2114,6 +2125,12 @@ function quotaCardsHtml(id){
 function renderEmpLeavePage(id){
   populateReqTypeSelect();
   document.getElementById('empQuotaCards').innerHTML=quotaCardsHtml(id);
+  /* 打卡首頁右上角也顯示特休剩餘，點了直接跳到「請假」分頁 */
+  try{
+    const L=leaveLedger(id);
+    const v=document.getElementById('empLeaveChipVal');
+    if(v){ v.textContent=`${dayStr(L.annualLeft)} ${t('days_unit')}`; v.classList.toggle('low', L.annualLeft<=HOURS_PER_DAY*2); }
+  }catch(err){ console.warn('leave chip',err); }
   initDatePicker('reqDate','reqDateWrap');
   initDatePicker('reqDateEnd','reqDateEndWrap');
   initTimePicker('reqStart','reqStartWrap');
@@ -2658,6 +2675,10 @@ document.querySelectorAll('[data-etab]').forEach(tab=>{
     ['clock','leave','receipt'].forEach(p=>{ document.getElementById('epanel-'+p).style.display=(p===tab.dataset.etab)?'block':'none'; });
   };
 });
+document.getElementById('empLeaveChip').onclick=()=>{
+  const tb=document.querySelector('[data-etab="leave"]'); if(tb) tb.click();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
 
 /* ============================================================
    主控端 UI
