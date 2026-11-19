@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kartvizit → HubSpot | TTC Istanbul</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<style>
+  :root{--bg:#f5f6f8;--card:#fff;--ink:#1d2330;--mute:#6b7280;--line:#e3e6eb;--accent:#0b6bcb;--warn:#b45309;--warnbg:#fff7ed;--ok:#15803d;--okbg:#f0fdf4;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+  header{background:#12325c;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:5}
+  header h1{font-size:17px;margin:0;font-weight:600}
+  header small{display:block;opacity:.75;font-weight:400;font-size:12px}
+  .lang button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer}
+  .lang button.on{background:#fff;color:#12325c}
+  main{max-width:880px;margin:0 auto;padding:16px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .panel h2{font-size:15px;margin:0 0 10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+  label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+  input[type=text],input[type=email],textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:15px;font-family:inherit;background:#fff}
+  input.empty{border-color:#f0b37a;background:var(--warnbg)}
+  textarea{min-height:90px;font-size:13px;font-family:ui-monospace,Menlo,monospace;color:#374151}
+  .drop{border:2px dashed #9db4d3;border-radius:12px;padding:22px;text-align:center;background:#f8fbff;cursor:pointer}
+  .drop.over{background:#e8f1fd}
+  .drop strong{display:block;font-size:16px;margin-bottom:4px}
+  .btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+  .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .btn.danger{background:#fff;color:#b91c1c;border:1px solid #e5a3a3}
+  .btn:disabled{opacity:.5;cursor:default}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .cardbox{display:grid;grid-template-columns:220px 1fr;gap:14px}
+  @media(max-width:640px){.cardbox{grid-template-columns:1fr}}
+  .thumb{width:100%;border-radius:8px;border:1px solid var(--line);background:#eee;min-height:120px;object-fit:contain;max-height:260px}
+  .status{font-size:13px;color:var(--mute);margin:6px 0}
+  .bar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+  .bar>div{height:100%;background:var(--accent);width:0;transition:width .2s}
+  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+  .badge{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warnbg);color:var(--warn)}
+  .badge.ok{background:var(--okbg);color:var(--ok)}
+  .badge.dup{background:#fee2e2;color:#b91c1c}
+  details summary{cursor:pointer;font-size:13px;color:var(--mute);margin-top:8px}
+  .hint{font-size:13px;color:var(--mute);margin:6px 0 0}
+  .sticky{position:sticky;bottom:0;background:rgba(245,246,248,.95);padding:10px 0;border-top:1px solid var(--line)}
+  .count{font-size:14px;color:var(--mute)}
+  .chk{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ink)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1 data-i="title"></h1><small data-i="subtitle"></small></div>
+  <div class="lang"><button id="l-tr">TR</button> <button id="l-zh">中文</button></div>
+</header>
+<main>
+  <section class="panel">
+    <h2 data-i="settings"></h2>
+    <div class="grid">
+      <div><label data-i="owner"></label><input type="email" id="s-owner" value="evatzeng@taitra.org.tw"></div>
+      <div><label data-i="source"></label><input type="text" id="s-source" placeholder="Istanbul Hardware Fair 2026"></div>
+      <div><label data-i="country"></label><input type="text" id="s-country" value="Turkey"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="drop" id="drop">
+      <strong data-i="dropTitle"></strong>
+      <span class="hint" data-i="dropHint"></span>
+      <input type="file" id="file" accept="image/*" multiple hidden>
+    </div>
+    <p class="hint" data-i="privacy"></p>
+  </section>
+
+  <div id="cards"></div>
+
+  <div class="sticky">
+    <div class="row" style="justify-content:space-between">
+      <span class="count" id="count"></span>
+      <div class="row">
+        <button class="btn danger" id="clear" data-i="clearAll"></button>
+        <button class="btn" id="export" data-i="export"></button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<template id="tpl">
+  <section class="panel card">
+    <div class="head">
+      <strong class="cname"></strong>
+      <div class="row">
+        <span class="badge state"></span>
+        <label class="chk"><input type="checkbox" class="ok"> <span data-i="checked"></span></label>
+      </div>
+    </div>
+    <div class="cardbox">
+      <div>
+        <img class="thumb" alt="">
+        <div class="status"></div>
+        <div class="bar"><div></div></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn ghost rot" data-i="rotate"></button>
+          <button class="btn ghost merge" data-i="merge"></button>
+          <button class="btn danger del" data-i="delete"></button>
+        </div>
+      </div>
+      <div>
+        <div class="grid fields"></div>
+        <details><summary data-i="rawText"></summary><textarea class="raw" readonly></textarea>
+          <p class="hint" data-i="rawHint"></p></details>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script>
+const T = {
+  tr:{title:"Kartvizit → HubSpot",subtitle:"Taipei Ticaret Merkezi İstanbul",settings:"Genel ayarlar (tüm kartlara uygulanır)",
+    owner:"Contact Owner (HubSpot e-posta)",source:"Kartvizit kaynağı / etkinlik",country:"Varsayılan ülke",
+    dropTitle:"Kartvizit fotoğraflarını seçin veya buraya sürükleyin",dropHint:"Birden fazla fotoğraf seçebilirsiniz. Telefonda kamera ile de çekebilirsiniz.",
+    privacy:"Fotoğraflar sadece bu tarayıcıda işlenir, hiçbir sunucuya yüklenmez. Sayfayı kapatırsanız fotoğraflar kaybolur, girilen bilgiler bu cihazda saklanır.",
+    checked:"Kontrol ettim",rotate:"↻ Döndür",merge:"Öncekiyle birleştir (arka yüz)",delete:"Sil",rawText:"Okunan ham metin",
+    rawHint:"Eksik bilgiyi buradan kopyalayıp yukarıdaki alanlara yapıştırabilirsiniz.",
+    export:"HubSpot CSV indir",clearAll:"Tümünü temizle",
+    loadingModel:"OCR modeli yükleniyor (ilk seferde biraz sürebilir)…",reading:"Metin okunuyor…",done:"Okundu",failed:"Okunamadı – bilgileri elle girin",waiting:"Sırada…",
+    stNeed:"Kontrol gerekli",stOk:"Kontrol edildi",stDup:"Tekrar eden e-posta",
+    count:(n,c)=>`${n} kart · ${c} kontrol edildi`,confirmClear:"Tüm kartlar silinsin mi?",yes:"Evet, sil",no:"Vazgeç",
+    nothing:"Henüz kart yok.",unchecked:(n)=>`${n} kart henüz kontrol edilmedi. Yine de indirilsin mi? (CSV'de "Check Notes" sütununda işaretlenir)`,
+    noPrev:"Birleştirilecek önceki kart yok.",
+    f:{firstName:"Ad",lastName:"Soyad",email:"E-posta",phone:"Telefon (sabit)",mobile:"Cep telefonu",jobTitle:"Unvan",company:"Firma adı",website:"Web sitesi",address:"Adres",city:"Şehir",country:"Ülke"}},
+  zh:{title:"名片 → HubSpot",subtitle:"伊斯坦堡台灣貿易中心",settings:"共用設定（套用到所有名片）",
+    owner:"Contact Owner（HubSpot 帳號 email）",source:"名片來源／活動",country:"預設國家",
+    dropTitle:"選擇名片照片，或拖曳到這裡",dropHint:"可一次選多張；手機可直接拍照。",
+    privacy:"照片只在這個瀏覽器裡處理，不會上傳到任何伺服器。關閉頁面後照片會消失，已輸入的資料會留在這台裝置。",
+    checked:"已檢查",rotate:"↻ 旋轉",merge:"併入上一張（背面）",delete:"刪除",rawText:"辨識出的原始文字",
+    rawHint:"缺的資料可以從這裡複製，貼到上面的欄位。",
+    export:"下載 HubSpot CSV",clearAll:"全部清除",
+    loadingModel:"載入辨識模型中（第一次會比較久）…",reading:"辨識文字中…",done:"辨識完成",failed:"無法辨識，請手動輸入",waiting:"排隊中…",
+    stNeed:"待檢查",stOk:"已檢查",stDup:"email 重複",
+    count:(n,c)=>`共 ${n} 張 · 已檢查 ${c} 張`,confirmClear:"確定要刪除全部名片？",yes:"確定刪除",no:"取消",
+    nothing:"還沒有名片。",unchecked:(n)=>`還有 ${n} 張沒勾「已檢查」，仍要下載嗎？（會在 CSV 的 Check Notes 欄標註）`,
+    noPrev:"沒有上一張可以合併。",
+    f:{firstName:"名 First Name",lastName:"姓 Last Name",email:"Email",phone:"電話（市話）",mobile:"手機",jobTitle:"職稱",company:"公司名稱",website:"網站",address:"地址",city:"城市",country:"國家"}}
+};
+const FIELDS=["firstName","lastName","jobTitle","company","email","mobile","phone","website","address","city","country"];
+let lang = (()=>{try{return localStorage.getItem("cardLang")||"tr"}catch(e){return "tr"}})();
+const t=k=>T[lang][k];
+
+/* ---------- text helpers ---------- */
+const fold=s=>(s||"").toLocaleLowerCase("tr").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ı/g,"i");
+const titleCase=s=>s.split(/\s+/).map(w=>w?w.charAt(0).toLocaleUpperCase("tr")+w.slice(1).toLocaleLowerCase("tr"):w).join(" ");
+const isUpper=s=>s===s.toLocaleUpperCase("tr")&&/[A-ZÇĞİÖŞÜ]/.test(s);
+
+const COMPANY_KW=["a.s.","a.ş.","as.","ltd","sti","şti","san.","sanayi","tic.","ticaret","holding","inc","gmbh","corp","co.","limited","group","grup","makina","makine","otomotiv","elektrik","elektronik","insaat","ithalat","ihracat ltd","dis tic","dış tic","teknoloji","industry","industries","trading"];
+const TITLE_KW=["mudur","müdür","manager","director","direktor","başkan","baskan","president","ceo","cfo","coo","cto","owner","founder","kurucu","sahibi","ortak","partner","uzman","specialist","sorumlu","sorumlusu","yonetici","yönetici","executive","engineer","muhendis","mühendis","sales","satis","satış","satin alma","satınalma","purchasing","purchase","procurement","export","import","ihracat","ithalat","marketing","pazarlama","yonetim kurulu","chairman","koordinator","coordinator","temsilci","representative","assistant","asistan","officer","supervisor","sef","şef","lead","head","danisman","consultant","genel"];
+const ADDR_KW=["mah.","mah ","mahallesi","cad.","cad ","caddesi","sok.","sk.","sokak","sokagi","bulvar","blv","bulv","no:","no.","no ","kat:","kat ","daire","d:","osb","organize sanayi","plaza","is merkezi","iş merkezi","sitesi","blok","street","st.","avenue","road","pk","posta"];
+const CITIES=["İstanbul","Ankara","İzmir","Bursa","Kocaeli","Konya","Gaziantep","Kayseri","Antalya","Adana","Mersin","Manisa","Denizli","Eskişehir","Sakarya","Tekirdağ","Samsun","Trabzon","Hatay","Kahramanmaraş","Balıkesir","Aydın","Muğla","Malatya","Diyarbakır","Şanlıurfa","Çorum","Afyonkarahisar","Kütahya","Uşak","Bolu","Düzce","Edirne","Kırklareli","Çanakkale","Zonguldak","Ordu","Rize","Erzurum","Van","Sivas","Tokat","Yalova","Bilecik","Karaman","Aksaray","Niğde","Nevşehir","Isparta","Burdur","Osmaniye","Kırıkkale","Kırşehir","Elazığ","Batman","Mardin","Gebze"];
+const FREEMAIL=["gmail","hotmail","yahoo","outlook","yandex","icloud","live","msn","mynet","windowslive"];
+const hasKw=(s,list)=>{const f=" "+fold(s)+" ";return list.some(k=>f.includes(fold(k)))};
+
+function normPhone(raw){
+  let d=raw.replace(/[^\d+]/g,""); const plus=d.startsWith("+"); d=d.replace(/\+/g,"");
+  if(d.startsWith("0090")) d=d.slice(2);
+  if(d.length===12&&d.startsWith("90")) d=d.slice(2);
+  else if(d.length===11&&d.startsWith("0")) d=d.slice(1);
+  else if(!(d.length===10&&/^[2-5]/.test(d))) return {num:(plus?"+":"")+d,mobile:false,tr:false};
+  return {num:`+90 ${d.slice(0,3)} ${d.slice(3,6)} ${d.slice(6,8)} ${d.slice(8)}`,mobile:d.startsWith("5"),tr:true};
+}
+
+function parseCard(text){
+  const out={}; FIELDS.forEach(f=>out[f]="");
+  const lines=text.split(/\n/).map(l=>l.replace(/[|•·]/g," ").replace(/\s+/g," ").trim()).filter(l=>l.length>1);
+  const used=new Set(); const phones=[],mobiles=[];
+  // email
+  lines.forEach((l,i)=>{const m=l.replace(/\s*@\s*/g,"@").match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/);
+    if(m&&!out.email){out.email=m[0].toLowerCase().replace(/[.,;]+$/,"");used.add(i);}});
+  // website
+  lines.forEach((l,i)=>{if(out.website||l.includes("@"))return;
+    const m=l.match(/(https?:\/\/)?(www\.)[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)+|(https?:\/\/)?[A-Za-z0-9\-]+\.(com\.tr|com|net|org|net\.tr|biz|tr|eu|co)\b/i);
+    if(m){out.website=m[0].replace(/^https?:\/\//i,"").toLowerCase();used.add(i);}});
+  // phones
+  lines.forEach((l,i)=>{const re=/\+?\(?\d[\d\s().\-\/]{8,}\d/g; let m,any=false,last=0;
+    while((m=re.exec(l))){const r=m[0];const digits=r.replace(/\D/g,""); if(digits.length<10||digits.length>14)continue; any=true;
+      // label = text between previous number and this one
+      const lab=fold(l.slice(last,m.index)); last=m.index+r.length;
+      const isFax=/(fax|faks|\bf\s*:|\bf\.)/.test(lab); const isMobLabel=/(gsm|cep|mobile|mob|\bm\s*:|\bm\.|cell)/.test(lab);
+      if(isFax)continue; const p=normPhone(r);
+      if(p.mobile||isMobLabel) mobiles.push(p.num); else phones.push(p.num);}
+    if(any)used.add(i);});
+  out.mobile=[...new Set(mobiles)][0]||""; out.phone=[...new Set(phones)][0]||"";
+  if(!out.phone&&mobiles.length>1) out.phone=[...new Set(mobiles)][1]||"";
+  // company
+  lines.forEach((l,i)=>{if(used.has(i)||out.company)return; if(hasKw(l,COMPANY_KW)&&!hasKw(l,ADDR_KW)&&!/\d{3,}/.test(l)){out.company=l;used.add(i);}});
+  // address & city
+  const addr=[];
+  lines.forEach((l,i)=>{if(used.has(i))return; if(hasKw(l,ADDR_KW)||/\b\d{5}\b/.test(l)||/\w+\s*\/\s*(istanbul|ankara|izmir|bursa|kocaeli)/i.test(fold(l))){addr.push(l);used.add(i);}});
+  out.address=addr.join(", ");
+  const blob=fold(addr.join(" ")+" "+lines.join(" "));
+  const cityHit=CITIES.find(c=>fold(addr.join(" ")).includes(fold(c)))||CITIES.find(c=>new RegExp("\\b"+fold(c)+"\\b").test(blob));
+  if(cityHit) out.city=cityHit==="Gebze"?"Kocaeli":cityHit;
+  // job title
+  lines.forEach((l,i)=>{if(used.has(i)||out.jobTitle)return; if(hasKw(l,TITLE_KW)&&!/\d/.test(l)&&l.length<70){out.jobTitle=l;used.add(i);}});
+  // name: 2-4 words, letters only
+  const nameRe=/^[A-Za-zÇĞİÖŞÜçğıöşüÂâÎîÛû.'\-]+(\s[A-Za-zÇĞİÖŞÜçğıöşüÂâÎîÛû.'\-]+){1,3}$/;
+  let nameIdx=-1;
+  const cands=lines.map((l,i)=>({l,i})).filter(o=>!used.has(o.i)&&nameRe.test(o.l)&&o.l.length<=40&&!hasKw(o.l,COMPANY_KW)&&!hasKw(o.l,TITLE_KW));
+  if(cands.length){
+    // prefer a candidate next to the job title line, else one whose last word is ALL CAPS, else first
+    const tIdx=lines.indexOf(out.jobTitle);
+    let pick=cands.find(o=>tIdx>=0&&Math.abs(o.i-tIdx)===1)||cands.find(o=>{const w=o.l.split(" ");return isUpper(w[w.length-1])&&!isUpper(w[0])})||cands[0];
+    nameIdx=pick.i; used.add(pick.i);
+    let w=pick.l.replace(/^(dr|prof|mr|mrs|ms|av|müh|muh|doç|doc)\.?\s+/i,"").split(" ");
+    w=w.map(x=>titleCase(x));
+    out.lastName=w.pop(); out.firstName=w.join(" ");
+  }
+  // company fallback from remaining ALL CAPS line or domain
+  if(!out.company){
+    const c=lines.find((l,i)=>!used.has(i)&&isUpper(l)&&!/\d{3,}/.test(l)&&l.length>2&&l.length<60);
+    if(c) out.company=c;
+    else {const dom=domainOf(out);if(dom) out.company=titleCase(dom.split(".")[0]);}
+  }
+  if(!out.website){const d=domainOf(out); if(d) out.website="www."+d;}
+  return out;
+}
+function domainOf(o){
+  if(o.website) return o.website.replace(/^www\./,"").split("/")[0];
+  if(o.email){const d=o.email.split("@")[1]||"";if(!FREEMAIL.some(f=>d.startsWith(f+".")))return d;}
+  return "";
+}
+
+/* ---------- state ---------- */
+let cards=[]; // {id, fields, raw, ok, status, img, rot}
+const KEY="ttcCards.v1";
+function save(){try{localStorage.setItem(KEY,JSON.stringify(cards.map(c=>({id:c.id,fields:c.fields,raw:c.raw,ok:c.ok,status:c.status==="done"||c.status==="failed"?c.status:"failed"}))))}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"[]");cards=s.map(c=>({...c,img:null,rot:0}))}catch(e){cards=[]}}
+
+/* ---------- OCR ---------- */
+let workerP=null;
+function getWorker(onLog){
+  if(!workerP) workerP=Tesseract.createWorker(["tur","eng"],1,{logger:m=>onLog&&onLog(m)});
+  return workerP;
+}
+let currentLog=null;
+const queue=[]; let busy=false;
+function enqueue(card){queue.push(card);runQueue();}
+async function runQueue(){
+  if(busy)return; busy=true;
+  while(queue.length){
+    const c=queue.shift(); c.status="loading"; renderCard(c);
+    try{
+      currentLog=c;
+      if(!workerP) workerP=Tesseract.createWorker(["tur","eng"],1,{logger:m=>{if(currentLog){currentLog.prog=m.progress||0;currentLog.status=m.status==="recognizing text"?"reading":"loading";updateProgress(currentLog);}}});
+      const w=await workerP;
+      const canvas=await prepImage(c.img,c.rot);
+      c.status="reading"; renderCard(c);
+      const {data}=await w.recognize(canvas);
+      c.raw=(data.text||"").trim();
+      const parsed=parseCard(c.raw);
+      FIELDS.forEach(f=>{ if(!c.touched||!c.touched[f]) c.fields[f]=parsed[f]||""; });
+      if(!c.fields.country) c.fields.country=$("#s-country").value.trim();
+      c.status=c.raw?"done":"failed";
+    }catch(e){console.error(e);c.status="failed";}
+    c.prog=1; renderCard(c); save(); updateCount();
+  }
+  busy=false; currentLog=null;
+}
+function loadImage(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url;});}
+async function prepImage(im,rot){
+  const max=2200; let w=im.naturalWidth,h=im.naturalHeight; const s=Math.min(1,max/Math.max(w,h)); const up=Math.max(w,h)<1200?1200/Math.max(w,h):1;
+  const k=s<1?s:up; w=Math.round(w*k); h=Math.round(h*k);
+  const swap=rot%180!==0; const cv=document.createElement("canvas"); cv.width=swap?h:w; cv.height=swap?w:h;
+  const ctx=cv.getContext("2d"); ctx.translate(cv.width/2,cv.height/2); ctx.rotate(rot*Math.PI/180); ctx.drawImage(im,-w/2,-h/2,w,h);
+  const id=ctx.getImageData(0,0,cv.width,cv.height),d=id.data; let mn=255,mx=0; const g=new Uint8ClampedArray(d.length/4);
+  for(let i=0,j=0;i<d.length;i+=4,j++){const v=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];g[j]=v;if(v<mn)mn=v;if(v>mx)mx=v;}
+  const r=Math.max(1,mx-mn); for(let i=0,j=0;i<d.length;i+=4,j++){const v=(g[j]-mn)*255/r;d[i]=d[i+1]=d[i+2]=v;}
+  ctx.setTransform(1,0,0,1,0,0); ctx.putImageData(id,0,0); return cv;
+}
+
+/* ---------- UI ---------- */
+const $=s=>document.querySelector(s);
+function applyLang(){
+  document.documentElement.lang=lang==="tr"?"tr":"zh-Hant";
+  document.querySelectorAll("[data-i]").forEach(el=>{const v=t(el.dataset.i);if(typeof v==="string")el.textContent=v;});
+  $("#l-tr").classList.toggle("on",lang==="tr"); $("#l-zh").classList.toggle("on",lang==="zh");
+  renderAll();
+}
+function dupEmails(){const m={};cards.forEach(c=>{const e=c.fields.email;if(e)m[e]=(m[e]||0)+1});return m;}
+function renderAll(){$("#cards").innerHTML="";cards.forEach(c=>{c.el=null;renderCard(c)});updateCount();}
+function renderCard(c){
+  if(!c.el){
+    const n=$("#tpl").content.firstElementChild.cloneNode(true); c.el=n; $("#cards").appendChild(n);
+    n.querySelectorAll("[data-i]").forEach(el=>{el.textContent=t(el.dataset.i)});
+    const grid=n.querySelector(".fields");
+    FIELDS.forEach(f=>{const d=document.createElement("div");d.innerHTML=`<label>${T[lang].f[f]}</label><input type="text" data-f="${f}">`;grid.appendChild(d);
+      const inp=d.querySelector("input"); inp.addEventListener("input",()=>{c.fields[f]=inp.value;c.touched=c.touched||{};c.touched[f]=true;inp.classList.toggle("empty",!inp.value&&["firstName","lastName","email","company"].includes(f));save();refreshHead(c);});});
+    n.querySelector(".ok").addEventListener("change",e=>{c.ok=e.target.checked;save();refreshHead(c);updateCount();});
+    n.querySelector(".del").addEventListener("click",()=>{cards=cards.filter(x=>x!==c);n.remove();save();updateCount();refreshAllHeads();});
+    n.querySelector(".rot").addEventListener("click",()=>{if(!c.img)return;c.rot=(c.rot+90)%360;n.querySelector(".thumb").style.transform=`rotate(${c.rot}deg)`;c.touched={};enqueue(c);});
+    n.querySelector(".merge").addEventListener("click",()=>mergePrev(c));
+  }
+  const n=c.el;
+  const th=n.querySelector(".thumb"); if(c.img){th.src=c.img.src;th.style.display="";}else th.style.display="none";
+  n.querySelector(".rot").disabled=!c.img;
+  FIELDS.forEach(f=>{const inp=n.querySelector(`[data-f="${f}"]`); if(document.activeElement!==inp) inp.value=c.fields[f]||""; inp.classList.toggle("empty",!inp.value&&["firstName","lastName","email","company"].includes(f));});
+  n.querySelector(".raw").value=c.raw||"";
+  n.querySelector(".ok").checked=!!c.ok;
+  const st={queued:t("waiting"),loading:t("loadingModel"),reading:t("reading"),done:t("done"),failed:t("failed")}[c.status]||"";
+  n.querySelector(".status").textContent=st;
+  updateProgress(c); refreshHead(c);
+}
+function updateProgress(c){if(!c.el)return;const b=c.el.querySelector(".bar");const done=c.status==="done"||c.status==="failed";b.style.display=done?"none":"";b.firstElementChild.style.width=Math.round((c.prog||0)*100)+"%";
+  const st={loading:t("loadingModel"),reading:t("reading")}[c.status]; if(st) c.el.querySelector(".status").textContent=st+(c.prog?` ${Math.round(c.prog*100)}%`:"");}
+function refreshHead(c){if(!c.el)return;const f=c.fields;const nm=[f.firstName,f.lastName].filter(Boolean).join(" ")||"—";
+  c.el.querySelector(".cname").textContent=nm+(f.company?" · "+f.company:"");
+  const b=c.el.querySelector(".state");const dup=f.email&&dupEmails()[f.email]>1;
+  b.className="badge state"+(dup?" dup":c.ok?" ok":""); b.textContent=dup?t("stDup"):c.ok?t("stOk"):t("stNeed");}
+function refreshAllHeads(){cards.forEach(refreshHead);}
+function updateCount(){$("#count").textContent=cards.length?T[lang].count(cards.length,cards.filter(c=>c.ok).length):t("nothing");}
+function mergePrev(c){
+  const i=cards.indexOf(c); if(i<1){toast(t("noPrev"));return;}
+  const p=cards[i-1]; FIELDS.forEach(f=>{if(!p.fields[f]&&c.fields[f])p.fields[f]=c.fields[f];});
+  p.raw=(p.raw||"")+"\n---\n"+(c.raw||""); cards.splice(i,1); c.el.remove(); renderCard(p); save(); updateCount();
+}
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+async function addFiles(files){
+  for(const file of files){
+    if(!file.type.startsWith("image/"))continue;
+    const c={id:newId(),fields:{},raw:"",ok:false,status:"queued",rot:0,prog:0};FIELDS.forEach(f=>c.fields[f]="");
+    try{c.img=await loadImage(file);}catch(e){c.status="failed";}
+    cards.push(c); renderCard(c); if(c.img) enqueue(c);
+  }
+  updateCount();
+}
+
+/* ---------- dialogs ---------- */
+function toast(msg){const d=document.createElement("div");d.textContent=msg;Object.assign(d.style,{position:"fixed",left:"50%",bottom:"80px",transform:"translateX(-50%)",background:"#1d2330",color:"#fff",padding:"10px 14px",borderRadius:"8px",zIndex:20,fontSize:"14px",maxWidth:"90%"});document.body.appendChild(d);setTimeout(()=>d.remove(),2600);}
+function ask(msg){return new Promise(res=>{const w=document.createElement("div");Object.assign(w.style,{position:"fixed",inset:"0",background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:30,padding:"16px"});
+  w.innerHTML=`<div style="background:#fff;border-radius:12px;padding:18px;max-width:380px"><p style="margin:0 0 14px">${msg}</p><div class="row" style="justify-content:flex-end"><button class="btn ghost" data-v="0">${t("no")}</button><button class="btn" data-v="1">${t("yes")}</button></div></div>`;
+  w.addEventListener("click",e=>{const v=e.target.dataset&&e.target.dataset.v;if(v!==undefined){w.remove();res(v==="1");}});document.body.appendChild(w);});}
+
+/* ---------- export ---------- */
+const COLS=[["First Name","firstName"],["Last Name","lastName"],["Email","email"],["Phone Number","phone"],["Mobile Phone Number","mobile"],["Job Title","jobTitle"],["Company Name","company"],["Company Domain Name",null],["Website URL","website"],["Street Address","address"],["City","city"],["Country/Region","country"],["Contact Owner",null],["Card Source",null],["Check Notes",null]];
+const csvCell=v=>{v=(v==null?"":String(v));return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+async function doExport(){
+  if(!cards.length){toast(t("nothing"));return;}
+  const un=cards.filter(c=>!c.ok).length; if(un&&!(await ask(T[lang].unchecked(un))))return;
+  const owner=$("#s-owner").value.trim(),src=$("#s-source").value.trim(),ctry=$("#s-country").value.trim(); const dups=dupEmails();
+  const rows=[COLS.map(c=>c[0])];
+  cards.forEach(c=>{const f=c.fields; const notes=[];
+    if(!c.ok)notes.push("not checked"); if(!f.email)notes.push("no email"); if(!f.firstName&&!f.lastName)notes.push("no name"); if(!f.company)notes.push("no company"); if(f.email&&dups[f.email]>1)notes.push("duplicate email");
+    rows.push(COLS.map(([h,k])=>{
+      if(h==="Company Domain Name")return domainOf(f); if(h==="Contact Owner")return owner; if(h==="Card Source")return src; if(h==="Check Notes")return notes.join("; ");
+      if(k==="country")return f.country||ctry; return f[k]||"";}));});
+  const csv="﻿"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n");
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  const name=`hubspot_kartvizit_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.csv`;
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+}
+
+/* ---------- wire up ---------- */
+function bindSetting(id,k){const el=$(id);try{const v=localStorage.getItem(k);if(v!==null)el.value=v;}catch(e){}el.addEventListener("input",()=>{try{localStorage.setItem(k,el.value)}catch(e){}});}
+if(typeof window!=="undefined"&&document.getElementById("drop")){
+  bindSetting("#s-owner","ttcOwner");bindSetting("#s-source","ttcSource");bindSetting("#s-country","ttcCountry");
+  const drop=$("#drop"),file=$("#file");
+  drop.addEventListener("click",()=>file.click());
+  file.addEventListener("change",()=>{addFiles([...file.files]);file.value="";});
+  ["dragenter","dragover"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add("over")}));
+  ["dragleave","drop"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove("over")}));
+  drop.addEventListener("drop",ev=>addFiles([...ev.dataTransfer.files]));
+  $("#export").addEventListener("click",doExport);
+  $("#clear").addEventListener("click",async()=>{if(cards.length&&await ask(t("confirmClear"))){cards=[];save();renderAll();}});
+  $("#l-tr").addEventListener("click",()=>{lang="tr";try{localStorage.setItem("cardLang",lang)}catch(e){}applyLang();});
+  $("#l-zh").addEventListener("click",()=>{lang="zh";try{localStorage.setItem("cardLang",lang)}catch(e){}applyLang();});
+  load(); applyLang();
+}
+</script>
+</body>
+</html>
